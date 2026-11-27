@@ -57,6 +57,8 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
 std::expected<std::string,SubscriptionSeedError> subscriptionSeedDdbResponse(const SubscriptionSeed&);
 std::expected<std::string,SubscriptionSeedError> openSubscriptionSeedDdbResponse(
     std::string_view wire,const SignedSubscriptionPresence& expected);
+std::expected<std::string,SubscriptionSeedError> validateSubscriptionSeedMetainfo(
+    std::string metainfo,const SignedSubscriptionPresence& expected);
 std::expected<std::string,SubscriptionSeedError> encodeSubscriptionPresence(const SignedSubscriptionPresence&,
     std::int64_t publicationNonce);
 std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscriptionPresence(

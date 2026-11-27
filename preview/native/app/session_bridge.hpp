@@ -155,6 +155,7 @@ public:
   bool stageProfileRestore(quint64 session, QString backup);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
+  bool answerSubscriptionUpgrade(quint64 session,quint64 request,bool accepted);
   void cancelSubscription(ui::SubscriptionCommandKey);
   bool metasearchCatalog(ui::MetasearchCatalogKey);
   bool metasearchQuery(ui::MetasearchQueryCommand);
@@ -254,6 +255,7 @@ signals:
   void subscriptionCatalogReady(biglybtc::ui::SubscriptionCatalogPresentation);
   void subscriptionReady(biglybtc::ui::SubscriptionPresentation);
   void subscriptionHistoryChanged(quint64 session);
+  void subscriptionUpgradeAvailable(quint64 session,quint64 request,QString name,quint32 version);
   void metasearchCatalogReady(biglybtc::ui::MetasearchCatalogPresentation);
   void metasearchReady(biglybtc::ui::MetasearchPresentation);
   void metasearchDownloadReady(biglybtc::ui::MetasearchDownloadPresentation);
@@ -344,6 +346,7 @@ private:
   void closeWorkerSubscriptions();
   void stopSubscriptionReceiver()noexcept;
   void subscriptionsDispatchInterrupted();
+  void pollSubscriptionUpgrade();
   void finishSubscriptionDispatch();
   void deliverSubscriptionCatalog(ui::SubscriptionCatalogPresentation);
   void deliverSubscription(ui::SubscriptionPresentation);

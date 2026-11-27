@@ -95,6 +95,8 @@ public:
       const storage::TagManagerStartupMode* startup);
   void updateSubscriptionSeeds(std::span<const core::TorrentHash>,const engine::HeldSubscriptionSeedResolver&);
   std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade();
+  std::expected<void,storage::Error> downloadSubscriptionUpgrade(const std::array<char,20>& previous,std::uint32_t version);
+  std::optional<std::expected<std::string,storage::Error>> takeSubscriptionUpgradePayload();
   std::expected<void,storage::Error> addMagnet(const engine::PendingMagnet&);
   std::expected<void,storage::Error> cancelMagnet(const core::TorrentHash&);
   std::vector<engine::PendingMagnetStatus> pendingMagnets()const;

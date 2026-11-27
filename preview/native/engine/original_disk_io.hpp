@@ -30,6 +30,9 @@ public:
       std::vector<std::optional<OriginalDiskFile>>,
       OriginalDiskAccess access=OriginalDiskAccess::ReadWrite,
       std::function<bool()> validatedOriginalResume = {});
+  // A single small payload acquired without filesystem or resume state.
+  explicit OriginalDiskFiles(std::shared_ptr<libtorrent::torrent_info>);
+  bool isVolatile() const noexcept { return !volatilePayload_.empty(); }
   void recordHashOperation() noexcept { hashOperations_.fetch_add(1,std::memory_order_relaxed); }
   std::uint64_t hashOperations() const noexcept { return hashOperations_.load(std::memory_order_relaxed); }
   bool acceptsOriginalResume() const { return access_==OriginalDiskAccess::ReadWrite && validatedOriginalResume_ && validatedOriginalResume_(); }
@@ -58,6 +61,7 @@ private:
   std::function<bool()> validatedOriginalResume_;
   std::shared_ptr<libtorrent::torrent_info> metadata_;
   std::vector<std::optional<OriginalDiskFile>> files_;
+  std::string volatilePayload_;
   std::optional<storage::Error> failure_;
   std::atomic_bool failedException_ = false;
   DiskLatency diskLatency_;

@@ -123,6 +123,80 @@ void SessionBridge::automaticSubscriptionNotice(QString message){
   if(!host_){return;}const auto session=host_->columnLayoutSession;
   QMetaObject::invokeMethod(this,[this,session,message=std::move(message)]{if(profileClosed_||closingSession_||session!=publishedColumnLayoutSession_){return;}QPointer<SessionBridge> alive(this);emit messageReady(message);if(alive&&!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_){emit subscriptionHistoryChanged(session);}},Qt::QueuedConnection);
 }
+void SessionBridge::pollSubscriptionUpgrade() {
+  auto& host=*host_;
+  auto& pending=host.subscriptionUpgradePrompt;
+  if (!host.rssFetchAllowed()||!host.i2p) {
+    pending.reset();
+    return;
+  }
+  if (pending&&pending->downloading) {
+    auto received=host.i2p->takeSubscriptionUpgradePayload();
+    if (!received) { return; }
+    QString message;
+    if (!*received) { message=text(received->error().message); }
+    else if (search::installI2pSubscriptionUpgrade(host.lease,pending->update,std::move(**received))) {
+      message=tr("Subscription updated to version %1.").arg(pending->update.presence.version);
+      host.nextI2pSubscriptionSeedScan={};
+    } else { message=tr("The profile changed or the subscription update needs recovery."); }
+    pending.reset();
+    automaticSubscriptionNotice(std::move(message));
+    return;
+  }
+  const auto now=std::chrono::steady_clock::now();
+  if (pending&&now<pending->expires) { return; }
+  pending.reset();
+  const auto session=host.columnLayoutSession;
+  auto offer=host.i2p->takeSubscriptionUpgrade();
+  if (!offer) { return; }
+  const auto version=offer->presence.version;
+  const auto previous=host.promptedSubscriptionVersions.find(offer->publicKey);
+  if (previous!=host.promptedSubscriptionVersions.end()&&previous->second>=version) { return; }
+  const auto rows=ensureSubscriptions().catalog(host.lease,session);
+  if (!rows) { return; }
+  const auto row=std::ranges::find_if(*rows,[&](const auto& item) {
+    return item.anonymous&&item.subscribed&&item.selected.publicKey==offer->publicKey;
+  });
+  if (row==rows->end()) { return; }
+  const auto request=++host.nextSubscriptionUpgradeRequest;
+  host.promptedSubscriptionVersions.insert_or_assign(offer->publicKey,version);
+  pending.emplace(Host::SubscriptionUpgradePrompt{std::move(*offer),request,now+std::chrono::minutes(10)});
+  QMetaObject::invokeMethod(this,[this,session,request,name=row->name.left(2048),version]{
+    if (!profileClosed_&&!closingSession_&&session==publishedColumnLayoutSession_) {
+      emit subscriptionUpgradeAvailable(session,request,name,version);
+    }
+  },Qt::QueuedConnection);
+}
+bool SessionBridge::answerSubscriptionUpgrade(quint64 session,quint64 request,bool accepted) {
+  if (profileClosed_||closingSession_||session!=publishedColumnLayoutSession_||!request) { return false; }
+  const auto submitted=worker_.submit([this,session,request,accepted](std::stop_token stop)->core::WorkResult {
+    if (stop.stop_requested()||!host_||host_->columnLayoutSession!=session||!host_->subscriptionUpgradePrompt) { return {}; }
+    auto& host=*host_;
+    auto& pending=host.subscriptionUpgradePrompt;
+    if (pending->request!=request||pending->downloading) { return {}; }
+    if (!host.i2p||!host.rssFetchAllowed()||guardedLibraryRecovery(host.lease)||
+        !storage::requireNoPendingSubscriptionAcquisition(host.lease)||
+        std::chrono::steady_clock::now()>=pending->expires) {
+      pending.reset();
+      automaticSubscriptionNotice(tr("The subscription update is no longer available."));
+      return {};
+    }
+    if (!accepted) {
+      const auto remembered=search::rememberI2pSubscriptionUpgrade(host.lease,pending->update);
+      pending.reset();
+      if (!remembered) { automaticSubscriptionNotice(tr("Could not save the subscription update decision.")); }
+      return {};
+    }
+    const auto started=host.i2p->downloadSubscriptionUpgrade(pending->update.previous,pending->update.presence.version);
+    if (started) { pending->downloading=true; }
+    else {
+      pending.reset();
+      automaticSubscriptionNotice(text(started.error().message));
+    }
+    return {};
+  });
+  return submitted.has_value();
+}
 void SessionBridge::enqueueAutomaticSubscriptions(const std::vector<search::SavedSubscriptionResultSelector>& candidates){
   if(!host_||!host_->rssFetchAllowed()){return;}bool full=false;
   for(const auto& candidate:candidates){if(candidate.subscription.shortId.size()!=10||candidate.resultKey.size()!=10){continue;}const auto key=candidate.subscription.shortId+candidate.resultKey;

@@ -170,6 +170,20 @@ struct OwnedProfile::Impl {
       barrier=false;
     }
   };
+  struct SubscriptionDownload {
+    search::I2pSubscriptionUpgrade update;
+    std::shared_ptr<SubscriptionSource> source;
+    core::TorrentHash selected;
+    std::uint64_t admission;
+    std::filesystem::path slot;
+    engine::detail::PreparedSubscriptionTorrent prepared;
+    std::chrono::steady_clock::time_point deadline;
+    lt::torrent_handle handle{};
+    std::string bytes;
+    std::vector<bool> pieces;
+    bool registered=false,reading=false;
+    std::optional<std::expected<std::string,Error>> result;
+  };
   std::map<std::string,std::unique_ptr<Magnet>> magnets;
   std::optional<dht::Actor::Options> discoveryOptions;std::shared_ptr<ContactExchange> contactExchange;
   std::shared_ptr<const engine::detail::MixedManagedOrigin> metadataOrigin=std::make_shared<engine::detail::MixedManagedOrigin>();
@@ -179,6 +193,8 @@ struct OwnedProfile::Impl {
   std::unique_ptr<i2cp::InitialChannel> channel;std::unique_ptr<Bridge> bridge;std::unique_ptr<SourcePermit> permit;
   std::map<std::string,std::unique_ptr<Member>> members;
   std::map<std::string,Subscription> subscriptions;
+  std::optional<search::I2pSubscriptionUpgrade> offeredUpgrade;
+  std::optional<SubscriptionDownload> subscriptionDownload;
   QTimer timer;Options options;core::QueuePolicy queuePolicy;Rates rates;Phase phase=Phase::Prepared;
   std::uint64_t admission=0,generation=0;bool startRequested=false,bridgeRequested=false,installQueued=false,memberInstallRequested=false;std::int64_t started=nowMillis();
   std::uint32_t queueUnavailable=0;std::string failure;
@@ -189,7 +205,8 @@ struct OwnedProfile::Impl {
   Member* find(const core::TorrentHash& h)const{const auto i=members.find(h.hex());return i==members.end()?nullptr:i->second.get();}
   std::size_t privateAdmissionCount() const {
     const auto pending=std::ranges::count_if(magnets,[](const auto& entry){return !entry.second->released.load();});
-    return members.size()+static_cast<std::size_t>(pending)+subscriptions.size();
+    return members.size()+static_cast<std::size_t>(pending)+subscriptions.size()+
+        static_cast<std::size_t>(subscriptionDownload&&!subscriptionDownload->result);
   }
   bool hasSubscriptionCapacity() const {
     const auto loaded=std::ranges::count_if(subscriptions,[](const auto& entry) {
@@ -235,6 +252,11 @@ struct OwnedProfile::Impl {
     }
     for(auto& [key,m]:members){(void)key;m->handle={};if(m->retired.requested&&!m->retired.readyForJoin&&!m->retired.failure){m->retired.failure=Error{Code::Conflict,"Shared I2P session withdrew before target retirement; recheck retained"};}}
     for (auto& [key, seed] : subscriptions) { (void)key; seed.data().source->revoke(); seed.handle = {}; }
+    offeredUpgrade.reset();
+    if (subscriptionDownload) {
+      subscriptionDownload->handle={};
+      subscriptionDownload->result=std::unexpected(Error{Code::Conflict,"The I2P subscription session closed"});
+    }
   }
   void fail(Member& m,Error e){m.failure=e.message;m.retired.failure=std::move(e);/* Preserve siblings; this member cannot checkpoint. */if(m.handle.is_valid()){m.handle.pause();}}
   lt::BiglybtcPrivateI2pTorrentV1 registration(const Member& m)const{
@@ -248,11 +270,17 @@ struct OwnedProfile::Impl {
     if(requested.has_v2()){tuple.hashes|=2;std::copy(requested.v2.begin(),requested.v2.end(),tuple.torrent_v2.begin());}return tuple;
   }
   lt::BiglybtcPrivateI2pTorrentV1 registration(const Subscription& seed) const {
+    return subscriptionTuple(seed.data().source->hash(),seed.data().admission);
+  }
+  lt::BiglybtcPrivateI2pTorrentV1 registration(const SubscriptionDownload& download) const {
+    return subscriptionTuple(download.selected,download.admission);
+  }
+  lt::BiglybtcPrivateI2pTorrentV1 subscriptionTuple(const core::TorrentHash& hash,std::uint64_t route) const {
     lt::BiglybtcPrivateI2pTorrentV1 tuple;
     tuple.generation = generation;
-    tuple.admission = seed.data().admission;
+    tuple.admission = route;
     tuple.hashes = 1;
-    std::ranges::transform(seed.data().source->hash().bytes(), tuple.torrent_v1.begin(),
+    std::ranges::transform(hash.bytes(),tuple.torrent_v1.begin(),
         [](std::byte value) { return std::to_integer<unsigned char>(value); });
     return tuple;
   }
@@ -283,6 +311,86 @@ struct OwnedProfile::Impl {
   }
   bool subscriptionCurrent(const Subscription& seed, std::uint64_t revision) const {
     return source->revisionCurrent(revision) && seed.data().source->current(revision);
+  }
+  bool subscriptionDownloadCurrent(const SubscriptionDownload& download,std::uint64_t revision) const {
+    const auto definition=download.source->upgrade(revision);
+    return definition&&source->revisionCurrent(revision)&&definition->publicKey==download.update.publicKey&&
+        definition->minimumVersion<download.update.presence.version;
+  }
+  void finishSubscriptionDownload(std::expected<std::string,Error> result) {
+    auto& download=*subscriptionDownload;
+    if (download.result) { return; }
+    if (bridge) { bridge->cancelDiscovery(download.admission); }
+    if (download.registered) {
+      const auto tuple=registration(download);
+      if (lt::biglybtc_revoke_private_i2p_torrent_v1(session.get(),&tuple)!=0) {
+        close("Cannot withdraw the I2P subscription download");
+        return;
+      }
+      download.registered=false;
+    }
+    if (download.handle.is_valid()) { session->remove_torrent(download.handle); }
+    download.handle={};
+    download.result=std::move(result);
+  }
+  void advanceSubscriptionDownload(std::optional<std::uint64_t> revision={}) {
+    if (!subscriptionDownload||subscriptionDownload->result) { return; }
+    auto& download=*subscriptionDownload;
+    if (download.source->revoked()||std::chrono::steady_clock::now()>=download.deadline||
+        (revision&&!subscriptionDownloadCurrent(download,*revision))) {
+      finishSubscriptionDownload(std::unexpected(Error{Code::Conflict,"The I2P subscription update expired or changed"}));
+      return;
+    }
+    if (!download.registered) {
+      if (!revision) { requestStartup();return; }
+      const auto tuple=registration(download);
+      if (lt::biglybtc_admit_private_i2p_torrent_v1(session.get(),&tuple)!=0) {
+        finishSubscriptionDownload(std::unexpected(Error{Code::Conflict,"The I2P update torrent is already owned"}));
+        return;
+      }
+      download.registered=true;
+      lt::error_code error;
+      download.handle=session->add_torrent(download.prepared.parameters,error);
+      const auto route=download.admission;
+      if (error||!download.handle.is_valid()||!bridge->discoverSubscriptionUpgrade(download.source,download.selected,route,
+          [this,route](const Hash& peer,std::uint64_t operation) {
+            return subscriptionDownload&&subscriptionDownload->admission==route&&!subscriptionDownload->result&&
+                subscriptionDownloadCurrent(*subscriptionDownload,source->lease()->sourceRevision())&&
+                deliverDiscovered(*subscriptionDownload,peer,operation);
+          })) {
+        finishSubscriptionDownload(std::unexpected(Error{Code::Io,"Cannot start the I2P subscription transfer"}));
+      }
+      return;
+    }
+    if (!download.handle.is_valid()) {
+      finishSubscriptionDownload(std::unexpected(Error{Code::Io,"The I2P subscription transfer disappeared"}));
+      return;
+    }
+    if (!download.reading&&download.handle.status({}).is_seeding) {
+      const auto& metadata=*download.prepared.parameters.ti;
+      download.bytes.resize(static_cast<std::size_t>(metadata.total_size()));
+      download.pieces.resize(static_cast<std::size_t>(metadata.num_pieces()));
+      download.reading=true;
+      for (int i=0;i<metadata.num_pieces();++i) { download.handle.read_piece(lt::piece_index_t{i}); }
+    }
+  }
+  void subscriptionPiece(const lt::read_piece_alert& piece) {
+    auto& download=*subscriptionDownload;
+    const auto& metadata=*download.prepared.parameters.ti;
+    const auto index=static_cast<int>(piece.piece);
+    if (!download.reading||piece.error||!piece.buffer||index<0||index>=metadata.num_pieces()||
+        piece.size!=metadata.files().piece_size(piece.piece)) {
+      finishSubscriptionDownload(std::unexpected(Error{Code::Io,"Cannot read the verified I2P subscription payload"}));
+      return;
+    }
+    std::copy_n(piece.buffer.get(),piece.size,download.bytes.data()+static_cast<std::size_t>(index)*metadata.piece_length());
+    download.pieces[static_cast<std::size_t>(index)]=true;
+    if (!std::ranges::all_of(download.pieces,[](bool value){return value;})) { return; }
+    if (!search::validateSubscriptionSeedPayload(download.bytes,download.update.presence,download.update.publicKey,true)) {
+      finishSubscriptionDownload(std::unexpected(Error{Code::InvalidFormat,"The received I2P subscription signature is invalid"}));
+      return;
+    }
+    finishSubscriptionDownload(std::move(download.bytes));
   }
   bool startDiscovery(Subscription& seed) {
     if (!bridge || !discoveryOptions) { return false; }
@@ -543,6 +651,15 @@ struct OwnedProfile::Impl {
     for(const auto* alert:batch){
       if(lt::alert_cast<lt::alerts_dropped_alert>(alert)||lt::alert_cast<lt::session_error_alert>(alert)){failure="Shared I2P provider lost an essential observation";close();return;}
       const auto* torrent=dynamic_cast<const lt::torrent_alert*>(alert);if(!torrent){continue;}
+      if (subscriptionDownload&&!subscriptionDownload->result&&subscriptionDownload->handle==torrent->handle) {
+        if (const auto* piece=lt::alert_cast<lt::read_piece_alert>(alert);piece) { subscriptionPiece(*piece); }
+        else if (lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)||
+                 lt::alert_cast<lt::torrent_removed_alert>(alert)) {
+          finishSubscriptionDownload(std::unexpected(Error{Code::Io,"I2P subscription transfer failed"}));
+        }
+        if (!session) { return; }
+        continue;
+      }
       const auto subscription = std::ranges::find_if(subscriptions, [&](const auto& entry) {
         return entry.second.registered && entry.second.handle == torrent->handle;
       });
@@ -596,6 +713,7 @@ struct OwnedProfile::Impl {
     }
     advanceMagnets();if(!session){return;}
     advanceSubscriptions();if(!session){return;}
+    advanceSubscriptionDownload();if(!session){return;}
     for(auto& [key,m]:members){(void)key;if(!m->retired.requested||m->retired.failure||m->retired.readyForJoin){continue;}
       if(std::chrono::steady_clock::now()>=m->deadline){fail(*m,{Code::Io,"Target I2P retirement deadline expired before its final fence"});continue;}
       if(m->removed&&m->removing&&!m->handle.is_valid()){
@@ -708,7 +826,10 @@ struct OwnedProfile::Impl {
         }}
       catch(...){failure="I2P member installation ownership became uncertain; recheck retained";close();return;}
     }
-    if (phase==Phase::Active) { advanceSubscriptions(*revision); }
+    if (phase==Phase::Active) {
+      advanceSubscriptions(*revision);
+      if (session) { advanceSubscriptionDownload(*revision); }
+    }
     if(bridgeRequested){if(!channel->ownedTransportIdle()){return;}bridgeRequested=false;auto actual=channel->ownedLeaseDestination();if(!actual||actual->wire!=source->destination().wire){close();return;}
       bridge=std::make_unique<Bridge>(source,*channel,q);QObject::connect(bridge.get(),&Bridge::changed,q,[this]{if(!bridge||(phase!=Phase::Starting&&phase!=Phase::Active)){return;}const auto v=bridge->observation();if(v.phase==Bridge::Phase::Withdrawn){close(bridge->failureReason());}else if(v.phase==Bridge::Phase::Ready&&phase==Phase::Starting){requestInstall();}});
       if(!bridge->begin(options.ports,admission)){close();}}
@@ -909,8 +1030,59 @@ bool OwnedProfile::subscriptionSeedLoaded(const core::TorrentHash& hash) const {
 }
 std::optional<search::I2pSubscriptionUpgrade> OwnedProfile::takeSubscriptionUpgrade() {
   auto& state=*impl_;
-  if (!state.onThread()||state.phase==Phase::Withdrawn||!state.bridge) { return {}; }
-  return state.bridge->takeSubscriptionUpgrade();
+  if (!state.onThread()||state.phase!=Phase::Active||!state.bridge||state.subscriptionDownload) { return {}; }
+  auto offer=state.bridge->takeSubscriptionUpgrade();
+  if (offer) { state.offeredUpgrade=*offer; }
+  return offer;
+}
+std::expected<void,Error> OwnedProfile::downloadSubscriptionUpgrade(const std::array<char,20>& previous,
+    std::uint32_t version) try {
+  auto& state=*impl_;
+  if (!state.onThread()||state.phase!=Phase::Active||state.sourcePaused||!state.offeredUpgrade||
+      state.subscriptionDownload||state.offeredUpgrade->previous!=previous||state.offeredUpgrade->presence.version!=version) {
+    return std::unexpected(Error{Code::Conflict,"The I2P subscription offer is no longer available"});
+  }
+  auto update=std::move(*state.offeredUpgrade);
+  state.offeredUpgrade.reset();
+  const auto oldHash=core::TorrentHash::parse({previous.data(),previous.size()});
+  const auto newHash=core::TorrentHash::parse({update.presence.publicationHash.data(),update.presence.publicationHash.size()});
+  if (!oldHash||!newHash||*oldHash==*newHash) { return std::unexpected(Error{Code::InvalidFormat,"Invalid I2P subscription hash"}); }
+  const auto old=state.subscriptions.find(oldHash->hex());
+  if (old==state.subscriptions.end()||old->second.data().source->revoked()) {
+    return std::unexpected(Error{Code::Conflict,"The previous I2P subscription changed"});
+  }
+  const auto newKey=newHash->hex();
+  if (state.subscriptions.contains(newKey)||state.members.contains(newKey)||state.magnets.contains(newKey)||
+      state.privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
+    return std::unexpected(Error{Code::Busy,"I2P subscription transfer capacity is in use"});
+  }
+  auto metainfo=search::validateSubscriptionSeedMetainfo(update.metainfo,update.presence);
+  if (!metainfo) { return std::unexpected(Error{Code::InvalidFormat,"Invalid I2P subscription metainfo"}); }
+  std::uint64_t admission;
+  if (!entropy(admission)) { return std::unexpected(Error{Code::Io,"I2P subscription transfer entropy unavailable"}); }
+  auto slot=old->second.data().source->initial_.directory/(".BiglyBTC-i2p-update-"+std::to_string(admission));
+  const lt::sha1_hash hash(lt::span<const char>{update.presence.publicationHash});
+  auto prepared=engine::detail::prepareSubscriptionUpgradeTorrent(hash,*metainfo,slot,*state.disks);
+  if (!prepared) { return std::unexpected(Error{Code::Io,"Cannot reserve the I2P subscription transfer"}); }
+  state.subscriptionDownload.emplace(Impl::SubscriptionDownload{std::move(update),old->second.data().source,*newHash,
+      admission,std::move(slot),std::move(*prepared),std::chrono::steady_clock::now()+std::chrono::minutes(3),{},{},{},false,false,{}});
+  state.requestStartup();
+  return {};
+} catch (...) {
+  return std::unexpected(Error{Code::Io,"Cannot prepare the I2P subscription transfer"});
+}
+std::optional<std::expected<std::string,Error>> OwnedProfile::takeSubscriptionUpgradePayload() {
+  auto& state=*impl_;
+  if (!state.onThread()||!state.subscriptionDownload||!state.subscriptionDownload->result) { return {}; }
+  auto& download=*state.subscriptionDownload;
+  if (*download.result&&!state.subscriptionDownloadCurrent(download,state.source->lease()->sourceRevision())) {
+    if (!download.source->revoked()&&std::chrono::steady_clock::now()<download.deadline) { return {}; }
+    download.result=std::unexpected(Error{Code::Conflict,"The I2P subscription changed before installation"});
+  }
+  auto result=std::move(download.result);
+  state.disks->releaseOriginalPath(download.slot,download.prepared.files);
+  state.subscriptionDownload.reset();
+  return result;
 }
 std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnetWithTagRates(
     const engine::PendingMagnet& intent,engine::ProfileTagRates& rates){

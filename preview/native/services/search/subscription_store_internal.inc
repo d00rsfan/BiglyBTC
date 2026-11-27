@@ -31,14 +31,17 @@ std::expected<void, E> writePrivate(StateHandle dir, const std::string& leaf, st
 }
 
 std::expected<void, E> writeAt(StateHandle dir, const std::string& leaf,
-    const std::optional<std::string>& desired) {
+    const std::optional<std::string>& desired,
+    const std::function<bool(const File&,const File&,const File&)>& matches = {}) {
   constexpr auto limit = 4 * 1024 * 1024;
   const auto backupName = leaf + ".bak";
   const auto savingName = leaf + ".saving";
   auto primary = named(dir, leaf, limit);
   auto backup = named(dir, backupName, limit);
   auto saving = named(dir, savingName, limit);
-  if (!primary || !backup || !saving) { return std::unexpected(E::SourceChanged); }
+  if (!primary || !backup || !saving || (matches&&!matches(*primary,*backup,*saving))) {
+    return std::unexpected(E::SourceChanged);
+  }
   if (!desired || (primary->present && primary->bytes == *desired)) {
     auto removed = unlinkOwned(dir, *saving);
     if (!removed) { return removed; }

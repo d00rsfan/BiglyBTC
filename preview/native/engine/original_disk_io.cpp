@@ -204,7 +204,8 @@ public:
     const bool hasResume=resume&&resume->have_pieces.size()==slot.files->metadata().num_pieces();
     enqueue(slot, [this, slot, hasResume, links = std::move(links), handler = std::move(handler)] {
       const bool unsupported = std::ranges::any_of(links, [](const auto& value) { return !value.empty(); });
-      const bool accepted=hasResume&&!unsupported&&slot.files->acceptsOriginalResume();
+      const bool accepted=!unsupported&&(slot.files->isVolatile()?!hasResume:
+          hasResume&&slot.files->acceptsOriginalResume());
       boost::asio::post(context_, [slot, handler = std::move(handler), unsupported, accepted] {
         handler(unsupported ? lt::status_t::fatal_disk_error : accepted ? lt::status_t::no_error : lt::status_t::need_full_check,
             unsupported ? diskError(lt::operation_t::check_resume, ENOTSUP) : lt::storage_error{});
@@ -351,6 +352,15 @@ OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
     }
   }
 }
+OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata)
+    : access_(OriginalDiskAccess::ReadWrite),metadata_(std::move(metadata)) {
+  constexpr auto maximum=4*1024*1024;
+  if (!metadata_||metadata_->num_files()!=1||metadata_->total_size()<=0||metadata_->total_size()>maximum||
+      metadata_->files().pad_file_at(lt::file_index_t{0})) {
+    throw std::invalid_argument("Invalid volatile subscription storage geometry");
+  }
+  volatilePayload_.resize(static_cast<std::size_t>(metadata_->total_size()));
+}
 void OriginalDiskFiles::recordRecheckHash(int piece,std::uint8_t outcome,std::int64_t readableBytes) noexcept {
   if(access_!=OriginalDiskAccess::RecheckReadOnly||piece<0||outcome<1||outcome>3){return;}
   std::lock_guard lock(recheckMutex_);if(static_cast<std::size_t>(piece)<recheckOutcomes_.size()){recheckOutcomes_[static_cast<std::size_t>(piece)]=outcome;recheckBytes_[static_cast<std::size_t>(piece)]=std::max(recheckBytes_[static_cast<std::size_t>(piece)],readableBytes);}
@@ -374,6 +384,10 @@ bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
 std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset, std::span<char> output,lt::file_index_t* failedFile) {
   if(failedFile){*failedFile=lt::file_index_t{-1};}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || output.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
+  if (isVolatile()) {
+    std::copy_n(volatilePayload_.data()+offset,output.size(),output.data());
+    return {};
+  }
   const auto& files = metadata_->files(); std::size_t done = 0;
   while (done < output.size()) {
     const auto index = files.file_index_at_offset(static_cast<std::int64_t>(offset));
@@ -399,6 +413,10 @@ std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offse
   if (const auto error=failure()) { return std::unexpected(*error); }
   if(access_!=OriginalDiskAccess::ReadWrite){failure_=storage::Error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};return std::unexpected(*failure_);}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || input.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
+  if (isVolatile()) {
+    std::copy(input.begin(),input.end(),volatilePayload_.data()+offset);
+    return {};
+  }
   const auto& files = metadata_->files(); std::size_t done = 0;
   while (done < input.size()) {
     const auto index = files.file_index_at_offset(static_cast<std::int64_t>(offset));

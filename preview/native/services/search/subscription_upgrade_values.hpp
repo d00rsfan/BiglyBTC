@@ -12,7 +12,7 @@ struct SubscriptionUpgradeValues {
 };
 
 std::expected<SubscriptionUpgradeValues,SubscriptionSeedError> planI2pSubscriptionUpgrade(
-    std::string configuration,std::string oldDefinition,std::string newDefinition,
+    std::string configuration,std::string oldDefinition,std::optional<std::string> newDefinition,
     const I2pSubscriptionUpgrade& selected);
 
 } // namespace biglybtc::search

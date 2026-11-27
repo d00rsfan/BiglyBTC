@@ -134,7 +134,7 @@ struct Bridge::Impl {
   Clock::time_point publisherRetry{};
   std::shared_ptr<const engine::SubscriptionSeedPresence> subscriptionPresence(const Discovery& job) const {
     const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
-    return child?(*child)->presence(activeRevision):nullptr;
+    return child&&job.seeding?(*child)->presence(activeRevision):nullptr;
   }
   std::optional<dht::AzureusValue> readSubscriptionPresence(const dht::Id& key) const {
     if (!executing||!current()||source->mixedMode()) { return {}; }
@@ -164,7 +164,7 @@ struct Bridge::Impl {
     std::shared_ptr<const engine::SubscriptionSeedMetainfo> match;
     for (const auto& job:discoveries) {
       const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
-      if (!child) { continue; }
+      if (!child||!job.seeding) { continue; }
       const auto row=(*child)->metainfo(activeRevision);
       if (!row||std::string_view(row->lookupKey.data(),row->lookupKey.size())!=target) { continue; }
       if (match) { return {}; }
@@ -203,15 +203,14 @@ struct Bridge::Impl {
         ||child->destination().wire!=source->destination().wire||child->mixedMode()!=source->mixedMode()){return false;}
     return addDiscovery(std::move(child), selected, wire, route, seeding, std::move(deliver));
   }
-  bool discoverSubscription(std::shared_ptr<SubscriptionSource> child, std::uint64_t route,
-      std::function<bool(const Hash&,std::uint64_t)> deliver) {
+  bool discoverSubscription(std::shared_ptr<SubscriptionSource> child,const core::TorrentHash& selected,
+      std::uint64_t route,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver) {
     if (!onThread() || !discovery || !current() || !route || !deliver || !child || child->revoked()
         || source->mixedMode() || !source->lease() || !child->lease_->sharesOwnership(*source->lease())) { return false; }
-    const auto selected = child->hash();
     if (selected.bytes().size() != dht::Id{}.size()) { return false; }
     dht::Id wire{};
     std::ranges::transform(selected.bytes(), wire.begin(), [](std::byte value) { return std::to_integer<Byte>(value); });
-    return addDiscovery(std::move(child), selected, wire, route, true, std::move(deliver));
+    return addDiscovery(std::move(child),selected,wire,route,seeding,std::move(deliver));
   }
   bool addDiscovery(DiscoverySource child, const core::TorrentHash& selected, const dht::Id& wire,
       std::uint64_t route, bool seeding, std::function<bool(const Hash&,std::uint64_t)> deliver) {
@@ -337,7 +336,7 @@ struct Bridge::Impl {
         upgradeSource->subscription->upgrade(activeRevision)==upgradeSource->definition;
   }
   std::shared_ptr<const engine::SubscriptionSeedUpgradeProbe> subscriptionUpgrade(const Discovery& job)const {
-    if (source->mixedMode()||!job.firstSubscriptionTurn) { return {}; }
+    if (source->mixedMode()||!job.seeding||!job.firstSubscriptionTurn) { return {}; }
     const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
     return child?(*child)->upgrade(activeRevision):nullptr;
   }
@@ -397,7 +396,7 @@ struct Bridge::Impl {
       else{
         const auto value=discovery->observation();
         if(value.operation!=discoveryOperation||value.target!=job->wire){cancelDiscovery(job->admission);return;}
-        const bool subscription=std::holds_alternative<std::shared_ptr<SubscriptionSource>>(job->source);
+        const bool subscription=job->seeding&&std::holds_alternative<std::shared_ptr<SubscriptionSource>>(job->source);
         const auto settled=[&](const dht::Peer& peer) {
           return peer.hash==source->destination().hash || (subscription && peer.seed)
               || std::ranges::find(job->delivered,peer.hash)!=job->delivered.end();
@@ -972,7 +971,11 @@ bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::To
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return source&&impl_->discover(source->source_,hash,wire,admission,seeding,std::move(deliver));}
 bool Bridge::discoverSubscription(std::shared_ptr<SubscriptionSource> source, std::uint64_t admission,
     std::function<bool(const Hash&,std::uint64_t)> deliver) {
-  return impl_->discoverSubscription(std::move(source), admission, std::move(deliver));
+  return source&&impl_->discoverSubscription(source,source->hash(),admission,true,std::move(deliver));
+}
+bool Bridge::discoverSubscriptionUpgrade(std::shared_ptr<SubscriptionSource> source,const core::TorrentHash& selected,
+    std::uint64_t admission,std::function<bool(const Hash&,std::uint64_t)> deliver) {
+  return impl_->discoverSubscription(std::move(source),selected,admission,false,std::move(deliver));
 }
 bool Bridge::subscriptionDiscoveryWindowElapsed(std::uint64_t admission,
     std::chrono::steady_clock::time_point now) const {

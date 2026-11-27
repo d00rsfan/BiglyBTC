@@ -54,15 +54,15 @@ namespace discovery=i2p::dht;
 class SubscriptionLeecher {
 public:
   SubscriptionLeecher(Router& router, const i2p::ClientIdentity& remote, i2p::Destination local,
-      const discovery::Contact& contact, std::string_view key, std::string_view payload, bool requireSeed=true)
+      const discovery::Contact& contact, std::string_view key, std::string_view payload,bool requireSeed=true,bool serve=false)
       : router_(router), remote_(remote), local_(std::move(local)), contact_(contact),
-        key_(key), payload_(payload), requireSeed_(requireSeed) { clock_.start(); }
+        key_(key), payload_(payload), requireSeed_(requireSeed),serving_(serve) { clock_.start(); }
 
   bool pump() {
     if (!failure.isEmpty()) { return true; }
     try {
       while (router_.next()) { receive(router_.take()); }
-      if (!connection_ && resolvedAt_ && elapsed()-*resolvedAt_>=500) {
+      if (!serving_&&!connection_ && resolvedAt_ && elapsed()-*resolvedAt_>=500) {
         connection_.emplace(1,1717,*remote_.destination(),local_,stream::MaximumWindow,elapsed());
       }
       if (!connection_) { return false; }
@@ -86,7 +86,7 @@ public:
         deliver(*mux);
         connection_->dispatched(*packet,elapsed());
       }
-      return announcing_ && blocks_==expectedBlocks();
+      return announcing_ && (serving_?served_==payload_.size():blocks_==expectedBlocks());
     } catch (const std::exception& error) {
       failure=QString::fromUtf8(error.what());
       return true;
@@ -154,7 +154,8 @@ private:
     const auto mux=cp::decodeDhtMuxDatagram(payload);
     require(mux && mux->protocol==18,"Unexpected owned DHT dispatch while serving the seed");
     const auto message=discovery::decode(mux->datagram);
-    require(message && message->method==discovery::Method::AnnouncePeer && (!requireSeed_ || message->seed)
+    require(message && message->method==discovery::Method::AnnouncePeer && (!requireSeed_ || message->seed)&&
+        (!serving_||!message->seed)
         && std::string_view(reinterpret_cast<const char*>(message->target.data()),message->target.size())==key_,
         "Wrong signed seed key in actual I2P announce");
     discovery::Message ack;
@@ -175,7 +176,12 @@ private:
           && data_.mid(28,20)==QByteArray::fromStdString(key_),"Peer-wire handshake must use the signed subscription hash");
       handshake_=true;
       data_.remove(0,68);
-      write(QByteArray("\0\0\0\1\2",5));
+      if (serving_) {
+        QByteArray available("\0\0\0\2\5",5);
+        available.append(static_cast<char>(expectedBlocks()==2?0xc0:0x80));
+        available.append("\0\0\0\1\1",5);
+        write(available);
+      } else { write(QByteArray("\0\0\0\1\2",5)); }
     }
     while (data_.size()>=4) {
       const auto size=readInt(data_.constData());
@@ -183,6 +189,25 @@ private:
       if (data_.size()<4+static_cast<qsizetype>(size)) { break; }
       const auto packet=data_.mid(4,size);
       data_.remove(0,4+static_cast<qsizetype>(size));
+      if (serving_) {
+        if (packet.size()==13&&packet.front()=='\6') {
+          const auto index=readInt(packet.constData()+1);
+          const auto begin=readInt(packet.constData()+5);
+          const auto count=readInt(packet.constData()+9);
+          const auto offset=static_cast<std::size_t>(index)*PieceBytes+begin;
+          require(index<expectedBlocks()&&begin<PieceBytes&&count&&count<=16384&&offset<=payload_.size()&&
+              count<=payload_.size()-offset,"Unexpected I2P subscription block requested");
+          QByteArray block;
+          appendInt(block,9+count);
+          block.append('\7');
+          appendInt(block,index);
+          appendInt(block,begin);
+          block.append(payload_.data()+offset,count);
+          write(block);
+          served_+=count;
+        }
+        continue;
+      }
       if (packet==QByteArray(1,'\0')) { continue; }
       if (packet==QByteArray(1,'\1') && !requested_) {
         QByteArray request;
@@ -215,6 +240,7 @@ private:
   discovery::Contact contact_;
   std::string key_,payload_;
   bool requireSeed_;
+  bool serving_;
   QElapsedTimer clock_;
   std::optional<stream::Connection> connection_;
   std::optional<std::uint64_t> resolvedAt_;
@@ -222,6 +248,7 @@ private:
   std::array<bool,2> seen_{};
   std::uint32_t messageId_=30;
   unsigned blocks_=0;
+  std::size_t served_=0;
   bool offered_=false,handshake_=false,requested_=false,announcing_=false;
 };
 #endif
@@ -535,11 +562,17 @@ private slots:
 
   void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation_data() {
     QTest::addColumn<bool>("verified");
-    QTest::newRow("verified-definition")<<true;
-    QTest::newRow("replayed-older-definition")<<false;
+    QTest::addColumn<bool>("transfer");
+    QTest::addColumn<bool>("corrupted");
+    QTest::newRow("verified-definition")<<true<<false<<false;
+    QTest::newRow("verified-payload")<<true<<true<<false;
+    QTest::newRow("torrent-verified-invalid-signature")<<true<<true<<true;
+    QTest::newRow("replayed-older-definition")<<false<<false<<false;
   }
   void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation() {
     QFETCH(bool,verified);
+    QFETCH(bool,transfer);
+    QFETCH(bool,corrupted);
     namespace original=owned_i2p_test;
     namespace provider=i2p::provider;
     namespace search=biglybtc::search;
@@ -552,8 +585,20 @@ private slots:
     const auto& row=*before.find("row");
     const auto payload=std::string(before.find("definition")->bytes);
     const auto originalSeed=search::makeSubscriptionSeed(row,payload,1000);
-    const auto newerSeed=search::makeSubscriptionSeed(*after.find("row"),std::string(after.find("definition")->bytes),1000);
+    auto newPayload=std::string(after.find("definition")->bytes);
+    auto newerSeed=search::makeSubscriptionSeed(*after.find("row"),newPayload,1000);
     QVERIFY(originalSeed&&originalSeed->presence&&newerSeed&&newerSeed->presence);
+    if (corrupted) {
+      newPayload.back()='x';
+      auto metainfo=original::core::Document::parse(newerSeed->metainfo);
+      QVERIFY(metainfo&&metainfo->find("info"));
+      const auto infoBytes=original::core::encodeValue(*metainfo->find("info"));
+      QVERIFY(infoBytes);
+      auto info=original::core::Document::parse(*infoBytes);
+      const auto replacement=QCryptographicHash::hash(QByteArray::fromStdString(newPayload),QCryptographicHash::Sha1);
+      QVERIFY(info&&info->replaceValue("pieces","20:"+replacement.toStdString())&&metainfo->replaceValue("info",info->serialize()));
+      newerSeed->metainfo=metainfo->serialize();
+    }
     const auto hash=original::core::TorrentHash::parse({originalSeed->publicationHash.data(),originalSeed->publicationHash.size()});
     QVERIFY(hash);
     auto associated=original::core::Document::parse(*original::core::encodeValue(row));
@@ -646,6 +691,8 @@ private slots:
     const auto version=search::encodeSubscriptionPresence(verified?*newerSeed->presence:presence,-315);
     QVERIFY(version);
     replyValue(*versionLookup,*version,513);
+    std::optional<search::I2pSubscriptionUpgrade> acquired;
+    std::optional<std::expected<std::string,biglybtc::storage::Error>> downloaded;
     if (verified) {
       QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
       const auto packet=cp::decodeDhtSendDatagram(router.take());
@@ -674,12 +721,42 @@ private slots:
       const auto datagram=cp::encodeDhtMuxDatagram({17,10002,10000,*signedData},cp::GzipMode::Deflate);
       QVERIFY(datagram);
       inbound(router,514,*datagram,true);
-      std::optional<search::I2pSubscriptionUpgrade> acquired;
       const auto ready=[&]{if (!acquired) { acquired=(*owner)->takeSubscriptionUpgrade(); }return acquired.has_value();};
       QTRY_VERIFY_WITH_TIMEOUT(ready(),8000);
       QCOMPARE(acquired->previous,originalSeed->publicationHash);
       QCOMPARE(acquired->presence.publicationHash,newerSeed->publicationHash);
       QCOMPARE(acquired->metainfo,newerSeed->metainfo);
+      if (transfer) {
+        QVERIFY(!(*owner)->downloadSubscriptionUpgrade(acquired->previous,acquired->presence.version+1));
+        const auto started=(*owner)->downloadSubscriptionUpgrade(acquired->previous,acquired->presence.version);
+        QVERIFY2(started,started?"":started.error().message.c_str());
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+        const auto get=signedSeedQuery(router.take(),*contact,false);
+        QVERIFY(get&&!get->noSeed&&std::ranges::equal(get->target,newerSeed->publicationHash,
+            [](auto x,char y){return x==static_cast<unsigned char>(y);}));
+        response.transaction=get->transaction;
+        replyToSeed(router,515,response);
+        const auto local=router.registeredDestination;
+        QVERIFY(local);
+        SubscriptionLeecher seeder(router,remote,*local,*contact,
+            {newerSeed->publicationHash.data(),newerSeed->publicationHash.size()},newPayload,false,true);
+        QTRY_VERIFY_WITH_TIMEOUT(seeder.pump(),20000);
+        QVERIFY2(seeder.failure.isEmpty(),qPrintable(seeder.failure));
+        const auto complete=[&]{
+          seeder.pump();
+          if (!downloaded) { downloaded=(*owner)->takeSubscriptionUpgradePayload(); }
+          return downloaded.has_value();
+        };
+        QTRY_VERIFY_WITH_TIMEOUT(complete(),10000);
+        if (corrupted) {
+          QVERIFY(!*downloaded);
+          QCOMPARE(downloaded->error().code,biglybtc::storage::ErrorCode::InvalidFormat);
+        } else {
+          QVERIFY2(*downloaded,*downloaded?"":downloaded->error().message.c_str());
+          QCOMPARE(**downloaded,newPayload);
+        }
+        QVERIFY(!(*owner)->takeSubscriptionUpgradePayload());
+      }
     } else {
       QTest::qWait(500);
       QVERIFY(!router.next()&&!(*owner)->takeSubscriptionUpgrade());
@@ -687,6 +764,15 @@ private slots:
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     QCOMPARE(original::read(profile.path/"subscriptions.config"),saved);
     QCOMPARE(original::read(profile.path/"downloads.config"),std::string("d9:downloadslee"));
+    if (transfer&&!corrupted) {
+      QVERIFY(search::installI2pSubscriptionUpgrade(*profile.lease,*acquired,std::move(**downloaded)).has_value());
+      const auto confirmed=search::readSavedSubscriptionSeed(*profile.lease,
+          {newerSeed->publicationHash.data(),newerSeed->publicationHash.size()},search::SubscriptionSeedKey::Publication,
+          search::SubscriptionSeedNetwork::I2P,1000);
+      QVERIFY(confirmed&&*confirmed);
+      QCOMPARE((**confirmed).payload,newPayload);
+      QCOMPARE(original::read(profile.path/"downloads.config"),std::string("d9:downloadslee"));
+    }
     (*owner)->close();
     (*owner)->join();
   }

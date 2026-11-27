@@ -26,6 +26,10 @@ std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(
     const std::filesystem::path& storageSlot,MetadataDiskPolicy&,
     std::function<bool()> sourceCurrent = {});
 
+std::optional<PreparedSubscriptionTorrent> prepareSubscriptionUpgradeTorrent(
+    const libtorrent::sha1_hash&,std::string_view validatedMetainfo,
+    const std::filesystem::path& storageSlot,MetadataDiskPolicy&);
+
 class SubscriptionSeedOwner {
 public:
   static bool supported() noexcept;

@@ -310,7 +310,7 @@ core::TorrentHash identity(const ui::Target& target) {
 
 bool guardedLibraryRecovery(const storage::ProfileLease& lease) {
   return storage::hasPendingCategoryDeletion(lease) || storage::hasPendingFileOperation(lease)
-      || storage::hasPendingArchiveRestore(lease);
+      || storage::hasPendingArchiveRestore(lease) || search::hasPendingI2pSubscriptionUpgrade(lease);
 }
 }
 
@@ -2267,6 +2267,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         const auto subscriptionReady=storage::requireNoPendingSubscriptionAcquisition(host_->lease);
         const bool fileRecovery=guardedLibraryRecovery(host_->lease);
         host_->pollSubscriptionSeeds(subscriptionReady.has_value()&&!fileRecovery&&!host_->recoveryDrainStarted);
+        if (subscriptionReady&&!fileRecovery&&!host_->recoveryDrainStarted) { pollSubscriptionUpgrade(); }
         take(subscriptionReady);pollRssFetch();pollMetasearch();pollMetasearchDownload();if(!host_->metasearchProviderActive()){pollAutomaticSubscriptionQueue();if(!host_->subscriptionAcquisition){pollSubscriptions();}}
         if(host_->recoveryDrainStarted){throw Failure{{storage::ErrorCode::Busy,"Explicit close without checkpoint is incomplete; retained owners may remain live"}};}
         if(fileRecovery){

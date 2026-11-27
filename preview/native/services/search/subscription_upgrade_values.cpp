@@ -34,10 +34,17 @@ const core::Node* signedDetails(const core::Document& document) {
 }
 
 std::expected<SubscriptionUpgradeValues,SubscriptionSeedError> planI2pSubscriptionUpgrade(
-    std::string configuration,std::string oldDefinition,std::string newDefinition,
+    std::string configuration,std::string oldDefinition,std::optional<std::string> newDefinition,
     const I2pSubscriptionUpgrade& update) try {
-  const auto candidate=validateSubscriptionSeedPayload(newDefinition,update.presence,update.publicKey,true);
-  if (!candidate) { return std::unexpected(candidate.error()); }
+  if (newDefinition) {
+    const auto candidate=validateSubscriptionSeedPayload(*newDefinition,update.presence,update.publicKey,true);
+    if (!candidate) { return std::unexpected(candidate.error()); }
+  } else {
+    const auto wire=encodeSubscriptionPresence(update.presence,0);
+    if (!wire||!verifySubscriptionPresence(*wire,update.publicKey,update.presence.version)) {
+      return std::unexpected(Error::Signature);
+    }
+  }
   auto catalogue=core::Document::parse(std::move(configuration),SourceLimits);
   if (!catalogue||!core::encodeValue(catalogue->root())) { return std::unexpected(Error::Malformed); }
   const auto* entries=catalogue->find("subs");
@@ -53,7 +60,7 @@ std::expected<SubscriptionUpgradeValues,SubscriptionSeedError> planI2pSubscripti
     selected=&row;
   }
   if (!selected||selected->find("private_key")) { return std::unexpected(Error::Ineligible); }
-  const auto old=makeSubscriptionSeed(*selected,std::move(oldDefinition),0);
+  const auto old=makeSubscriptionSeed(*selected,oldDefinition,0);
   if (!old||!old->anonymous||!old->presence||old->presence->version>=update.presence.version) {
     return std::unexpected(Error::Ineligible);
   }
@@ -62,29 +69,36 @@ std::expected<SubscriptionUpgradeValues,SubscriptionSeedError> planI2pSubscripti
     return std::unexpected(Error::Ineligible);
   }
 
-  auto definition=core::Document::parse(std::move(newDefinition),SourceLimits);
-  const auto* details=definition?signedDetails(*definition):nullptr;
   auto raw=core::encodeValue(*selected);
-  if (!details||!raw) { return std::unexpected(Error::Malformed); }
+  if (!raw) { return std::unexpected(Error::Malformed); }
   auto row=core::Document::parse(std::move(*raw),SourceLimits);
   if (!row) { return std::unexpected(Error::Malformed); }
-  for (const auto* key:{"name","version","is_public","is_anonymous"}) {
-    const auto* value=details->find(key);
-    if (!value) { return std::unexpected(Error::Malformed); }
-    const auto encoded=core::encodeValue(*value);
-    if (!encoded||!row->replaceValue(key,*encoded)) { return std::unexpected(Error::Malformed); }
-  }
   const auto encodedBytes=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
   const auto encodedInteger=[](std::int64_t value){return "i"+std::to_string(value)+"e";};
-  if (!row->replaceValue("az_version",encodedInteger(integer(*details,"az_version").value_or(1)))||
-      !row->replaceValue("hash",encodedBytes({update.presence.publicationHash.data(),update.presence.publicationHash.size()}))||
-      !row->replaceValue("sig",encodedBytes(update.presence.signature))||
-      !row->replaceValue("sig_data_size",encodedInteger(update.presence.signedSize))||
-      !row->replaceValue("hupv",encodedInteger(update.presence.version))) {
-    return std::unexpected(Error::Malformed);
+  auto definitionName=old->fileName.substr(0,old->fileName.rfind('.'));
+  if (newDefinition) {
+    auto definition=core::Document::parse(*newDefinition,SourceLimits);
+    const auto* details=definition?signedDetails(*definition):nullptr;
+    if (!details) { return std::unexpected(Error::Malformed); }
+    for (const auto* key:{"name","version","is_public","is_anonymous"}) {
+      const auto* value=details->find(key);
+      if (!value) { return std::unexpected(Error::Malformed); }
+      const auto encoded=core::encodeValue(*value);
+      if (!encoded||!row->replaceValue(key,*encoded)) { return std::unexpected(Error::Malformed); }
+    }
+    if (!row->replaceValue("az_version",encodedInteger(integer(*details,"az_version").value_or(1)))||
+        !row->replaceValue("hash",encodedBytes({update.presence.publicationHash.data(),update.presence.publicationHash.size()}))||
+        !row->replaceValue("sig",encodedBytes(update.presence.signature))||
+        !row->replaceValue("sig_data_size",encodedInteger(update.presence.signedSize))) {
+      return std::unexpected(Error::Malformed);
+    }
+    const auto updated=makeSubscriptionSeed(row->root(),*newDefinition,0);
+    if (!updated||!updated->presence||!updated->anonymous||
+        updated->fileName.substr(0,updated->fileName.rfind('.'))!=definitionName) {
+      return std::unexpected(Error::Malformed);
+    }
   }
-  const auto updated=makeSubscriptionSeed(row->root(),definition->originalBytes(),0);
-  if (!updated||!updated->presence||!updated->anonymous) { return std::unexpected(Error::Malformed); }
+  if (!row->replaceValue("hupv",encodedInteger(update.presence.version))) { return std::unexpected(Error::Malformed); }
   auto replacement=std::string("l");
   for (const auto& entry:entries->children) {
     const auto encoded=core::encodeValue(entry);
@@ -96,8 +110,7 @@ std::expected<SubscriptionUpgradeValues,SubscriptionSeedError> planI2pSubscripti
   if (!catalogue->replaceValue("subs",replacement)) { return std::unexpected(Error::Malformed); }
   auto changed=catalogue->serialize();
   if (changed.size()>MaximumSourceBytes) { return std::unexpected(Error::Limit); }
-  const auto definitionName=updated->fileName.substr(0,updated->fileName.rfind('.'));
-  return SubscriptionUpgradeValues{std::move(changed),definition->originalBytes(),definitionName};
+  return SubscriptionUpgradeValues{std::move(changed),newDefinition?std::move(*newDefinition):std::move(oldDefinition),std::move(definitionName)};
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error::Limit);
 }

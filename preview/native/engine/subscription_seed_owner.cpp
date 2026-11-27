@@ -36,6 +36,26 @@ bool bindSubscriptionHash(Metadata& info, const lt::sha1_hash& hash) {
 }
 
 std::string_view bytes(const lt::sha1_hash& hash) { return {hash.data(), 20}; }
+
+std::shared_ptr<lt::torrent_info> subscriptionMetadata(const lt::sha1_hash& hash,std::string_view metainfo) {
+  const auto data=lt::span<const char>{metainfo.data(),static_cast<std::ptrdiff_t>(metainfo.size())};
+  lt::error_code error;
+  auto metadata=std::make_shared<lt::torrent_info>(data,error,lt::from_span);
+  if (error||!bindSubscriptionHash(*metadata,hash)) { return {}; }
+  return metadata;
+}
+
+lt::add_torrent_params subscriptionParameters(std::shared_ptr<lt::torrent_info> metadata,
+    const std::filesystem::path& slot) {
+  lt::add_torrent_params request;
+  request.ti=std::move(metadata);
+  request.save_path=platform::pathToUtf8(slot);
+  request.flags&=~(lt::torrent_flags::paused|lt::torrent_flags::auto_managed);
+  request.flags|=lt::torrent_flags::duplicate_is_error|lt::torrent_flags::override_trackers
+      |lt::torrent_flags::override_web_seeds|lt::torrent_flags::disable_dht
+      |lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;
+  return request;
+}
 } // namespace
 
 std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::sha1_hash& hash,
@@ -45,11 +65,8 @@ std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::
   const auto parent = source.directoryHandle->get();
   const auto resolved = state::stateDirectoryPath(parent);
   if (!resolved || *resolved != source.directory) { return {}; }
-  lt::error_code error;
-  const auto data = lt::span<const char>{source.metainfo.data(),
-      static_cast<std::ptrdiff_t>(source.metainfo.size())};
-  auto metadata = std::make_shared<lt::torrent_info>(data, error, lt::from_span);
-  if (error || !bindSubscriptionHash(*metadata, hash)) { return {}; }
+  auto metadata=subscriptionMetadata(hash,source.metainfo);
+  if (!metadata) { return {}; }
 
   const auto index = lt::file_index_t{0};
   const auto fileName = metadata->files().file_name(index);
@@ -82,18 +99,24 @@ std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::
   payload.front().emplace(OriginalDiskFile{std::move(*descriptor), std::move(*io), verifyFile});
   auto files = std::make_shared<OriginalDiskFiles>(metadata, std::move(payload), OriginalDiskAccess::ReadOnly);
 
-  lt::add_torrent_params request;
-  request.ti = std::move(metadata);
-  request.save_path = platform::pathToUtf8(slot);
-  request.flags &= ~(lt::torrent_flags::paused | lt::torrent_flags::auto_managed);
+  auto request=subscriptionParameters(std::move(metadata),slot);
   // Let the SDK verify all pieces. Its stop-when-ready gate prevents uploads
   // between completion of the check and the owning worker's authorization.
-  request.flags |= lt::torrent_flags::upload_mode | lt::torrent_flags::stop_when_ready
-      | lt::torrent_flags::duplicate_is_error | lt::torrent_flags::override_trackers
-      | lt::torrent_flags::override_web_seeds | lt::torrent_flags::disable_dht
-      | lt::torrent_flags::disable_lsd | lt::torrent_flags::disable_pex;
+  request.flags|=lt::torrent_flags::upload_mode|lt::torrent_flags::stop_when_ready;
   if (!disks.registerOriginalPath(slot, files)) { return {}; }
   return PreparedSubscriptionTorrent{std::move(request), std::move(files)};
+}
+
+std::optional<PreparedSubscriptionTorrent> prepareSubscriptionUpgradeTorrent(const lt::sha1_hash& hash,
+    std::string_view metainfo,const std::filesystem::path& slot,MetadataDiskPolicy& disks) {
+  auto metadata=subscriptionMetadata(hash,metainfo);
+  if (!metadata) { return {}; }
+  auto files=std::make_shared<OriginalDiskFiles>(metadata);
+  auto request=subscriptionParameters(std::move(metadata),slot);
+  request.max_connections=8;
+  request.max_uploads=0;
+  if (!disks.registerOriginalPath(slot,files)) { return {}; }
+  return PreparedSubscriptionTorrent{std::move(request),std::move(files)};
 }
 
 bool SubscriptionSeedOwner::supported() noexcept { return AcceptsSubscriptionHash<lt::torrent_info>; }

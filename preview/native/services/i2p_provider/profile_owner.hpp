@@ -97,6 +97,9 @@ public:
       std::optional<std::chrono::steady_clock::time_point> rotateAt = {}); // Owner Qt.
   bool subscriptionSeedLoaded(const core::TorrentHash&) const;
   std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade(); // Owner Qt, current source only.
+  std::expected<void,storage::Error> downloadSubscriptionUpgrade(
+      const std::array<char,20>& previous,std::uint32_t version); // Confirmed offer, owner Qt.
+  std::optional<std::expected<std::string,storage::Error>> takeSubscriptionUpgradePayload();
   bool subscriptionSeedSlotAvailable(std::chrono::steady_clock::time_point now) const; // Owner Qt, passive SDK observation.
   class TagSourceUpdate final {
   public:~TagSourceUpdate();

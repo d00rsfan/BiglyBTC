@@ -289,6 +289,20 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge,&Bridge::subscriptionCatalogReady,&window,&Window::setSubscriptionCatalog);
     QObject::connect(&bridge,&Bridge::subscriptionReady,&window,&Window::setSubscriptionResult);
     QObject::connect(&bridge,&Bridge::subscriptionHistoryChanged,&window,&Window::subscriptionHistoryChanged);
+    QObject::connect(&bridge,&Bridge::subscriptionUpgradeAvailable,&window,
+        [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](quint64 session,quint64 request,const QString& name,quint32 version) {
+          if (!owner||!view) { return; }
+          auto* prompt=new QMessageBox(QMessageBox::Question,QObject::tr("Update subscription"),
+              QObject::tr("Install version %1 of “%2” over I2P?").arg(version).arg(name),
+              QMessageBox::Yes|QMessageBox::No,view);
+          prompt->setTextFormat(Qt::PlainText);
+          prompt->setDefaultButton(QMessageBox::No);
+          prompt->setAttribute(Qt::WA_DeleteOnClose);
+          QObject::connect(prompt,&QMessageBox::finished,view,[owner,session,request](int answer) {
+            if (owner) { owner->answerSubscriptionUpgrade(session,request,answer==QMessageBox::Yes); }
+          });
+          prompt->open();
+        });
     QObject::connect(&window,&Window::subscriptionCatalogRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCatalogKey key){if(owner&&view&&!owner->subscriptionCatalog(key)&&view){view->rejectSubscriptionCatalog(key);}});
     QObject::connect(&window,&Window::subscriptionCommandRequested,&bridge,[owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::SubscriptionCommand command){if(owner&&view&&!owner->subscriptionCommand(command)&&view){view->rejectSubscriptionCommand(command);}});
     QObject::connect(&window,&Window::subscriptionCancelRequested,&bridge,&Bridge::cancelSubscription);

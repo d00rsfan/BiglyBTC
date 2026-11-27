@@ -331,7 +331,15 @@ std::expected<std::string,SubscriptionSeedError> openSubscriptionSeedDdbResponse
   auto body=wire[1]?cryptMetainfo(expected.publicationHash,wire.substr(2),false)
       :std::expected<std::string,Error>{std::string(wire.substr(2))};
   if (!body) { return std::unexpected(body.error()); }
-  const auto doc=core::Document::parse(std::move(*body),{4096,4096,256,16});
+  return validateSubscriptionSeedMetainfo(std::move(*body),expected);
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error::Limit);
+}
+
+std::expected<std::string,SubscriptionSeedError> validateSubscriptionSeedMetainfo(
+    std::string metainfo,const SignedSubscriptionPresence& expected) try {
+  if (!expected.signedSize||expected.signedSize>MaxBytes) { return std::unexpected(Error::Malformed); }
+  const auto doc=core::Document::parse(std::move(metainfo),{4096,4096,256,16});
   const auto* info=doc?doc->find("info"):nullptr;
   if (!info||info->type!=Node::Type::Dictionary) { return std::unexpected(Error::Malformed); }
   constexpr std::string_view prefix="subscription:publish:";

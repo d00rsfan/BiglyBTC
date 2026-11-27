@@ -16,6 +16,7 @@
 #include <QUrl>
 #include <algorithm>
 #include <array>
+#include <functional>
 #include <limits>
 #include <map>
 #include <new>
@@ -249,8 +250,9 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
 } // namespace
 
-std::expected<void,E> installI2pSubscriptionUpgrade(const storage::ProfileLease& lease,
-    const I2pSubscriptionUpgrade& update,std::string newDefinition) try {
+namespace {
+std::expected<void,E> writeI2pSubscriptionUpgrade(const storage::ProfileLease& lease,
+    const I2pSubscriptionUpgrade& update,std::optional<std::string> newDefinition) try {
   const auto access=lease.sourceAccess(true);
   if (!access||!lease.authorizesMutation(*access)) { return std::unexpected(E::Lease); }
   const auto root=lease.directoryHandle();
@@ -267,15 +269,16 @@ std::expected<void,E> installI2pSubscriptionUpgrade(const storage::ProfileLease&
   auto subs=subscriptionDirectory(lease,stamp);
   if (!subs) { return std::unexpected(subs.error()); }
   const auto config=named(root,"subscriptions.config",MetaBytes);
-  const auto configBackup=named(root,"subscriptions.config.bak",MetaBytes);
+  auto configBackup=named(root,"subscriptions.config.bak",MetaBytes);
   const auto definition=named(subs->get(),leaf,MetaBytes);
-  const auto definitionBackup=named(subs->get(),leaf+".bak",MetaBytes);
+  auto definitionBackup=named(subs->get(),leaf+".bak",MetaBytes);
   const auto saving=named(subs->get(),leaf+".saving",MetaBytes);
   if (!config||!config->present||!configBackup||!definition||!definition->present||!definitionBackup||!saving||saving->present) {
     return std::unexpected(E::SourceChanged);
   }
   const auto values=planI2pSubscriptionUpgrade(config->bytes,definition->bytes,newDefinition,update);
   if (!values||values->definitionName!=leaf) { return std::unexpected(E::Malformed); }
+  if (!newDefinition&&values->configuration==config->bytes) { return {}; }
   const auto observed=state::stateStampAt(root,"subs");
   if (!observed||!*observed||!sameDirectory(**observed,stamp)||!stillNamed(root,*config)||
       !stillNamed(root,*configBackup)||!stillNamed(subs->get(),*definition)||!stillNamed(subs->get(),*definitionBackup)||
@@ -284,10 +287,27 @@ std::expected<void,E> installI2pSubscriptionUpgrade(const storage::ProfileLease&
   }
   const UpgradeIntent intent{config->bytes,definition->bytes,std::move(newDefinition),
       fileDigest(*configBackup),fileDigest(*definitionBackup),update};
+#ifdef _WIN32
+  // The recovery pass verifies these bytes again and opens its own witnesses.
+  // NTFS replacement can refuse to rename over an open backup.
+  configBackup->witness.releaseWitness();
+  definitionBackup->witness.releaseWitness();
+#endif
   auto journal=publishUpgradeIntent(root,intent,*signedWire);
   if (!journal) { return std::unexpected(journal.error()); }
   return recoverUpgrade(lease,intent,*journal);
 } catch (const std::bad_alloc&) { return std::unexpected(E::Memory); }
+} // namespace
+
+std::expected<void,E> installI2pSubscriptionUpgrade(const storage::ProfileLease& lease,
+    const I2pSubscriptionUpgrade& update,std::string newDefinition) {
+  return writeI2pSubscriptionUpgrade(lease,update,std::move(newDefinition));
+}
+
+std::expected<void,E> rememberI2pSubscriptionUpgrade(const storage::ProfileLease& lease,
+    const I2pSubscriptionUpgrade& update) {
+  return writeI2pSubscriptionUpgrade(lease,update,std::nullopt);
+}
 
 std::expected<void,E> recoverI2pSubscriptionUpgrade(const storage::ProfileLease& lease) try {
   if (!lease.valid()) { return std::unexpected(E::Lease); }
@@ -312,6 +332,10 @@ std::expected<void,E> recoverI2pSubscriptionUpgrade(const storage::ProfileLease&
   if (!intent) { return std::unexpected(intent.error()); }
   return recoverUpgrade(lease,*intent,*journal);
 } catch (const std::bad_alloc&) { return std::unexpected(E::Memory); }
+
+bool hasPendingI2pSubscriptionUpgrade(const storage::ProfileLease& lease) {
+  return pendingSubscriptionUpgrade(lease.directoryHandle());
+}
 
 std::expected<std::vector<SavedSubscriptionSeedCandidate>,E> savedSubscriptionSeedCandidates(
     const storage::ProfileLease& lease,SubscriptionSeedNetwork network) try {

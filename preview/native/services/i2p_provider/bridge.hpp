@@ -51,6 +51,8 @@ private:
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
   bool discoverSubscription(std::shared_ptr<SubscriptionSource>,std::uint64_t admission,
       std::function<bool(const Hash&,std::uint64_t)>);
+  bool discoverSubscriptionUpgrade(std::shared_ptr<SubscriptionSource>,const core::TorrentHash&,
+      std::uint64_t admission,std::function<bool(const Hash&,std::uint64_t)>);
   bool subscriptionDiscoveryWindowElapsed(std::uint64_t admission,
       std::chrono::steady_clock::time_point now) const;
   std::optional<search::I2pSubscriptionUpgrade> takeSubscriptionUpgrade();

@@ -381,6 +381,8 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
       *newSeed->presence,newSeed->metainfo};
   const auto goal=search::planI2pSubscriptionUpgrade(oldConfig,oldBody,newBody,candidate);
   require(goal&&goal->definition==newBody,"Project the signed update before publication");
+  const auto declined=search::planI2pSubscriptionUpgrade(oldConfig,oldBody,std::nullopt,candidate);
+  require(declined&&declined->definition==oldBody,"Decline only records the offered version");
   const auto oldCatalogue=core::Document::parse(oldConfig);
   const auto newCatalogue=core::Document::parse(goal->configuration);
   require(oldCatalogue&&newCatalogue&&oldCatalogue->find("subs")&&newCatalogue->find("subs"),"Read unchanged opaque values");
@@ -402,13 +404,19 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
       {"configuration",bencoded(oldConfig)},{"old_definition",bencoded(oldBody)},{"new_definition",bencoded(newBody)},
       {"configuration_backup","i0e"},{"definition_backup","i0e"},{"public_key",bencoded(candidate.publicKey)},
       {"previous",bencoded({candidate.previous.data(),candidate.previous.size()})},{"version","i5e"},{"publication",bencoded(*encoded)}};
-  std::string journal="d";
-  for (const auto& [key,value]:fields) { journal+=bencoded(key)+value; }
-  journal+='e';
+  const auto journalFor=[&](bool declining) {
+    std::string journal="d";
+    for (const auto& [key,value]:fields) { journal+=bencoded(key)+(declining&&key=="new_definition"?"i0e":value); }
+    return journal+'e';
+  };
 
-  enum class Point {Fresh,PartialIntent,Intent,DefinitionRenamed,DefinitionWritten,ConfigurationRenamed,Diverged};
+  enum class Point {Fresh,PartialIntent,Intent,DefinitionRenamed,DefinitionWritten,ConfigurationRenamed,Diverged,
+                    Declined,DeclineInterrupted};
   for (const auto step:{Point::Fresh,Point::PartialIntent,Point::Intent,Point::DefinitionRenamed,
-                        Point::DefinitionWritten,Point::ConfigurationRenamed,Point::Diverged}) {
+                        Point::DefinitionWritten,Point::ConfigurationRenamed,Point::Diverged,
+                        Point::Declined,Point::DeclineInterrupted}) {
+    const bool declining=step==Point::Declined||step==Point::DeclineInterrupted;
+    const auto journal=journalFor(declining);
     QTemporaryDir temporary;
     require(temporary.isValid(),"Recover in an isolated profile");
     const std::filesystem::path root(temporary.path().toStdU16String());
@@ -423,6 +431,10 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
     write(definition,oldBody);
     write(configuration,oldConfig);
     write(opaque,"d7:resultslee");
+    if (step==Point::Fresh) {
+      write(definitionBackup,"Previous definition backup");
+      write(configurationBackup,"Previous configuration backup");
+    }
     auto lease=storage::ProfileLease::acquire(root);
     require(lease.has_value(),"Own the generated upgrade profile");
     if (step==Point::Fresh) {
@@ -432,6 +444,9 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
       require(!std::filesystem::exists(marker)&&read(definition)==oldBody&&read(configuration)==oldConfig,"Invalid upgrade preserves both files");
       require(search::installI2pSubscriptionUpgrade(*lease,candidate,newBody).has_value(),"Publish approved signed upgrade");
       require(!search::installI2pSubscriptionUpgrade(*lease,candidate,newBody),"Reject replay against the changed source");
+    } else if (step==Point::Declined) {
+      require(search::rememberI2pSubscriptionUpgrade(*lease,candidate).has_value(),"Remember a declined signed update");
+      require(search::rememberI2pSubscriptionUpgrade(*lease,candidate).has_value(),"Repeated decline is harmless");
     } else {
       if (step==Point::PartialIntent) { write(staged,"d"); }
       else { write(marker,journal); }
@@ -440,9 +455,9 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
         if (step==Point::DefinitionRenamed) { write(root/"subs"/(goal->definitionName+".saving"),newBody); }
         else { write(definition,newBody); }
       }
-      if (step==Point::ConfigurationRenamed) {
+      if (step==Point::ConfigurationRenamed||step==Point::DeclineInterrupted) {
         std::filesystem::rename(configuration,configurationBackup);
-        write(root/"subscriptions.config.saving",goal->configuration);
+        write(root/"subscriptions.config.saving",declining?declined->configuration:goal->configuration);
       }
       if (step==Point::Diverged) {
         write(configuration,"de");
@@ -457,6 +472,9 @@ void checkUpgradeJournal(const std::filesystem::path& fixtureDirectory) {
         "Completed recovery is idempotent");
     if (step==Point::PartialIntent) {
       require(read(definition)==oldBody&&read(configuration)==oldConfig,"Incomplete intent leaves the original pair intact");
+    } else if (declining) {
+      require(read(definition)==oldBody&&read(configuration)==declined->configuration&&read(configurationBackup)==oldConfig&&
+          !std::filesystem::exists(definitionBackup),"Decline retains the original version and definition after reopening");
     } else {
       require(read(definition)==newBody&&read(configuration)==goal->configuration&&read(configurationBackup)==oldConfig&&
           read(definitionBackup)==oldBody,"Reopen with matching signed bytes and original backups");

@@ -3,6 +3,15 @@
   std::chrono::steady_clock::time_point nextSubscriptionSeedScan{};
   std::chrono::steady_clock::time_point nextI2pSubscriptionSeedScan{};
   std::optional<core::TorrentHash> lastI2pSubscriptionBootstrap;
+  struct SubscriptionUpgradePrompt {
+    search::I2pSubscriptionUpgrade update;
+    quint64 request;
+    std::chrono::steady_clock::time_point expires;
+    bool downloading=false;
+  };
+  std::optional<SubscriptionUpgradePrompt> subscriptionUpgradePrompt;
+  quint64 nextSubscriptionUpgradeRequest=0;
+  std::map<std::string,std::uint32_t> promptedSubscriptionVersions;
   const std::int64_t subscriptionSeedCreationSeconds=wallMillis()/1000;
   const std::int64_t subscriptionPresenceNonce=static_cast<std::int64_t>(QRandomGenerator::system()->generate64()>>1);
 

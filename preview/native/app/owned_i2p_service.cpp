@@ -262,6 +262,26 @@ std::optional<search::I2pSubscriptionUpgrade> OwnedI2pService::takeSubscriptionU
       !state.onOwner([&]{result=state.owner->takeSubscriptionUpgrade();})) { return {}; }
   return result;
 }
+std::expected<void,storage::Error> OwnedI2pService::downloadSubscriptionUpgrade(
+    const std::array<char,20>& previous,std::uint32_t version) {
+  auto& state=*impl_;
+  std::lock_guard lock(state.mutex);
+  std::expected<void,Error> result=std::unexpected(Error{Code::Conflict,"The original I2P session is unavailable"});
+  if (!state.closed&&!state.checkpointOmitted&&QThread::currentThread()==state.caller) {
+    state.onOwner([&]{result=state.owner->downloadSubscriptionUpgrade(previous,version);});
+  }
+  return result;
+}
+std::optional<std::expected<std::string,storage::Error>> OwnedI2pService::takeSubscriptionUpgradePayload() {
+  auto& state=*impl_;
+  std::lock_guard lock(state.mutex);
+  std::optional<std::expected<std::string,Error>> result;
+  if (state.closed||state.checkpointOmitted||QThread::currentThread()!=state.caller||
+      !state.onOwner([&]{result=state.owner->takeSubscriptionUpgradePayload();})) {
+    return std::expected<std::string,Error>{std::unexpected(Error{Code::Conflict,"The original I2P session is unavailable"})};
+  }
+  return result;
+}
 std::expected<std::string,storage::Error> OwnedI2pService::takeCompletedMetadata(const core::TorrentHash& hash){
   auto& s=*impl_;std::lock_guard lock(s.mutex);std::expected<std::string,Error> result=std::unexpected(Error{Code::Io,"I2P metadata event loop unavailable"});
   if(!(s.closed||s.checkpointOmitted)&&QThread::currentThread()==s.caller){s.onOwner([&]{result=s.owner->takeCompletedMetadata(hash);});}return result;
@@ -506,6 +526,10 @@ std::expected<void,storage::Error> OwnedI2pService::addMagnet(const engine::Pend
 std::expected<void,storage::Error> OwnedI2pService::cancelMagnet(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::vector<engine::PendingMagnetStatus> OwnedI2pService::pendingMagnets()const{return {};}
 std::optional<search::I2pSubscriptionUpgrade> OwnedI2pService::takeSubscriptionUpgrade(){return {};}
+std::expected<void,storage::Error> OwnedI2pService::downloadSubscriptionUpgrade(const std::array<char,20>&,std::uint32_t){
+  return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Private I2P is unavailable"});
+}
+std::optional<std::expected<std::string,storage::Error>> OwnedI2pService::takeSubscriptionUpgradePayload(){return {};}
 std::expected<std::string,storage::Error> OwnedI2pService::takeCompletedMetadata(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::releaseMagnet(const core::TorrentHash&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
 std::expected<void,storage::Error> OwnedI2pService::publishPendingMagnet(const core::TorrentHash&,const std::function<std::expected<void,storage::Error>()>&){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"I2P metadata provider unavailable"});}
