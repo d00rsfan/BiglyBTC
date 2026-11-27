@@ -14,8 +14,11 @@ bool actualPublicationPolicyHold(const engine::ManagedDownloadStatus& actual)noe
 }
 std::optional<ui::PublicationSource> publicationSource(std::optional<storage::RecoverySource> value){if(!value){return {};}switch(*value){case storage::RecoverySource::Backup:return ui::PublicationSource::Backup;case storage::RecoverySource::Saving:return ui::PublicationSource::Saving;default:return ui::PublicationSource::Primary;}}
 QString trackerObservation(const tracker::TrackerCatalog& catalog){if(!catalog.listener.running){return catalog.listener.joined?SessionBridge::tr("Actual tracker at last refresh: stopped; no owned listener."):SessionBridge::tr("Actual tracker at last refresh: owned listener is joining.");}auto address=catalog.listener.endpoint?text(catalog.listener.endpoint->announceUrl):QString{};
- if(catalog.listener.endpoint&&!catalog.listener.endpoint->udpAnnounceUrl.empty()){
-   address+=QStringLiteral(" / ")+text(catalog.listener.endpoint->udpAnnounceUrl);
+ if(catalog.listener.endpoint){
+   const auto& observed=*catalog.listener.endpoint;
+   for(const auto* url:{&observed.udpAnnounceUrl,&observed.httpsAnnounceUrl}){
+     if(!url->empty()){address+=QStringLiteral(" / ")+text(*url);}
+   }
  }
  return SessionBridge::tr("Actual tracker at last refresh: %1; %2 accepted connections, %3 completed requests.").arg(address).arg(catalog.listener.acceptedConnections).arg(catalog.listener.completedRequests);}
 }

@@ -629,7 +629,7 @@ if(TARGET biglybtc_profile AND TARGET biglybtc_local_engine)
 endif()
 
 if(TARGET biglybtc_saved_share_source AND TARGET biglybtc_local_engine)
-  add_library(biglybtc_embedded_tracker STATIC tracker/embedded_tracker.cpp tracker/tracker_protocol.cpp)
+  add_library(biglybtc_embedded_tracker STATIC tracker/embedded_tracker.cpp tracker/tracker_protocol.cpp tracker/tracker_tls.cpp)
   target_include_directories(biglybtc_embedded_tracker PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/tracker")
   target_link_libraries(biglybtc_embedded_tracker PUBLIC biglybtc_saved_share_source biglybtc_profile PRIVATE biglybtc_saved_service_view biglybtc_local_engine Qt6::Core Qt6::Network OpenSSL::Crypto LibtorrentRasterbar::torrent-rasterbar Threads::Threads)
   target_compile_features(biglybtc_embedded_tracker PUBLIC cxx_std_23)

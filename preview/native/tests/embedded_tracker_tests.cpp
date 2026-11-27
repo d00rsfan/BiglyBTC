@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QSslConfiguration>
+#include <QSslSocket>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUdpSocket>
@@ -15,6 +17,8 @@
 #include <cerrno>
 #include <fcntl.h>
 #include <map>
+#include <openssl/pkcs12.h>
+#include <openssl/x509v3.h>
 #include <unistd.h>
 using namespace biglybtc;namespace t=tracker;namespace wire=tracker::detail;
 namespace {
@@ -40,6 +44,38 @@ struct Profile {
 std::unique_ptr<t::EmbeddedTrackerService> service(Profile& p,t::TrackerServiceMode mode=t::TrackerServiceMode::Normal){auto result=t::EmbeddedTrackerService::open(*p.lease,p.path.toStdString(),501,mode);must(bool(result),"Cannot open actual tracker service");return std::move(*result);}
 t::OwnedTrackerEndpoint startEndpoint(Profile& p,t::EmbeddedTrackerService& s){must(bool(s.configure(*p.lease,501,{"127.0.0.1",0},{})),"Cannot configure actual HTTP tracker");auto endpoint=s.startListener(*p.lease,501,{});must(bool(endpoint),"Cannot start actual private listener");return std::move(*endpoint);}
 QByteArray exchange(Profile& p,t::EmbeddedTrackerService& s,quint16 port,const QByteArray& request){QTcpSocket socket;socket.connectToHost(QHostAddress::LocalHost,port);QElapsedTimer clock;clock.start();bool written=false;QByteArray response;while(clock.elapsed()<5000){QCoreApplication::processEvents();if(!written&&socket.state()==QAbstractSocket::ConnectedState){must(socket.write(request)==request.size(),"Private HTTP request failed");written=true;}must(bool(s.poll(*p.lease,501)),"Actual tracker poll failed");response+=socket.readAll();if(written&&socket.state()==QAbstractSocket::UnconnectedState){must(bool(s.poll(*p.lease,501)),"Actual tracker byte receipts failed");return response;}QTest::qWait(1);}throw std::runtime_error("Private tracker exchange timed out");}
+struct GeneratedTrackerCertificate {QByteArray keyStore;QSslCertificate leaf;};
+GeneratedTrackerCertificate generateTrackerCertificate() {
+  const std::unique_ptr<EVP_PKEY,decltype(&EVP_PKEY_free)> key(EVP_PKEY_Q_keygen(nullptr,nullptr,"RSA",2048),&EVP_PKEY_free);
+  const std::unique_ptr<X509,decltype(&X509_free)> cert(X509_new(),&X509_free);
+  must(key&&cert,"Could not generate an isolated tracker certificate");
+  auto* subject=X509_get_subject_name(cert.get());
+  must(X509_set_version(cert.get(),2)==1&&ASN1_INTEGER_set(X509_get_serialNumber(cert.get()),1)==1
+      &&X509_gmtime_adj(X509_getm_notBefore(cert.get()),-30)&&X509_gmtime_adj(X509_getm_notAfter(cert.get()),3600)
+      &&X509_NAME_add_entry_by_txt(subject,"CN",MBSTRING_ASC,reinterpret_cast<const unsigned char*>("localhost"),-1,-1,0)==1
+      &&X509_set_issuer_name(cert.get(),subject)==1&&X509_set_pubkey(cert.get(),key.get())==1,
+      "Could not bind the generated certificate name and key");
+  const std::unique_ptr<X509_EXTENSION,decltype(&X509_EXTENSION_free)> localAddress(
+      X509V3_EXT_conf_nid(nullptr,nullptr,NID_subject_alt_name,"DNS:localhost,IP:127.0.0.1"),&X509_EXTENSION_free);
+  must(localAddress&&X509_add_ext(cert.get(),localAddress.get(),-1)==1&&X509_sign(cert.get(),key.get(),EVP_sha256())>0,
+      "Could not sign the generated tracker certificate");
+  const auto certificateSize=i2d_X509(cert.get(),nullptr);
+  must(certificateSize>0,"Could not export the generated tracker certificate");
+  QByteArray certificate(certificateSize,Qt::Uninitialized);
+  auto* output=reinterpret_cast<unsigned char*>(certificate.data());
+  must(i2d_X509(cert.get(),&output)==certificateSize,"Failed to export the generated certificate");
+  const auto chain=QSslCertificate::fromData(certificate,QSsl::Der);
+  must(chain.size()==1&&!chain.front().isNull(),"Invalid generated tracker certificate");
+  const std::unique_ptr<PKCS12,decltype(&PKCS12_free)> store(
+      PKCS12_create("changeit","tracker",key.get(),cert.get(),nullptr,0,0,0,0,0),&PKCS12_free);
+  must(bool(store),"Could not create the isolated tracker key store");
+  const auto storeSize=i2d_PKCS12(store.get(),nullptr);
+  must(storeSize>0,"Could not export the generated key store");
+  QByteArray keyStore(storeSize,Qt::Uninitialized);
+  output=reinterpret_cast<unsigned char*>(keyStore.data());
+  must(i2d_PKCS12(store.get(),&output)==storeSize,"Failed to export generated key store");
+  return {std::move(keyStore),chain.front()};
+}
 void udpInteger(QByteArray& bytes,quint64 value,int width) {
   for(int index=width-1;index>=0;--index){bytes+=static_cast<char>((value>>(8*index))&0xff);}
 }
@@ -93,6 +129,48 @@ private slots:
   body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"completed",0,3,17)));body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"completed",0,3,17)));auto scrape=body(exchange(area,*owner,port,http("/scrape?info_hash="+encoded(area.hash)+"&info_hash="+encoded(std::string(20,'z')))));const auto* files=scrape.find("files");QVERIFY(files&&files->find(area.hash));QCOMPARE(files->find(area.hash)->find("downloaded")->integer,std::int64_t{1});QCOMPARE(files->find(std::string(20,'z'))->find("complete")->integer,std::int64_t{0});auto stopped=body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"stopped",0,3,17)));QVERIFY(stopped.find("peers")->bytes.empty());auto unknown=body(exchange(area,*owner,port,announce(std::string(20,'z'),a,seed.serverPort())));QVERIFY(unknown.find("failure reason"));
   auto final=owner->catalog(*area.lease,501);QVERIFY(final&&final->rows[0].runtime);QCOMPARE(final->rows[0].runtime->completed,std::int64_t{1});QVERIFY(final->rows[0].runtime->announces>=5&&final->rows[0].runtime->bytesIn>0&&final->rows[0].runtime->bytesOut>0);QVERIFY(owner->stop(*area.lease,501,final->rows[0].key,{}));auto denied=body(exchange(area,*owner,port,announce(area.hash,a,seed.serverPort())));QVERIFY(denied.find("failure reason"));QVERIFY(owner->stopListener(*area.lease,501,{}));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased&&!closed.checkpointFailure);
   auto saved=document(bytes(area.path+"/tracker.config"));QCOMPARE(raw(saved,*saved.find("per_key")),raw(original,*original.find("per_key")));QCOMPARE(raw(saved,*saved.find("future")),raw(original,*original.find("future")));const auto& row=saved.find("torrents")->children[0];QCOMPARE(row.find("row_future")->bytes,std::string_view("row-unknown"));QCOMPARE(row.find("stats")->find("future")->bytes,std::string_view("stats-unknown"));QCOMPARE(row.find("stats")->find("completed")->integer,std::int64_t{1});QCOMPARE(row.find("status")->integer,std::int64_t{1});area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
+ }
+ void realHttpsTrackerUsesTheProfileCertificate() {
+  Profile area;
+  const auto fixture=generateTrackerCertificate();
+  const auto keyStore=area.path+"/.keystore";
+  write(keyStore,fixture.keyStore);
+  auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(config&&config->document().replaceValue("Tracker Port SSL Enable","i1e"));
+  QVERIFY(config->document().replaceValue("Tracker Port SSL","i0e")&&config->save(*area.lease));
+  auto owner=service(area);
+  auto endpoint=startEndpoint(area,*owner);
+  auto catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
+  const QUrl url(QString::fromStdString(endpoint.description().httpsAnnounceUrl));
+  QCOMPARE(url.scheme(),QStringLiteral("https"));
+  QCOMPARE(url.host(),QStringLiteral("127.0.0.1"));
+  QVERIFY(url.port()>0&&url.port()!=endpoint.description().port);
+
+  QSslSocket socket;
+  auto secure=QSslConfiguration::defaultConfiguration();
+  secure.setCaCertificates({fixture.leaf});
+  secure.setPeerVerifyMode(QSslSocket::VerifyPeer);
+  socket.setSslConfiguration(secure);
+  socket.connectToHostEncrypted(url.host(),static_cast<quint16>(url.port()));
+  QTRY_VERIFY_WITH_TIMEOUT(socket.isEncrypted(),5000);
+  QCOMPARE(socket.peerCertificate(),fixture.leaf);
+  const auto request=announce(area.hash,std::string(20,'s'),5005,"started",0);
+  QCOMPARE(socket.write(request),request.size());
+  QByteArray response;
+  QElapsedTimer elapsed;elapsed.start();
+  while(elapsed.elapsed()<5000&&socket.state()!=QAbstractSocket::UnconnectedState){
+    QVERIFY(owner->poll(*area.lease,501));
+    QTest::qWait(5);response+=socket.readAll();
+  }
+  QCOMPARE(body(response).find("complete")->integer,std::int64_t{1});
+  const auto plain=body(exchange(area,*owner,endpoint.description().port,http("/scrape?info_hash="+encoded(area.hash))));
+  QCOMPARE(plain.find("files")->find(area.hash)->find("complete")->integer,std::int64_t{1});
+  write(keyStore,"replacement key store");
+  QVERIFY(!owner->poll(*area.lease,501));
+  QVERIFY(!endpoint.current(*area.lease,501));
+  const auto closed=owner->close();
+  QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased);
  }
  void realUdpTrackerUsesSameOwnedSwarmAsHttp() {
   Profile area;
