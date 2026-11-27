@@ -15,6 +15,8 @@
 #include <chrono>
 #include <limits>
 #include <map>
+#include <set>
+#include <span>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -109,6 +111,61 @@ bool skipped(const fs::path& relative, std::string_view name, const StateStamp& 
   const auto parent = platform::pathToUtf8(relative.filename());
   return stamp.directory && ((parent == "aznettorbrowser" && name.starts_with("browser_"))
       || (parent == "azwebtorrent" && (name == "data" || name.starts_with("browser_"))));
+}
+
+struct VersionedPluginArchive {
+  std::string family;
+  std::vector<int> version;
+};
+
+std::optional<VersionedPluginArchive> versionedPluginArchive(std::string name) {
+  for (char& c : name) {
+    if (c >= 'A' && c <= 'Z') { c = static_cast<char>(c + ('a' - 'A')); }
+  }
+  constexpr std::size_t extensionSize = 4;
+  if (!name.ends_with(".jar") && !name.ends_with(".zip")) { return {}; }
+  const auto separator = name.rfind('_');
+  const auto extension = name.size() - extensionSize;
+  if (separator == std::string::npos || separator + 1 >= extension) { return {}; }
+  auto text = std::string_view(name).substr(separator + 1, extension - separator - 1);
+  std::vector<int> version;
+  while (true) {
+    const auto dot = text.find('.');
+    const auto token = text.substr(0, dot);
+    const auto part = unsignedValue(token);
+    if (!part || *part > std::numeric_limits<int>::max()) { return {}; }
+    version.push_back(static_cast<int>(*part));
+    if (dot == std::string_view::npos) { break; }
+    text.remove_prefix(dot + 1);
+  }
+  while (!version.empty() && version.back() == 0) { version.pop_back(); }
+  return VersionedPluginArchive{name.substr(0, separator) + name.substr(extension), std::move(version)};
+}
+
+using PluginArchiveNames = std::set<fs::path, FilesystemPathLess>;
+
+PluginArchiveNames supersededPluginArchives(StateHandle source, std::span<const fs::path> entries,
+    std::stop_token stop) {
+  std::map<std::string, std::pair<std::vector<int>, fs::path>> latest;
+  PluginArchiveNames superseded;
+  for (const auto& entry : entries) {
+    checkCancellation(stop);
+    auto archive = versionedPluginArchive(platform::pathToUtf8(entry));
+    if (!archive) { continue; }
+    const auto stamp = take(stateStampAt(source, entry));
+    require(stamp.has_value(), ErrorCode::Conflict, "Saved plugin directory changed during backup");
+    if (!stamp->regular || !stamp->owned || stamp->links != 1) { continue; }
+
+    auto [kept, inserted] = latest.try_emplace(std::move(archive->family), std::move(archive->version), entry);
+    if (inserted) { continue; }
+    auto& [version, name] = kept->second;
+    if (version < archive->version) {
+      superseded.insert(std::move(name));
+      version = std::move(archive->version);
+      name = entry;
+    } else { superseded.insert(entry); }
+  }
+  return superseded;
 }
 
 struct DirectoryRelocation { std::string previous, destination; };
@@ -243,12 +300,16 @@ private:
     require(depth <= MaximumDepth, ErrorCode::Unsupported, "Profile backup directory is too deeply nested");
     const auto before = take(stateStamp(source));
     require(!sameStateDirectory(before, outputStamp_), ErrorCode::UnsafePath, "Backup destination is inside the profile");
-    for (const auto& name : take(listStateDirectoryNames(source, MaximumEntries, stop_))) {
+    const auto entries = take(listStateDirectoryNames(source, MaximumEntries, stop_));
+    const auto superseded = !relocation_ && relative.parent_path() == "plugins"
+        ? supersededPluginArchives(source, entries, stop_) : PluginArchiveNames{};
+    for (const auto& name : entries) {
       checkCancellation(stop_);
       if (name == "." || name == "..") { continue; }
       const auto expected = take(stateStampAt(source, name));
       require(expected.has_value(), ErrorCode::Conflict, "Saved profile directory changed during backup");
       if (skipped(relative, platform::pathToUtf8(name), *expected, includePlugins, relocation_.has_value())) { continue; }
+      if (expected->regular && expected->owned && expected->links == 1 && superseded.contains(name)) { continue; }
       require(expected->directory || expected->regular, ErrorCode::UnsafePath, "Profile backup requires ordinary files and directories");
       const auto path = relative / name;
       if (expected->directory) {

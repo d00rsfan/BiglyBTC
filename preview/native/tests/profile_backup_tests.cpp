@@ -3,6 +3,7 @@
 #include "profile_backup_scheduler.hpp"
 #include "../platform/utf8_path.hpp"
 
+#include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -106,6 +107,29 @@ void verifyCopy() {
   const auto next = take(storage::backupSavedProfile(*files.lease, destination, "2026-11-27"));
   check(next.directory.filename() == "2026-11-27.4" && !fs::exists(next.directory / "plugins"),
       "Use the saved plugin option for the next backup");
+}
+
+void verifyPluginArchiveVersions() {
+  Fixture files;
+  const auto plugins = fs::path("plugins") / "example";
+  const auto metadata = std::array{"example_1.9.jar", "Example_1.10.JAR", "example_1.9.zip", "example_1.10.zip",
+      "legacy.jar", "other_1.2.jar", "example_1..3.jar", "example_2147483648.0.jar"};
+  write(files.profile / "biglybt.config", "de");
+  for (const auto* name : metadata) { write(files.profile / plugins / name, name); }
+  for (const auto* name : {"dep_1.jar", "dep_2.jar"}) {
+    write(files.profile / name, name);
+    write(files.profile / plugins / "tools" / name, name);
+  }
+  const auto backup = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27")).directory;
+  for (const auto* name : metadata) {
+    const auto older = std::string_view(name) == "example_1.9.jar" || std::string_view(name) == "example_1.9.zip";
+    check(fs::exists(backup / plugins / name) != older, "Keep the highest version for each plugin archive type");
+    check(read(files.profile / plugins / name) == name, "Keep every original plugin file untouched");
+  }
+  for (const auto* name : {"dep_1.jar", "dep_2.jar"}) {
+    check(read(backup / name) == name && read(backup / plugins / "tools" / name) == name,
+        "Keep root and deeper dependency archives");
+  }
 }
 
 void verifyRefusalsAndCleanup() {
@@ -255,10 +279,11 @@ void verifyAutomaticBackup() {
 
 int main() try {
   verifyCopy();
+  verifyPluginArchiveVersions();
   verifyRefusalsAndCleanup();
   verifyRestore();
   verifyAutomaticBackup();
-  std::cout << "Profile backup, relocation, scheduling and failure recovery passed\n";
+  std::cout << "Profile backup, plugin archive selection, relocation, scheduling and failure recovery passed\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << error.what() << '\n';
