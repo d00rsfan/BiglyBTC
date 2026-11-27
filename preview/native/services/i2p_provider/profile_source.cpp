@@ -13,6 +13,7 @@
 #include "plugin_settings.hpp"
 #include "torrent_state.hpp"
 #include "manual_tag_store.hpp"
+#include "saved_download_tags_view.hpp"
 #include "biglybtc/tag_rate_limits.hpp"
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/hasher.hpp>
@@ -249,6 +250,12 @@ Stamp pendingCapture(const storage::ProfileLease& lease,const engine::PendingMag
 struct ProfileSource::Impl {
   std::shared_ptr<const storage::ProfileLease> lease;
   std::optional<storage::TagManagerStartupMode> tagMode;std::optional<RateStamps> rateSource;
+  struct QueueTagSnapshot {
+    std::uint64_t revision;
+    std::shared_ptr<const core::SavedTagSeedPriorities> values;
+  };
+  storage::SavedTagSeedPriorityReader queueTagReader;
+  core::AtomicSharedPtr<const QueueTagSnapshot> queueTags;
   core::AtomicSharedPtr<const PrivateRatePreparation> privateRates;
   bool privateRatesCurrent()const noexcept{const auto prepared=privateRates.load();return !prepared||prepared->source.current();}
   core::TorrentHash hash;std::string directory;engine::OwnedI2pPolicy policy;
@@ -378,6 +385,12 @@ bool ProfileSource::groupMode()const noexcept{return impl_->session||bool(impl_-
 bool ProfileSource::mixedMode()const noexcept{return impl_->mixed;}
 bool ProfileSource::tagManagerEnabled() const noexcept {
   return impl_->tagMode && impl_->tagMode->enabled();
+}
+std::optional<std::shared_ptr<const core::SavedTagSeedPriorities>> ProfileSource::queueTagPriorities() const noexcept {
+  if (!tagManagerEnabled()) { return std::shared_ptr<const core::SavedTagSeedPriorities>{}; }
+  const auto snapshot = impl_->queueTags.load();
+  if (!snapshot || snapshot->revision != impl_->lease->sourceRevision()) { return {}; }
+  return snapshot->values;
 }
 void ProfileSource::invalidate()noexcept{impl_->dirty=true;if(impl_->anchor){impl_->anchor->impl_->dirty=true;}}
 const Destination& ProfileSource::destination()const noexcept{return impl_->publicIdentity;}
@@ -581,6 +594,11 @@ std::expected<void,storage::Error> ProfileSource::validate(const storage::Profil
         for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->snapshot()){
           require(child->impl_->namedCurrent()&&child->impl_->memberSnapshot(true)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}
         if (impl_->lease->authorizesObservation(access)) {
+          const auto tags = impl_->queueTags.load();
+          if (tagManagerEnabled() && (!tags || tags->revision != access.revision())) {
+            impl_->queueTags.store(std::make_shared<const Impl::QueueTagSnapshot>(
+                Impl::QueueTagSnapshot{access.revision(), impl_->queueTagReader.read(*impl_->lease, access)}));
+          }
           for (const auto& weak : impl_->subscriptions) {
             if (auto subscription = weak.lock()) { subscription->refresh(access); }
           }

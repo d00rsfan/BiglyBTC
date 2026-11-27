@@ -5,6 +5,7 @@
 #include "identity.hpp"
 #include "effect_authority.hpp"
 #include "subscription_source.hpp"
+#include "biglybtc/saved_download_tags.hpp"
 #include <atomic>
 #include <memory>
 #include <functional>
@@ -93,6 +94,8 @@ private:
   friend class OwnedTorrent;
   friend class OwnedProfile;
   friend class SourcePermit;
+  // Absent until the I/O worker has observed this profile revision.
+  std::optional<std::shared_ptr<const core::SavedTagSeedPriorities>> queueTagPriorities() const noexcept;
   std::expected<void,storage::Error> validate(const storage::ProfileSourceAccess&) const;
   // Read-only final CAS preflight after the friend's actual flush/remove/join.
   // Accepts intentionally revoked effects ONLY when every held named source

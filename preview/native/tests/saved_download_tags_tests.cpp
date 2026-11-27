@@ -1,4 +1,5 @@
 #include "biglybtc/saved_download_tags.hpp"
+#include "biglybtc/queue_policy.hpp"
 #include "saved_download_tags_view.hpp"
 
 #include <algorithm>
@@ -20,10 +21,9 @@ std::string bytes(std::string_view value) { return std::to_string(value.size()) 
 std::string list(std::initializer_list<std::string> values) {
   std::string result = "l"; for (const auto& value : values) { result += value; } return result + 'e';
 }
-std::string dictionary(std::initializer_list<std::pair<std::string, std::string>> fields) {
-  std::vector<std::pair<std::string, std::string>> sorted(fields);
-  std::sort(sorted.begin(), sorted.end()); std::string result = "d";
-  for (const auto& [key, value] : sorted) { result += bytes(key) + value; } return result + 'e';
+std::string dictionary(std::vector<std::pair<std::string, std::string>> fields) {
+  std::sort(fields.begin(), fields.end()); std::string result = "d";
+  for (const auto& [key, value] : fields) { result += bytes(key) + value; } return result + 'e';
 }
 constexpr std::string_view Hash20 = "AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT";
 constexpr std::string_view Hash32 = "AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQTCQKRMFYYDENBWHA5DYPQ";
@@ -86,6 +86,59 @@ int main() {
       check(tag.uniqueHashes[0].hex()=="000102030405060708090A0B0C0D0E0F10111213", "20-byte declared hash mismatch");
       check(tag.uniqueHashes[1].hex()=="000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F", "32-byte declared hash mismatch");
       check(value.source->originalBytes()==raw && value.source->serialize()==raw, "unknown raw source changed");
+    });
+    run("saved-tag-priorities-follow-original-dictionary-order", [] {
+      const auto record = [](std::string first, std::string notFirst) {
+        return dictionary({{"n", bytes("priority")}, {"o", list({bytes(Hash20)})},
+            {"c", dictionary({{"rl.fps", std::move(first)}, {"rl.nfps", std::move(notFirst)}})}});
+      };
+      const auto first = record("i1e", "i0e"), notFirst = record("i0e", "i1e");
+      const auto project = [](std::string manual) {
+        return core::savedTagSeedPriorities(parsed(dictionary({{"3", std::move(manual)}})));
+      };
+      constexpr std::string_view hex = "000102030405060708090A0B0C0D0E0F10111213";
+      // The original decoded map visits key 8 before key 1 in this dictionary.
+      auto priorities = project(dictionary({{"1", first}, {"8", notFirst}}));
+      check(priorities.size() == 1 && priorities.begin()->second.first && !priorities.begin()->second.notFirst,
+          "last original tag sync did not update both flags");
+      priorities = project(dictionary({{"1", notFirst}, {"8", first}, {"9", record("i2e", bytes("1"))}}));
+      check(priorities.size() == 1 && !priorities.begin()->second.first && priorities.begin()->second.notFirst,
+          "unrelated or malformed boolean tags changed first priority");
+      std::vector<std::pair<std::string, std::string>> expanded{{"100", first}, {"c", "de"}};
+      for (int id = 0; id <= 42; ++id) { expanded.emplace_back(std::to_string(id), id == 21 ? notFirst : "de"); }
+      priorities = project(dictionary(std::move(expanded)));
+      check(priorities.size() == 1 && priorities.begin()->second.notFirst && !priorities.begin()->second.first,
+          "resizing and compacting the original dictionary changed tag precedence");
+      const auto both = project(dictionary({{"10", record("i1e", "i1e")}}));
+      core::QueueTorrentFacts facts;
+      facts.token = 1;
+      facts.complete = true;
+      facts.shareRatio = 5000;
+      storage::applySavedTagSeedPriority(&both, hex, facts);
+      const auto ranked = core::evaluateQueue({}, std::span(&facts, 1), {});
+      check(facts.externallyFirstPriority && facts.externallyNotFirstPriority && ranked
+          && ranked->decisions.front().firstPriority, "positive original priority must win where both flags are set");
+    });
+    run("queue-tag-read-reuses-only-stable-current-source", [] {
+      Area area, foreign;
+      const auto source = [](const char* flag) {
+        return dictionary({{"3", dictionary({{"1", dictionary({
+            {"c", dictionary({{flag, "i1e"}})}, {"o", list({bytes(Hash20)})}})}})}});
+      };
+      area.write("tag.config", source("rl.fps"));
+      auto access = area.lease->sourceAccess();
+      check(bool(access), "current queue tag profile source");
+      storage::SavedTagSeedPriorityReader reader;
+      const auto first = reader.read(*area.lease, *access);
+      check(first && first->size() == 1 && first->begin()->second.first
+          && reader.read(*area.lease, *access) == first, "unchanged source did not retain its projection");
+      check(!reader.read(*foreign.lease, *access), "wrong profile inherited queue tag settings");
+      area.write("tag.config.saving", source("rl.nfps"));
+      check(!reader.read(*area.lease, *access), "uncommitted tag candidate supplied queue control");
+      std::filesystem::rename(area.root / "tag.config.saving", area.root / "tag.config");
+      const auto replaced = reader.read(*area.lease, *access);
+      check(replaced && replaced != first && replaced->begin()->second.notFirst && !replaced->begin()->second.first,
+          "replacement priority retained stale flags");
     });
     run("absence-empty-and-download-state-swarm-data-stay-distinct", [] {
       auto absent=parsed("de");check(!absent.manualTypePresent && absent.tags.empty(), "missing manual root invented tags");

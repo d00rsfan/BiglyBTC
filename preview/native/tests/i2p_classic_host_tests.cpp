@@ -8,6 +8,7 @@
 #include "coexist_coordinator.hpp"
 #include "mixed_i2p_source.hpp"
 #include "mixed_i2p_transport.hpp"
+#include "manual_tag_store.hpp"
 #include <QTcpSocket>
 #include <QPointer>
 #include <libtorrent/alert_types.hpp>
@@ -315,6 +316,42 @@ private slots:
     const auto witness=owner->lastListenerFailure();QVERIFY(witness);QVERIFY(witness->sequence>0);QCOMPARE(witness->socketType,static_cast<int>(lt::socket_type_t::tcp));QCOMPARE(witness->operation,static_cast<int>(lt::operation_t::sock_bind));QVERIFY(witness->errorCode!=0);QVERIFY(!witness->handledAsMixedAccept);
     QVERIFY(!owner->managedAvailable());const auto polled=owner->poll();QVERIFY(!polled);QCOMPARE(polled.error(),engine::AccountingError::OwnerResetRequired);
   }
+  void savedManualTagFirstPriorityAppliesToPublicOwner_data(){
+    QTest::addColumn<bool>("enabled");
+    QTest::newRow("enabled")<<true;
+    QTest::newRow("disabled")<<false;
+  }
+  void savedManualTagFirstPriorityAppliesToPublicOwner(){
+    QFETCH(bool,enabled);
+    namespace test=owned_i2p_test;
+    test::Fixture f(true);
+    test::write(f.path/"tag.config",test::priorityTag());
+    auto state=core::Document::parse(test::read(f.state()));
+    QVERIFY(state&&state->eraseValue("announce"));
+    test::write(f.state(),state->serialize());
+    test::write(f.path/"fixture.torrent",test::dict({{"info",f.info}}));
+    auto config=core::Document::parse(test::read(f.path/"biglybt.config"));
+    QVERIFY(config&&config->replaceValue("tagmanager.enable",enabled?"i1e":"i0e"));
+    test::write(f.path/"biglybt.config",config->serialize());
+    auto startup=storage::TagManagerStartupMode::capture(*f.lease);
+    QVERIFY(startup);
+    auto made=engine::PersistentSession::create({9431,9432,9433});
+    if(!made&&made.error()==engine::AccountingError::DependencyUnqualified){QSKIP("Qualified persistent SDK unavailable");}
+    QVERIFY(made);
+    auto owner=std::move(*made);
+    const auto close=qScopeGuard([&]{static_cast<void>(owner->close(std::chrono::steady_clock::now()+std::chrono::seconds{2}));});
+    QVERIFY(owner->configureNetwork(engine::NetworkPolicy{}));
+    QVERIFY(owner->configureQueuePolicy(core::QueuePolicy{}));
+    QVERIFY(owner->configureTagManagerStartup(*startup));
+    QVERIFY(owner->startIdle(*f.lease));
+    QVERIFY(owner->startManaged(*f.lease,{.hash=f.hash,.queued=true}));
+    const auto applied=[&]{
+      static_cast<void>(owner->poll());
+      const auto rows=owner->managedDownloads();
+      return rows.size()==1&&rows.front().checked&&rows.front().firstPriority==enabled;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(applied(),5000);
+  }
   void coordinatorNormalizationUsesBothAnchorsAndRefusedPublicationLeavesThemCurrent(){
     namespace test=owned_i2p_test;namespace sam=services::i2p::provider;
     if(!engine::PersistentSession::mixedNetworksAvailable()){QSKIP("Qualified mixed SDK unavailable; existing source controls still run");}
@@ -323,6 +360,8 @@ private slots:
     auto inventory=core::Document::parse(test::read(f.path/"downloads.config"));QVERIFY(inventory);
     const auto* rows=inventory->find("downloads");QVERIFY(rows&&rows->children.size()==1);
     auto row=core::Document::parse(inventory->originalBytes().substr(rows->children[0].begin,rows->children[0].end-rows->children[0].begin));QVERIFY(row);QVERIFY(row->replaceValue("position","i5e"));QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(f.path/"downloads.config",inventory->serialize());
+    test::write(f.path/"tag.config",test::priorityTag());
+    auto startup=storage::TagManagerStartupMode::capture(*f.lease);QVERIFY(startup);
     auto pure=sam::ProfileSource::createSession(*f.lease),mixed=sam::ProfileSource::createMixedSession(*f.lease);QVERIFY(pure&&mixed);
     auto child=(*mixed)->prepareMixedChild(f.hash);QVERIFY(child);
     auto made=engine::PersistentSession::create({9401,9402,9403});QVERIFY(made);auto owner=std::move(*made);
@@ -339,11 +378,12 @@ private slots:
     const engine::PositionsPublication publication=[&](const engine::SourceMutation& operation){++publications;return positions([&]()->std::expected<void,storage::Error>{
       if(deny){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Controlled coordinator publication refusal"});}++operations;return operation();
     });};
-    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication));QCOMPARE(publications,1);QCOMPARE(operations,1);QVERIFY(!coordinator.positionFailure());
+    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication,nullptr,&*startup));QCOMPARE(publications,1);QCOMPARE(operations,1);QVERIFY(!coordinator.positionFailure());
+    QVERIFY(owner->managedDownloads().front().firstPriority);
     auto normalized=core::Document::parse(test::read(f.path/"downloads.config"));QVERIFY(normalized);auto library=core::readLibrary(*normalized);QVERIFY(library);QCOMPARE(library->downloads[0].position,std::optional<std::int64_t>{1});
     QVERIFY(test::read(f.path/"downloads.config")!=oldInventory);QVERIFY((*pure)->validate());QVERIFY((*mixed)->validate());QVERIFY((*child)->prepared());
     const auto currentInventory=test::read(f.path/"downloads.config");deny=true;coordinator.invalidatePositions();
-    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication));QCOMPARE(publications,2);QCOMPARE(operations,1);QVERIFY(coordinator.positionFailure());QCOMPARE(coordinator.positionFailure()->message,std::string("Controlled coordinator publication refusal"));
+    QVERIFY(coordinator.tick(*owner,nullptr,*f.lease,network,publication,nullptr,&*startup));QCOMPARE(publications,2);QCOMPARE(operations,1);QVERIFY(coordinator.positionFailure());QCOMPARE(coordinator.positionFailure()->message,std::string("Controlled coordinator publication refusal"));
     QCOMPARE(test::read(f.path/"downloads.config"),currentInventory);QVERIFY((*pure)->validate());QVERIFY((*mixed)->validate());QVERIFY((*child)->prepared());QVERIFY(!(*pure)->effectAuthority()->revoked());QVERIFY(!(*mixed)->effectAuthority()->revoked());
     QCOMPARE(test::read(f.state()),unchangedState);QCOMPARE(test::read(f.path/"biglybt.config"),config);QCOMPARE(test::read(f.key),pureKey);QCOMPARE(test::read(mixedKey),mixedBytes);
   }

@@ -3,6 +3,7 @@
 #include "biglybtc/library.hpp"
 
 #include <limits>
+#include <map>
 #include <optional>
 
 namespace biglybtc::core {
@@ -44,6 +45,13 @@ struct SavedDownloadTags {
   std::vector<SavedDownloadTag> tags;
   std::vector<SavedTagIssue> issues;
 };
+struct SavedTagSeedPriority {
+  bool first = false;
+  bool notFirst = false;
+};
+using SavedTagSeedPriorities = std::map<std::string, SavedTagSeedPriority, std::less<>>;
+// Original manual tag load/sync order over the saved configuration.
+SavedTagSeedPriorities savedTagSeedPriorities(const SavedDownloadTags&);
 struct SavedTagLimits {
   Limits document{};
   std::size_t tags = 4096, members = 65536, fieldBytes = 4096;

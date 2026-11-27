@@ -20,6 +20,14 @@ inline std::string dict(std::initializer_list<std::pair<std::string,std::string>
 inline void write(const fs::path& path,std::string_view bytes){std::ofstream output(path,std::ios::binary|std::ios::trunc);output.write(bytes.data(),static_cast<std::streamsize>(bytes.size()));output.close();if(!output||::chmod(path.c_str(),0600)!=0){throw std::runtime_error("Owned I2P fixture write/mode");}}
 inline std::string read(const fs::path& path){std::ifstream input(path,std::ios::binary);if(!input){throw std::runtime_error("Owned I2P fixture read");}return {std::istreambuf_iterator<char>(input),{}};}
 inline std::string sha1(std::string_view bytes){std::string result(20,'\0');unsigned n=0;if(EVP_Digest(bytes.data(),bytes.size(),reinterpret_cast<unsigned char*>(result.data()),&n,EVP_sha1(),nullptr)!=1||n!=20){throw std::runtime_error("Owned I2P fixture digest");}return result;}
+inline std::string priorityTag(){
+  const auto row=dict({
+    {"c",dict({{"rl.fps","i1e"}})},
+    {"n",b("Priority seed")},
+    {"o","l"+b("3HMO4Z3AGGG4KURW72TGALCMHKNWBVVC")+"e"}
+  });
+  return dict({{"3",dict({{"1",row}})}});
+}
 struct Fixture {
   QTemporaryDir temporary,payloadDirectory;
   fs::path path=temporary.path().toStdString(),key=path/"plugins/azneti2phelper/dest_key1.dat";

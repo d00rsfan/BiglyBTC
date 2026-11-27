@@ -3,6 +3,7 @@
 #include "../../platform/utf8_path.hpp"
 #include "state_file_io.hpp"
 #include "profile_owner.hpp"
+#include "saved_download_tags_view.hpp"
 #include "profile_tag_rates.hpp"
 #include "profile_prepared_tag_attachment.hpp"
 #include "private_tag_rate_source.hpp"
@@ -751,14 +752,16 @@ struct OwnedProfile::Impl {
       }else if(std::chrono::steady_clock::now()>=m->deadline){fail(*m,{Code::Io,"Target I2P storage retirement timed out; recheck retained"});}
     }
   }
-  engine::ExternalQueueSnapshot collectQueue(bool maintenance,bool positionProof=false){
+  engine::ExternalQueueSnapshot collectQueue(bool maintenance,bool positionProof=false,
+      const core::SavedTagSeedPriorities* tagPriorities=nullptr){
     const auto now=nowMillis();std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
     core::QueueContext context;context.nowMillis=now;context.ownerStartedMillis=started;std::int64_t down=0,up=0;bool any=false,onlySeeds=true;
-    for(auto& [key,m]:members){(void)key;if(!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()){continue;}
+    for(auto& [key,m]:members){if(!m->installed||m->retired.requested||!m->failure.empty()||!m->handle.is_valid()){continue;}
       lt::torrent_status s;const auto counters=sample(*m,s);if(counters.state!=engine::detail::ManagedPayloadCounters::Read::Accepted){s=m->handle.status();}
       const bool checked=m->counters->checked.load()&&!s.errc;
       if(maintenance&&checked&&m->queued&&!m->scrapePending&&now>=m->nextScrape){m->handle.scrape_tracker();m->scrapePending=true;m->nextScrape=now+10000;}
       core::QueueTorrentFacts f;const auto& saved=m->data().storage.queueMetadata();
+      storage::applySavedTagSeedPriority(tagPriorities, key, f);
       f.token=m->data().admission;f.position=static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position,1,std::numeric_limits<std::int32_t>::max()));
       f.complete=s.is_finished;
       const bool held=externalQueue?bool(s.flags&lt::torrent_flags::paused):m->queued;
@@ -792,7 +795,13 @@ struct OwnedProfile::Impl {
   }
   void schedule(){
     if(sourcePaused||phase!=Phase::Active||!session){return;}alerts();if(!session){return;}
-    auto snapshot=collectQueue(true);if(externalQueue){return;}
+    std::shared_ptr<const core::SavedTagSeedPriorities> tagPriorities;
+    if (!externalQueue && !members.empty()) {
+      auto current=source->queueTagPriorities();
+      if (!current) { requestStartup();return; }
+      tagPriorities=std::move(*current);
+    }
+    auto snapshot=collectQueue(true,false,tagPriorities.get());if(externalQueue){return;}
     auto context=snapshot.context;const auto now=context.nowMillis;
     std::vector<core::QueueTorrentFacts> facts;std::map<std::uint64_t,Member*> targets;
     for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,find(row.binding.hash));facts.push_back(std::move(row.facts));}

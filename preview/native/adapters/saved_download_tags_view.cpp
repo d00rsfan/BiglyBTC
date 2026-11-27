@@ -1,5 +1,5 @@
 #include "saved_download_tags_view.hpp"
-#include "state_file_io.hpp"
+#include "biglybtc/queue_policy.hpp"
 #include <new>
 
 namespace biglybtc::storage {
@@ -39,5 +39,57 @@ std::expected<SavedDownloadTagsView, Error> readSavedDownloadTagsView(const Prof
     if (stop.stop_requested()) { return std::unexpected(cancelled()); }
     return std::unexpected(Error{ErrorCode::Io, "Insufficient memory for saved download tags"});
   }
+}
+
+std::shared_ptr<const core::SavedTagSeedPriorities> SavedTagSeedPriorityReader::read(
+    const ProfileLease& lease, const ProfileSourceAccess& access) noexcept {
+  const auto unavailable = [this]() -> std::shared_ptr<const core::SavedTagSeedPriorities> {
+    stamps_.reset();
+    priorities_.reset();
+    return {};
+  };
+  if (!lease.authorizesObservation(access)) { return unavailable(); }
+  try {
+    const auto capture = [&]() -> std::optional<Stamps> {
+      constexpr std::array names{"tag.config", "tag.config.bak", "tag.config.saving"};
+      Stamps result;
+      for (std::size_t i = 0; i < names.size(); ++i) {
+        const auto observed = detail::stateStampAt(lease.directoryHandle(), names[i]);
+        if (!observed || (*observed && (!(*observed)->owned || !(*observed)->regular
+            || (*observed)->links != 1))) { return {}; }
+        result[i] = *observed;
+      }
+      return result;
+    };
+    const auto same = [](const Stamps& a, const Stamps& b) {
+      for (std::size_t i = 0; i < a.size(); ++i) {
+        if (bool(a[i]) != bool(b[i]) || (a[i] && !detail::sameStateSnapshot(*a[i], *b[i]))) { return false; }
+      }
+      return true;
+    };
+    const auto before = capture();
+    if (!before || before->back()) { return unavailable(); }
+    if (stamps_ && same(*stamps_, *before)) { return priorities_; }
+    const auto saved = readSavedDownloadTagsView(lease);
+    if (!saved) { return unavailable(); }
+    auto priorities = std::make_shared<const core::SavedTagSeedPriorities>(
+        saved->snapshot ? core::savedTagSeedPriorities(*saved->snapshot) : core::SavedTagSeedPriorities{});
+    const auto after = capture();
+    if (!after || !same(*before, *after)) { return unavailable(); }
+    stamps_ = *after;
+    priorities_ = std::move(priorities);
+    return priorities_;
+  } catch (...) {
+    return unavailable();
+  }
+}
+
+void applySavedTagSeedPriority(const core::SavedTagSeedPriorities* priorities, std::string_view hash,
+    core::QueueTorrentFacts& facts) noexcept {
+  if (!priorities) { return; }
+  const auto found = priorities->find(hash);
+  if (found == priorities->end()) { return; }
+  facts.externallyFirstPriority |= found->second.first;
+  facts.externallyNotFirstPriority |= found->second.notFirst;
 }
 } // namespace biglybtc::storage

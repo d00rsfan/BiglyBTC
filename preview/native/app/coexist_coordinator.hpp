@@ -6,6 +6,8 @@
 #include "network_policy.hpp"
 #include "queue_positions.hpp"
 #include "library_view.hpp"
+#include "saved_download_tags_view.hpp"
+#include "tag_manager_startup.hpp"
 #include <algorithm>
 #include <map>
 #include <set>
@@ -27,6 +29,7 @@ class CoexistCoordinator final {
   std::pair<const OwnedI2pService*,std::uint64_t> privateOwner_{};
   std::vector<std::tuple<Key,std::uint64_t,bool>> lastPositions_;
   std::optional<Error> positionFailure_;
+  storage::SavedTagSeedPriorityReader queueTagReader_;
   bool refreshPositions_=true;
   static std::expected<void,Error> fail(std::string message){return std::unexpected(Error{storage::ErrorCode::Conflict,std::move(message)});}
   static std::optional<std::int64_t> sum(std::optional<std::int64_t> a,std::optional<std::int64_t> b){
@@ -74,9 +77,14 @@ public:
   const std::optional<Error>& positionFailure()const noexcept{return positionFailure_;}
   std::expected<void,Error> tickImpl(engine::PersistentSession* pub,OwnedI2pService* priv,
       const storage::ProfileLease& lease,const engine::NetworkPolicy& network,
-      const engine::PositionsPublication& publishPositions={},engine::ProfileTagRates* common=nullptr){
+      const engine::PositionsPublication& publishPositions,engine::ProfileTagRates* common,
+      const storage::TagManagerStartupMode* tagStartup){
     std::expected<engine::ExternalQueueSnapshot,Error> a=pub?pub->externalQueueSnapshot():std::expected<engine::ExternalQueueSnapshot,Error>{engine::ExternalQueueSnapshot{}};if(!a){return std::unexpected(a.error());}
     engine::ExternalQueueSnapshot b;if(priv){auto v=priv->externalQueueSnapshot();if(!v){return std::unexpected(v.error());}b=std::move(*v);}
+    std::shared_ptr<const core::SavedTagSeedPriorities> tagPriorities;
+    if(tagStartup&&tagStartup->enabled()&&tagStartup->matches(lease)){
+      if(auto access=lease.sourceAccess()){tagPriorities=queueTagReader_.read(lease,*access);}
+    }
     if(refreshPositions_){
       auto source=storage::readLibraryView(lease);if(!source){return std::unexpected(source.error());}
       std::map<std::string,std::optional<std::uint32_t>> saved;
@@ -107,7 +115,9 @@ public:
         const Key key{privateRow,row.binding.hash.hex(),row.binding.admission};
         if(!row.binding.admission||!current.insert(key).second){return fail("Duplicate shared queue admission");}
         auto [token,added]=tokens_.try_emplace(key,0);if(added){if(nextToken_==UINT64_MAX){return fail("Shared queue identity space exhausted");}token->second=++nextToken_;}
-        row.facts.token=token->second;facts.push_back(row.facts);bindings.push_back({privateRow,row.binding});
+        row.facts.token=token->second;
+        storage::applySavedTagSeedPriority(tagPriorities.get(),std::get<1>(key),row.facts);
+        facts.push_back(row.facts);bindings.push_back({privateRow,row.binding});
         checked=checked&&row.checked;positions.push_back(row.position);
         positionStamp.push_back({key,row.transitionOrder,row.position.complete});
         if(row.transition){transitionReceipts.push_back({privateRow,row.transitionOrder,*row.transition});}
@@ -173,12 +183,15 @@ public:
   }
   std::expected<void,Error> tick(engine::PersistentSession& pub,OwnedI2pService* priv,
       const storage::ProfileLease& lease,const engine::NetworkPolicy& network,
-      const engine::PositionsPublication& publish={},engine::ProfileTagRates* common=nullptr){
-    return tickImpl(&pub,priv,lease,network,publish,common);
+      const engine::PositionsPublication& publish={},engine::ProfileTagRates* common=nullptr,
+      const storage::TagManagerStartupMode* tagStartup=nullptr){
+    return tickImpl(&pub,priv,lease,network,publish,common,tagStartup);
   }
   std::expected<void,Error> tickPrivate(OwnedI2pService& priv,const storage::ProfileLease& lease,
       const engine::NetworkPolicy& network,const engine::PositionsPublication& publish,
-      engine::ProfileTagRates& common){return tickImpl(nullptr,&priv,lease,network,publish,&common);}
+      engine::ProfileTagRates& common,const storage::TagManagerStartupMode* tagStartup=nullptr){
+    return tickImpl(nullptr,&priv,lease,network,publish,&common,tagStartup);
+  }
 
 };
 }

@@ -1,5 +1,6 @@
 #include "biglybtc/saved_download_tags.hpp"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <new>
@@ -50,7 +51,68 @@ std::optional<TorrentHash> normalHash(std::string_view id) {
   auto parsed = TorrentHash::parse({bytes.data(), used});
   return parsed ? std::optional{std::move(*parsed)} : std::nullopt;
 }
+
+std::vector<std::size_t> tagDictionaryOrder(const Node& manual) {
+  // BDecoder loads resilient tag.config dictionaries into a LightHashMap.
+  // TagManagerImpl creates and syncs manual tags in that map's slot order.
+  std::vector<std::size_t> slots(8, NoSavedTagIndex);
+  const auto insert = [&](std::size_t index) {
+    std::uint32_t hash = 0;
+    for (const unsigned char byte : manual.children[index * 2].bytes) {
+      hash = hash * 31 + byte; // Java String.hashCode for BDecoder's Latin-1 keys.
+    }
+    const auto mask = slots.size() - 1;
+    std::size_t slot = hash & mask;
+    for (std::uint64_t probe = 1; slots[slot] != NoSavedTagIndex; ++probe) {
+      slot = (hash + probe * (probe + 1) / 2) & mask;
+    }
+    slots[slot] = index;
+  };
+  const auto resize = [&](std::size_t count) {
+    auto previous = std::exchange(slots, std::vector<std::size_t>(count, NoSavedTagIndex));
+    for (const auto index : previous) {
+      if (index != NoSavedTagIndex) { insert(index); }
+    }
+  };
+  const auto count = manual.children.size() / 2;
+  for (std::size_t index = 0; index < count; ++index) {
+    if (4 * (index + 1) >= 3 * slots.size()) { resize(2 * slots.size()); }
+    insert(index);
+  }
+  std::size_t compact = 1;
+  while (compact * 9 < (count + 1) * 10) { compact *= 2; } // compactify(-0.9f)
+  if (compact < slots.size()) { resize(compact); }
+  std::erase(slots, NoSavedTagIndex);
+  return slots;
+}
 } // namespace
+
+SavedTagSeedPriorities savedTagSeedPriorities(const SavedDownloadTags& tags) {
+  SavedTagSeedPriorities result;
+  const auto* manual = tags.source ? tags.source->find("3") : nullptr;
+  if (!manual || tags.tags.empty()) { return result; }
+  std::vector<const SavedDownloadTag*> byIndex(manual->children.size() / 2);
+  for (const auto& tag : tags.tags) {
+    if (tag.id && !tag.duplicateId && tag.idKey == std::to_string(*tag.id)) {
+      byIndex.at(tag.sourceIndex) = &tag;
+    }
+  }
+  for (const auto index : tagDictionaryOrder(*manual)) {
+    const auto* tag = byIndex[index];
+    if (!tag || tag->uniqueHashes.empty()) { continue; }
+    const auto* settings = manual->children[index * 2 + 1].find("c");
+    if (!settings) { continue; }
+    const auto enabled = [&](std::string_view key) {
+      const auto* value = settings->find(key);
+      return value && value->type == Node::Type::Integer && value->integer == 1;
+    };
+    const SavedTagSeedPriority priority{enabled("rl.fps"), enabled("rl.nfps")};
+    if (!priority.first && !priority.notFirst) { continue; }
+    // Original updateFPSeeding applies both flags on each priority-tag sync.
+    for (const auto& hash : tag->uniqueHashes) { result.insert_or_assign(hash.hex(), priority); }
+  }
+  return result;
+}
 
 std::expected<SavedDownloadTags, SavedTagError> readSavedDownloadTags(std::string_view encoded, SavedTagLimits limits) {
   try {

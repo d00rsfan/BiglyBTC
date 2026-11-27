@@ -674,8 +674,9 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
   CoexistCoordinator coexistQueue;
   void scheduleCoexistence(){
     const auto publish=[this](const auto& operation){return publishPositions(operation);};
-    if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy,publish,commonTagRates.get()));}
-    else if(privateOnly()&&i2p&&commonTagRates){take(coexistQueue.tickPrivate(*i2p,lease,networkPolicy,publish,*commonTagRates));}
+    const auto* tags=tagManagerAtOpen?&*tagManagerAtOpen:nullptr;
+    if(coexistence()&&engine){take(coexistQueue.tick(*engine,i2p.get(),lease,networkPolicy,publish,commonTagRates.get(),tags));}
+    else if(privateOnly()&&i2p&&commonTagRates){take(coexistQueue.tickPrivate(*i2p,lease,networkPolicy,publish,*commonTagRates,tags));}
   }
   void requireI2pIdle(bool categoryRecovery=false) {
     if(!categoryRecovery){requireCategoryInventoryWritable();}

@@ -7,6 +7,7 @@
 #include "runtime_console.hpp"
 #include "file_channel_piece_window.hpp"
 #include "profile_tag_rates.hpp"
+#include "saved_download_tags_view.hpp"
 #include "profile_backup.hpp"
 #include "backup_piece_map.hpp"
 #include "managed_tracker_health.hpp"
@@ -321,10 +322,12 @@ struct PersistentSession::Impl {
   std::shared_ptr<const detail::ManagedTrackerResponseApi> trackerResponseApi;
   std::unique_ptr<lt::session> session{};
   std::optional<storage::TagManagerStartupMode> tagManagerMode;
+  std::shared_ptr<const storage::ProfileLease> queueTagLease;
+  storage::SavedTagSeedPriorityReader queueTagReader;
   std::shared_ptr<ProfileTagRates> tagRates;bool commonTagRateOwner=false;
   void releaseTagRateOwner()noexcept{
     if(commonTagRateOwner&&tagRates&&session){try{(void)tagRates->release(*session);}catch(...){}}
-    tagRates.reset();commonTagRateOwner=false;tagManagerMode.reset();
+    tagRates.reset();commonTagRateOwner=false;tagManagerMode.reset();queueTagLease.reset();
   }
   std::optional<storage::Error> tagRateProblem;
   Clock::time_point tagRateNext{};
@@ -771,6 +774,9 @@ struct PersistentSession::Impl {
       detail::require(profile->device == profileDevice && profile->inode == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile->device; profileInode = profile->inode; profileBound = true; }
+    if (!queueTagLease && tagManagerMode && tagManagerMode->enabled() && tagManagerMode->matches(lease)) {
+      if (auto retained = lease.retain()) { queueTagLease = std::move(*retained); }
+    }
     if(libraryRegularTrackerMode()){
       if(regularTrackerLease){detail::require(lease.sharesOwnership(*regularTrackerLease),"Regular tracker profile ownership changed",storage::ErrorCode::Conflict);}
       else{auto retained=lease.retain();detail::require(retained.has_value(),"Regular tracker profile retention failed",storage::ErrorCode::Conflict);regularTrackerLease=std::move(*retained);}
@@ -1204,7 +1210,14 @@ struct PersistentSession::Impl {
       try{queuePositionFailure=std::make_shared<const storage::Error>(failure.error);}catch(...){queuePositionFailure.reset();}
     }catch(...){queuePositionsBlocked=saveAttempted;queuePositionsUnavailable=true;queuePositionFailure.reset();}
   }
-  ExternalQueueSnapshot collectQueue(bool positionProof=false) {
+  std::shared_ptr<const core::SavedTagSeedPriorities> readQueueTagPriorities() {
+    if (!queueTagLease || externalQueue) { return {}; }
+    auto access = queueTagLease->sourceAccess();
+    return access ? queueTagReader.read(*queueTagLease, *access) : nullptr;
+  }
+
+  ExternalQueueSnapshot collectQueue(bool positionProof=false,
+      const core::SavedTagSeedPriorities* tagPriorities=nullptr) {
     std::vector<core::QueueTorrentFacts> facts;
     facts.reserve(managed.size());
     std::map<std::uint64_t, Managed*> targets;
@@ -1225,6 +1238,7 @@ struct PersistentSession::Impl {
       if (!value.handle.is_valid() || value.removing || value.stop || value.status.failure || value.status.verificationHeld || value.status.recheck) { continue; }
       const auto& saved = value.storage.queueMetadata();
       core::QueueTorrentFacts item;
+      storage::applySavedTagSeedPriority(tagPriorities, key, item);
       item.token = value.status.admission;
       item.position = value.queuePosition.value_or(static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position, 1,
           std::numeric_limits<std::int32_t>::max())));
@@ -1350,12 +1364,14 @@ struct PersistentSession::Impl {
   }
   std::vector<ExternalQueueRow> restoredDownloads;
   std::map<std::string,DormantTrackerReceipt> selectedLightSeeds;
-  void appendRestored(std::vector<core::QueueTorrentFacts>& facts,core::QueueContext& context) const {
+  void appendRestored(std::vector<core::QueueTorrentFacts>& facts,core::QueueContext& context,
+      const core::SavedTagSeedPriorities* tagPriorities) const {
     if(facts.empty()&&!restoredDownloads.empty()){context.seedingOnly=!magnetActive();}
     for(const auto& row:restoredDownloads){
       const auto owner=managed.find(row.binding.hash.hex());
       if(owner!=managed.end()&&owner->second->status.retained){continue;}
       facts.push_back(row.facts);
+      storage::applySavedTagSeedPriority(tagPriorities, row.binding.hash.hex(), facts.back());
       if(facts.back().lightSeedRequested){facts.back().lightSeedRequested=confirmedDormantTracker(row.binding.hash)!=nullptr;}
       if(!row.facts.complete){context.seedingOnly=false;}
     }
@@ -1363,10 +1379,11 @@ struct PersistentSession::Impl {
   void applyQueue() {
     if(externalQueue||closingAdmission){return;}
     normalizeManagedPositions();
-    auto snapshot=collectQueue();std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
+    const auto tagPriorities=readQueueTagPriorities();
+    auto snapshot=collectQueue(false,tagPriorities.get());std::vector<core::QueueTorrentFacts> facts;facts.reserve(snapshot.rows.size());
     std::map<std::uint64_t,Managed*> targets;
     for(auto& row:snapshot.rows){targets.emplace(row.binding.admission,managed.at(row.binding.hash.hex()).get());facts.push_back(std::move(row.facts));}
-    appendRestored(facts,snapshot.context);
+    appendRestored(facts,snapshot.context,tagPriorities.get());
     auto plan = core::evaluateQueue(*queuePolicy, facts, snapshot.context);
     if (!plan) {
       for (auto& [key, value] : managed) {
@@ -2304,11 +2321,12 @@ std::vector<core::TorrentHash> PersistentSession::selectRestoredDownloads(std::v
   impl_->selectedLightSeeds.clear();
   impl_->restoredDownloads=std::move(rows);
   if(impl_->restoredDownloads.empty()){return selected;}
-  auto snapshot=impl_->collectQueue();
+  const auto tagPriorities=impl_->readQueueTagPriorities();
+  auto snapshot=impl_->collectQueue(false,tagPriorities.get());
   std::vector<core::QueueTorrentFacts> facts;
   facts.reserve(snapshot.rows.size()+impl_->restoredDownloads.size());
   for(auto& row:snapshot.rows){facts.push_back(std::move(row.facts));}
-  impl_->appendRestored(facts,snapshot.context);
+  impl_->appendRestored(facts,snapshot.context,tagPriorities.get());
   const auto plan=core::evaluateQueue(*impl_->queuePolicy,facts,snapshot.context);
   if(!plan){
     // An unrepresentable projection must go through full admission so the

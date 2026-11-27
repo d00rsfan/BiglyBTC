@@ -332,11 +332,11 @@ class DhtChannelTests final:public QObject {
     return contact;
   }
   void registerSeedOwner(Router& router,i2p::provider::OwnedProfile& owner,const d::Contact& contact,
-      const d::Contact* mixed=nullptr) {
+      const d::Contact* mixed=nullptr,biglybtc::core::QueuePolicy queue={}) {
     QVERIFY(router.listen());
     const auto mixedRoutes=mixed?std::optional(d::Actor::Options{{},0,{*mixed}}):std::nullopt;
     QVERIFY(owner.configureDiscovery({{},10000,{contact}},mixedRoutes));
-    QVERIFY(owner.begin({router.options(),{{"i2cp.fastReceive","true"}},{6881,6881}},{},{}));
+    QVERIFY(owner.begin({router.options(),{{"i2cp.fastReceive","true"}},{6881,6881}},queue,{}));
     QTRY_VERIFY(router.next());
     QCOMPARE(router.take().type,cp::GetDateType);
     const auto now=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());
@@ -1179,6 +1179,62 @@ private slots:
     (*owner)->join();
     QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
     QCOMPARE(original::read(profile.path/"subs"/file),body);
+  }
+  void savedManualTagOverridesPrivateSeedRatio_data() {
+    QTest::addColumn<bool>("tagged");
+    QTest::newRow("tagged") << true;
+    QTest::newRow("untagged") << false;
+  }
+  void savedManualTagOverridesPrivateSeedRatio() {
+    QFETCH(bool,tagged);
+    namespace source=owned_i2p_test;
+    if (!i2p::provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
+    source::Fixture fixture;
+    source::write(source::fs::path(fixture.payloadDirectory.path().toStdString())/"owned.bin",fixture.payload);
+    if (tagged) { source::write(fixture.path/"tag.config",source::priorityTag()); }
+    const auto state=source::dict({{"info",fixture.info},{"attributes",source::dict({
+      {"networks","l3:I2Pe"},{"peersources","l3:DHTe"},{"resumecomplete","i2e"},{"storetypes","l1:Le"}
+    })},{"resume",source::dict({{"data",source::dict({
+      {"resume data",source::b("\x01")},{"valid","i1e"},{"blocks","de"}
+    })}})}});
+    source::write(fixture.state(),state);
+    source::write(fixture.path/"fixture.torrent",source::dict({{"info",fixture.info}}));
+    auto inventory=source::core::Document::parse(source::read(fixture.path/"downloads.config"));
+    QVERIFY(inventory&&inventory->find("downloads")&&inventory->find("downloads")->children.size()==1);
+    auto row=source::core::Document::parse(source::core::encodeValue(inventory->find("downloads")->children.front()).value());
+    const auto count="i"+std::to_string(fixture.payload.size())+"e";
+    QVERIFY(row&&row->replaceValue("downloaded",count)&&row->replaceValue("uploaded",count));
+    QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));
+    source::write(fixture.path/"downloads.config",inventory->serialize());
+    auto owner=i2p::provider::OwnedProfile::prepare(*fixture.lease,fixture.hash);
+    QVERIFY2(owner,owner?"":owner.error().message.c_str());
+    Router router;
+    auto remote=signer("dsa");
+    const auto contact=seedContact(remote);
+    QVERIFY(contact);
+    biglybtc::core::QueuePolicy queue;
+    queue.firstPriorityShareRatio=0;
+    queue.rankMode=biglybtc::core::QueueRankMode::None;
+    queue.ignoreShareRatio=500;
+    registerSeedOwner(router,**owner,*contact,nullptr,queue);
+    const auto complete=[&]{
+      const auto rows=(*owner)->observations();
+      return rows.size()==1&&rows.front().selectedComplete;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(complete(),5000);
+    const auto running=[&]{
+      const auto rows=(*owner)->observations();
+      return rows.size()==1&&!rows.front().queued;
+    };
+    if (tagged) {
+      QTRY_VERIFY_WITH_TIMEOUT(running(),5000);
+    } else {
+      QTest::qWait(600);
+      QVERIFY(!running());
+    }
+    QCOMPARE((*owner)->phase(),i2p::provider::OwnedProfile::Phase::Active);
+    (*owner)->close();
+    (*owner)->join();
   }
   void actualPrivateProfileTransferInBackup_data() {
     QTest::addColumn<bool>("receive");
