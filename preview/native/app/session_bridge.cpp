@@ -736,10 +736,12 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if (!paused) { return std::unexpected(paused.error()); }
       resumeI2p=*paused;
     }
-    return storage::backupSavedProfile(lease,destination,date,stop,backupTransferStatistics());
+    return storage::backupSavedProfile(lease,destination,date,stop,backupTransferStatistics(stop,pauseDownloads));
   }
-  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics() const {
-    auto statistics = engine ? engine->backupTransferStatistics() : std::vector<storage::ProfileBackupTransferStatistics>{};
+  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics(
+      std::stop_token stop,bool includeResume) {
+    auto statistics=engine?engine->backupTransferStatistics(stop,includeResume)
+        :std::vector<storage::ProfileBackupTransferStatistics>{};
     if (i2p) {
       for (const auto& [hash, observed] : i2pFacts) {
         static_cast<void>(hash);

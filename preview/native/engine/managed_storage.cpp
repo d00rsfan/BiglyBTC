@@ -757,17 +757,27 @@ bool writeLinks(storage::TorrentStateFile& state, const std::vector<Slot>& slots
   if(after==before){return false;}
   done(state.replaceSection("attributes",std::move(after)));return true;
 }
-void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int64_t>& counts,
-    std::span<const std::uint8_t> pieces, bool complete, bool classified) {
-  auto resume=dictionary(state.document().find("resume")); auto data=dictionary(resume.find("data"));
+struct ProgressSections {
+  std::string resume;
+  std::string attributes;
+};
+ProgressSections progressSections(const core::Document& state,const std::vector<std::int64_t>& counts,
+    std::span<const std::uint8_t> pieces,bool complete,bool classified) {
+  auto resume=dictionary(state.find("resume"));auto data=dictionary(resume.find("data"));
   std::string bitmap(pieces.size(),'\2');
   for(std::size_t i=0;i<pieces.size();++i){if(pieces[i]){bitmap[i]=1;}else if(complete||classified){bitmap[i]=0;}}
   put(data,"resume data",stringValue(bitmap)); put(data,"valid",complete||classified?"i1e":"i0e"); put(data,"blocks","de");
-  put(resume,"data",data.serialize()); done(state.replaceSection("resume",resume.serialize()));
-  auto attributes=dictionary(state.document().find("attributes")); put(attributes,"resumecomplete",complete?"i2e":"i1e");
+  put(resume,"data",data.serialize());
+  auto attributes=dictionary(state.find("attributes"));put(attributes,"resumecomplete",complete?"i2e":"i1e");
   auto downloaded=dictionary(attributes.find("filedownloaded")); std::string list="l";
   for (const auto value:counts) { list+=intValue(value); } put(downloaded,"downloaded",list+'e'); put(attributes,"filedownloaded",downloaded.serialize());
-  done(state.replaceSection("attributes",attributes.serialize()));
+  return {resume.serialize(),attributes.serialize()};
+}
+void writeProgress(storage::TorrentStateFile& state,const std::vector<std::int64_t>& counts,
+    std::span<const std::uint8_t> pieces,bool complete,bool classified) {
+  auto sections=progressSections(state.document(),counts,pieces,complete,classified);
+  done(state.replaceSection("resume",std::move(sections.resume)));
+  done(state.replaceSection("attributes",std::move(sections.attributes)));
 }
 void writeProgress(storage::TorrentStateFile& state,const std::vector<std::int64_t>& counts,
     std::size_t pieces,bool complete){
@@ -866,6 +876,57 @@ std::expected<void,Error> ManagedStorage::validateSharedSeedSource(
 }
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 const core::SavedDownload& ManagedStorage::capturedDownload() const { return impl_->captured; }
+
+std::optional<storage::ProfileBackupResumeImage> ManagedStorage::prepareBackupResume(
+    const storage::ProfileLease& lease,std::span<const std::uint8_t> verified) const try {
+  if (!impl_||impl_->purpose!=ManagedStoragePurpose::Download||impl_->attempted||!impl_->pending.empty()
+      ||verified.size()!=static_cast<std::size_t>(impl_->params.ti->num_pieces())
+      ||std::ranges::any_of(verified,[](auto piece){return piece>1;})) {
+    return {};
+  }
+  const auto& owner=*impl_;
+  if (owner.mapped) {
+    if (owner.mapped->failure()||!owner.mapped->flush()) { return {}; }
+  }
+  const auto counts=inspectFileProgress(verified);
+  const auto completed=verifiedOriginalBytes(verified);
+  if (!completed||counts.size()!=owner.layout.files.size()||*completed<=owner.captured.completedBytes.value_or(0)) {
+    return {};
+  }
+
+  const auto length=owner.layout.pieceLength;
+  for (const auto& slot:owner.slots) {
+    if (slot.padding) { continue; }
+    if (slot.expanding||slot.kind!=storage::OriginalStorageKind::Linear) { return {}; }
+    if (!counts[slot.index]) { continue; }
+    const auto& file=owner.layout.files[slot.index];
+    const auto first=file.offset/length;
+    auto last=(file.offset+file.bytes-1)/length;
+    while (last>first&&!verified[static_cast<std::size_t>(last)]) { --last; }
+    const auto pieceEnd=last*length+std::min(length,owner.layout.bytes-last*length);
+    const auto required=std::min(file.offset+file.bytes,pieceEnd)-file.offset;
+    const auto held=stateStamp(slot.data.get());
+    const auto named=stateStampAt(slot.parent.get(),slot.actual.filename());
+    if (!held||!held->owned||!held->regular||held->size<required||held->size>slot.bytes
+        ||!named||!*named||!sameFile(slot.identity,*held)||!sameStateSnapshot(*held,**named)
+        ||!syncStateFile(slot.data.get())) {
+      return {};
+    }
+    const auto current=stateStampAt(slot.parent.get(),slot.actual.filename());
+    if (!current||!*current||!sameStateSnapshot(**current,*held)) { return {}; }
+  }
+
+  auto state=owner.store.load(lease,owner.hash);
+  if (!state||state->recoveredBackup()||!state->persistedBytes()
+      ||state->persistedBytes()!=owner.state.persistedBytes()) {
+    return {};
+  }
+  const bool complete=std::ranges::all_of(verified,[](auto piece){return piece==1;});
+  auto sections=progressSections(state->document(),counts,verified,complete,true);
+  auto replacement=state->encodeBackupResume(std::move(sections.resume),std::move(sections.attributes));
+  if (!replacement||*replacement==*state->persistedBytes()) { return {}; }
+  return storage::ProfileBackupResumeImage{*state->persistedBytes(),std::move(*replacement),*completed};
+} catch (...) { return {}; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedFilePolicy() const noexcept { return impl_->filePolicies; }
 const compat::OriginalLayout& ManagedStorage::capturedFileLayout() const noexcept { return impl_->layout; }
 std::span<const compat::FilePolicy> ManagedStorage::capturedSavedFilePolicy() const noexcept { return impl_->savedFilePolicies; }

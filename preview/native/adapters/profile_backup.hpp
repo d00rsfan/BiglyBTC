@@ -14,10 +14,17 @@ struct ProfileBackup {
   std::uint64_t bytes = 0;
 };
 
+struct ProfileBackupResumeImage {
+  std::string source;
+  std::string destination;
+  std::int64_t completedBytes = 0;
+};
+
 struct ProfileBackupTransferStatistics {
   core::SavedDownload admitted;
   std::optional<std::int64_t> downloaded;
   std::optional<std::int64_t> uploaded;
+  std::optional<ProfileBackupResumeImage> resume{};
 };
 
 // Counts apply to the copied inventory when its saved row still matches the

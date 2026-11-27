@@ -8,6 +8,7 @@
 #include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
+#include "profile_backup.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
 #include "original_torrent_identity.hpp"
 #include "managed_payload_claim.hpp"
@@ -157,6 +158,10 @@ public:
   const ManagedQueueMetadata& queueMetadata() const;
   // Captured original mapping for passive same-admission group authority.
   const core::SavedDownload& capturedDownload() const;
+  // A backup owner supplies the verified map captured before its SDK cache
+  // flush. These bytes are staged only for the separate backup directory.
+  std::optional<storage::ProfileBackupResumeImage> prepareBackupResume(
+      const storage::ProfileLease&,std::span<const std::uint8_t>) const;
   // Effective live policy and the separately retained strict saved projection.
   std::span<const compat::FilePolicy> capturedFilePolicy() const noexcept;
   const compat::OriginalLayout& capturedFileLayout() const noexcept;

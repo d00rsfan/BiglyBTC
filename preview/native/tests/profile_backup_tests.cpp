@@ -2,6 +2,7 @@
 #include "profile_backup.hpp"
 #include "biglybtc/library.hpp"
 #include "profile_backup_scheduler.hpp"
+#include "torrent_state.hpp"
 #include "../platform/utf8_path.hpp"
 
 #include <array>
@@ -163,6 +164,56 @@ void verifyLiveTransferStatisticsInBackup() {
   check(legacySaved.legacyMap && legacySaved.downloads[0].downloaded == 41 && legacySaved.downloads[0].uploaded == 50
       && legacyBytes.contains(untouched) && read(root / "downloads.config") == legacy,
       "Keep a legacy root map and its byte-exact unselected row");
+}
+
+void verifyLiveResumeImageIsBoundToTheSavedStateAndInventory() {
+  Fixture files;
+  write(files.profile/"biglybt.config","de");
+  const std::string hash(20,'m');
+  const std::string row="d14:completedbytesi2e10:downloadedi3e8:uploadedi5e8:save_dir4:data"
+      "5:statei75e7:torrent4:stub12:torrent_hash"+encode(hash)+"e";
+  const auto inventory="d9:downloadsl"+row+"ee";
+  write(files.profile/"downloads.config",inventory);
+  auto saved=core::readLibrary(core::Document::parse(inventory).value()).value();
+  const auto& observed=saved.downloads.front();
+  const auto stateFile=fs::path("active")/(observed.hash->hex()+".dat");
+  const std::string source="d4:infode6:resumed4:datad5:validi0eeee";
+  write(files.profile/stateFile,source);
+  auto store=take(storage::TorrentStateStore::open(*files.lease));
+  const auto snapshot=take(store.load(*files.lease,*observed.hash));
+  check(!snapshot.prepared(),"Read the state without preparing a live mutation");
+  const auto projected=take(snapshot.encodeBackupResume("d4:datad5:validi1eee","de"));
+  const auto coded=core::Document::parse(projected).value();
+  check(coded.find("resume")->find("data")->find("valid")->integer==1&&coded.find("info")->children.empty(),
+      "The backup codec updates a copy and retains the original torrent info");
+  const std::array observations{storage::ProfileBackupTransferStatistics{
+      observed,7,std::nullopt,storage::ProfileBackupResumeImage{source,projected,6}}};
+  const auto make=[&] {
+    return take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-27",{},observations)).directory;
+  };
+  const auto progress=[&](const fs::path& copy) {
+    return core::readLibrary(core::Document::parse(read(copy/"downloads.config")).value()).value().downloads.front();
+  };
+
+  const auto copied=make();
+  check(progress(copied).completedBytes==6&&progress(copied).downloaded==7&&read(copied/stateFile)==projected,
+      "The backup contains one matched verified image and its inventory progress");
+  check(read(files.profile/stateFile)==source&&read(files.profile/"downloads.config")==inventory,
+      "The live resume state and inventory stay byte-exact");
+
+  write(files.profile/stateFile,"d4:infodee");
+  const auto stale=make();
+  check(progress(stale).completedBytes==2&&progress(stale).downloaded==7
+      &&read(stale/stateFile)=="d4:infodee","Reject stale state images while retaining independent counters");
+
+  write(files.profile/stateFile,source);
+  auto changed=core::Document::parse(row).value();
+  check(changed.replaceValue("save_dir","5:other").has_value(),"Change the saved mapping");
+  const auto otherInventory="d9:downloadsl"+changed.serialize()+"ee";
+  write(files.profile/"downloads.config",otherInventory);
+  const auto foreign=make();
+  check(read(foreign/"downloads.config")==otherInventory&&read(foreign/stateFile)==source,
+      "Changing the saved path excludes both snapshot projections");
 }
 
 void verifyPluginArchiveVersions() {
@@ -662,6 +713,7 @@ void verifyAutomaticBackup() {
 int main() try {
   verifyCopy();
   verifyLiveTransferStatisticsInBackup();
+  verifyLiveResumeImageIsBoundToTheSavedStateAndInventory();
   verifyPluginArchiveVersions();
   verifyRefusalsAndCleanup();
   verifyRestore();

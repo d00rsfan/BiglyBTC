@@ -332,8 +332,10 @@ PreparedProfileRestore prepareRestore(const ProfileLease& current, StateHandle s
   return {std::move(configuration),std::move(relocation),restoredConfig->serialize()};
 }
 
+template<class AcceptResume>
 std::string includeCurrentTransferStatistics(std::string bytes,
-    std::span<const ProfileBackupTransferStatistics> observations, std::stop_token stop) {
+    std::span<const ProfileBackupTransferStatistics> observations, std::stop_token stop,
+    const AcceptResume& acceptResume) {
   const auto document = core::Document::parse(std::move(bytes), compatibleConfigLimits());
   if (!document) { return {}; }
   const auto library = core::readLibrary(*document);
@@ -381,7 +383,15 @@ std::string includeCurrentTransferStatistics(std::string bytes,
     const auto& node = entries ? entries->children.at(row.sourceIndex)
         : document->root().children.at(row.sourceIndex * 2 + 1);
     auto updated = core::Document::parse(original.substr(node.begin, node.end - node.begin), compatibleConfigLimits());
-    bool changed = false;
+    const auto& resume=selection.resume;
+    const bool applyResume=resume&&row.completedBytes==admitted.completedBytes
+        &&resume->completedBytes>row.completedBytes.value_or(0)&&acceptResume(*row.hash,*resume);
+    bool changed=false;
+    if (applyResume) {
+      require(updated&&updated->replaceValue("completedbytes",'i'+std::to_string(resume->completedBytes)+'e'),
+          ErrorCode::InvalidFormat,"Cannot include verified progress in the backup inventory");
+      changed=true;
+    }
     for (const auto& [name, saved, live] : {
         std::tuple{"downloaded", row.downloaded, selection.downloaded},
         std::tuple{"uploaded", row.uploaded, selection.uploaded}}) {
@@ -436,7 +446,10 @@ public:
 
   ProfileBackup write(StateHandle source, fs::path directory, const ProfileFileSnapshot& configuration,
       std::string bytes, bool includePlugins) {
+    prepareInventory(source);
     copyTree(source, output_.get(), {}, includePlugins, 1);
+    require(!inventorySource_&&resumeImages_.empty(),ErrorCode::Conflict,
+        "Saved transfer state disappeared during backup");
     const auto last = take(captureProfileFile(source, Configuration, compatibleConfigLimits().inputBytes));
     require(configuration.matches(last), ErrorCode::Conflict, "Original profile configuration changed while backing up");
     require(bytes.size() <= std::numeric_limits<std::uint64_t>::max() - bytes_, ErrorCode::Unsupported, "Profile backup size is too large");
@@ -476,28 +489,70 @@ private:
     ++files_;
   }
 
+  void prepareInventory(StateHandle source) {
+    if (relocation_||statistics_.empty()||take(stateStampAt(source,"downloads.config.saving"))) { return; }
+    auto inventory=take(captureProfileFile(source,"downloads.config",compatibleConfigLimits().inputBytes));
+    if (!inventory.bytes) { return; }
+    auto active=openDirectoryAt(source,"active");
+    const auto acceptResume=[&](const core::TorrentHash& hash,const ProfileBackupResumeImage& image) {
+      if (!active||image.source.empty()||image.destination.empty()
+          ||image.destination.size()>compatibleConfigLimits().inputBytes) { return false; }
+      const auto leaf=hash.hex()+".dat";
+      if (const auto stage=stateStampAt(active->get(),leaf+".saving"); !stage||*stage) { return false; }
+      const auto state=captureProfileFile(active->get(),leaf,compatibleConfigLimits().inputBytes);
+      if (!state||!state->bytes||*state->bytes!=image.source) { return false; }
+      resumeImages_.emplace(fs::path("active")/leaf,&image);
+      return true;
+    };
+    inventoryImage_=includeCurrentTransferStatistics(*inventory.bytes,statistics_,stop_,acceptResume);
+    if (!inventoryImage_.empty()) { inventorySource_=std::move(inventory); }
+  }
+
+  bool writePreparedImage(StateHandle source,StateHandle destination,const fs::path& path,
+      const StateStamp& expected) {
+    const std::string* originalBytes=nullptr;
+    const std::string* replacement=nullptr;
+    if (path=="downloads.config"&&inventorySource_) {
+      originalBytes=&*inventorySource_->bytes;
+      replacement=&inventoryImage_;
+    } else if (const auto item=resumeImages_.find(path);item!=resumeImages_.end()) {
+      originalBytes=&item->second->source;
+      replacement=&item->second->destination;
+    }
+    if (!replacement) { return false; }
+    const auto leaf=platform::pathToUtf8(path.filename());
+    require(!take(stateStampAt(source,leaf+".saving")),ErrorCode::Conflict,
+        "Saved transfer state has a pending update");
+    const auto input=take(captureProfileFile(source,leaf,compatibleConfigLimits().inputBytes));
+    require(input.bytes&&*input.bytes==*originalBytes&&input.stamp&&sameStateSnapshot(*input.stamp,expected),
+        ErrorCode::Conflict,"Saved transfer state changed before backup");
+    auto output=take(stageStateFile(destination,path.filename(),*replacement,0600));
+    created_.emplace_back(path,take(stateStamp(output.get())));
+    if (path=="downloads.config") { take(setStateMtime(output.get(),expected.modified)); }
+    take(syncStateFile(output.get()));
+    const auto after=take(captureProfileFile(source,leaf,compatibleConfigLimits().inputBytes));
+    require(input.matches(after),ErrorCode::Conflict,"Saved transfer state changed during backup");
+    recordCopy(replacement->size());
+    if (path=="downloads.config") { inventorySource_.reset(); }
+    else { resumeImages_.erase(path); }
+    return true;
+  }
+
   bool rewriteConfiguration(StateHandle source, StateHandle destination, const fs::path& name,
       const fs::path& path, const StateStamp& expected) {
     if (path.has_parent_path()) { return false; }
     const auto leaf = platform::pathToUtf8(name);
-    const bool liveInventory = !relocation_ && leaf == "downloads.config" && !statistics_.empty()
-        && !take(stateStampAt(source, "downloads.config.saving"));
-    if (!liveInventory && (!relocation_ || !leaf.contains(".config"))) { return false; }
+    if (!relocation_||!leaf.contains(".config")) { return false; }
     const auto original = take(captureProfileFile(source, leaf, compatibleConfigLimits().inputBytes));
     require(original.bytes && original.stamp && sameStateSnapshot(*original.stamp, expected) && original.stillHeld(),
         ErrorCode::Conflict, "Profile configuration changed before copying");
-    std::string output;
-    if (liveInventory) {
-      output = includeCurrentTransferStatistics(*original.bytes, statistics_, stop_);
-    } else {
-      auto relocated = relocateBackupConfiguration(*original.bytes, relocation_->previous, relocation_->destination);
-      if (!relocated && relocated.error().code == ErrorCode::InvalidFormat && (leaf.contains(".bad") || leaf.contains(".bak"))) {
-        return false;
-      }
-      output = take(std::move(relocated));
-      if (relocation_->pauseDownloads && (leaf=="downloads.config" || leaf=="downloads.config.bak" || leaf=="downloads.config.saving")) {
-        output=take(pauseRestoredProfileDownloads(std::move(output),stop_));
-      }
+    auto relocated=relocateBackupConfiguration(*original.bytes,relocation_->previous,relocation_->destination);
+    if (!relocated&&relocated.error().code==ErrorCode::InvalidFormat&&(leaf.contains(".bad")||leaf.contains(".bak"))) {
+      return false;
+    }
+    auto output=take(std::move(relocated));
+    if (relocation_->pauseDownloads&&(leaf=="downloads.config"||leaf=="downloads.config.bak"||leaf=="downloads.config.saving")) {
+      output=take(pauseRestoredProfileDownloads(std::move(output),stop_));
     }
     if (output.empty() || output == *original.bytes) { return false; }
     auto snapshot = take(stageStateFile(destination, name, output, 0600));
@@ -512,7 +567,8 @@ private:
 
   void copyFile(StateHandle source, StateHandle destination, const fs::path& name,
       const fs::path& path, const StateStamp& expected) {
-    if (rewriteConfiguration(source, destination, name, path, expected)) { return; }
+    if (writePreparedImage(source,destination,path,expected)
+        ||rewriteConfiguration(source,destination,name,path,expected)) { return; }
     const auto input = take(openStateFile(source, name));
     require(expected.size >= 0 && sameStateSnapshot(take(stateStamp(input.get())), expected),
         ErrorCode::Conflict, "Saved file changed before backup");
@@ -584,6 +640,9 @@ private:
   std::stop_token stop_;
   std::optional<DirectoryRelocation> relocation_;
   std::span<const ProfileBackupTransferStatistics> statistics_;
+  std::optional<ProfileFileSnapshot> inventorySource_;
+  std::string inventoryImage_;
+  std::map<fs::path,const ProfileBackupResumeImage*> resumeImages_;
   std::vector<std::pair<fs::path, StateStamp>> created_;
   std::map<fs::path, StateStamp, FilesystemPathLess> directories_;
   std::uint64_t files_ = 0;

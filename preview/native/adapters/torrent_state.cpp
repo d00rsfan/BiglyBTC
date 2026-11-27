@@ -414,6 +414,17 @@ void traceResume(const core::TorrentHash& hash,std::string_view reason,const Res
 }
 }
 
+std::expected<std::string,Error> TorrentStateFile::encodeBackupResume(
+    std::string resume,std::string attributes) const {
+  auto copy=document_;
+  if (!copy.replaceValue("resume",std::move(resume))||!copy.replaceValue("attributes",std::move(attributes))) {
+    return error(ErrorCode::InvalidFormat,"Unable to encode torrent progress for backup");
+  }
+  auto bytes=copy.serialize();
+  if (!bytes) { return error(ErrorCode::InvalidFormat,"Unable to encode torrent state for backup"); }
+  return std::move(*bytes);
+}
+
 std::expected<void, Error> TorrentStateStore::saveInternal(const ProfileLease& lease, TorrentStateFile& state,
     void (*observer)(StateSaveStage), ProfileSourceAccess* access, std::string_view reason) const {
   if (state.device_ != activeDevice_ || state.inode_ != activeInode_) {

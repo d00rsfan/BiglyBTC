@@ -154,6 +154,7 @@ struct PersistentSession::Impl {
     int observedPeerCount = 0; // Reuse the normal status sample; avoid empty per-handle SDK RPCs.
     bool manualPaused = false, forceStart = false, stop = false;
     bool metadataRebaseFailed=false; // SDK stop deferred until outside FS gate.
+    bool backupFlushPending=false,backupFlushCompleted=false;
     std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool mainlineTrackerHealthy=false;
     detail::ManagedTrackerHealth trackerHealth;
@@ -652,6 +653,10 @@ struct PersistentSession::Impl {
       if (const auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
           removed && removed->userdata.get<OperationToken>()==value.token.get()) {
         value.advanceTimeline(removed->timestamp());value.timelinePaused=true;value.removed=true;
+      }
+      if (lt::alert_cast<lt::cache_flushed_alert>(alert)&&value.backupFlushPending) {
+        value.backupFlushPending=false;
+        value.backupFlushCompleted=true;
       }
       if (const auto* saved = lt::alert_cast<lt::save_resume_data_alert>(alert); saved && value.stop) {value.flushed=true;}
       if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)
@@ -3315,7 +3320,8 @@ void PersistentSession::resumeAfterProfileBackup() noexcept {
     if (impl_->onWorker()&&impl_->session) { impl_->session->resume(); }
   } catch (...) {}
 }
-std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupTransferStatistics() const {
+std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupTransferStatistics(
+    std::stop_token stop,bool includeResume) {
   std::vector<storage::ProfileBackupTransferStatistics> result;
   if (!impl_->onWorker() || impl_->closed || impl_->poisoned || impl_->closingAdmission) { return result; }
   for (const auto& [key, value] : impl_->managed) {
@@ -3331,6 +3337,73 @@ std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupT
       result.push_back({admitted, current.cumulativeReceived, current.cumulativeSent});
     }
   }
+  if (!includeResume||!impl_->managedLease||!impl_->session||impl_->call||stop.stop_requested()) { return result; }
+  impl_->call=true;
+  const auto release=qScopeGuard([this]{impl_->call=false;});
+  try {
+    if (!impl_->session->is_paused()||impl_->storageError||impl_->removalLost) { return result; }
+    struct Candidate {
+      Impl::Managed* source;
+      std::vector<std::uint8_t> pieces;
+    };
+    std::vector<Candidate> pending;
+    constexpr std::size_t MaximumSnapshots=128;
+    constexpr std::size_t MaximumImageBytes=32*1024*1024;
+    std::size_t pieceBudget=8*1024*1024;
+    const auto deadline=Clock::now()+4s;
+    for (const auto& [key,value]:impl_->managed) {
+      static_cast<void>(key);
+      if (pending.size()==MaximumSnapshots||stop.stop_requested()||Clock::now()>=deadline) { break; }
+      const auto& status=value->status;
+      if (!status.retained||!status.checked||status.failure||status.verificationHeld
+          ||value->backupFlushPending||value->stop||value->removing||!value->handle.is_valid()) {
+        continue;
+      }
+      const auto actual=value->handle.status(lt::torrent_handle::query_pieces);
+      if (actual.errc||(actual.state!=lt::torrent_status::downloading&&actual.state!=lt::torrent_status::finished
+          &&actual.state!=lt::torrent_status::seeding)||actual.pieces.empty()) { continue; }
+      const auto pieceCount=static_cast<std::size_t>(actual.pieces.size());
+      if (pieceCount>pieceBudget) { continue; }
+      std::vector<std::uint8_t> pieces;
+      pieces.reserve(pieceCount);
+      for (const auto piece:actual.pieces) { pieces.push_back(piece?1:0); }
+      const auto verified=value->storage.verifiedOriginalBytes(pieces);
+      if (!verified||*verified<=value->storage.capturedDownload().completedBytes.value_or(0)) { continue; }
+      value->backupFlushCompleted=false;
+      value->backupFlushPending=true;
+      value->handle.flush_cache();
+      pieceBudget-=pieceCount;
+      pending.push_back({value.get(),std::move(pieces)});
+    }
+    while (!stop.stop_requested()&&Clock::now()<deadline
+        &&std::ranges::any_of(pending,[](const auto& item){return item.source->backupFlushPending;})) {
+      static_cast<void>(impl_->pop());
+      if (impl_->storageError||impl_->removalLost) { return result; }
+      if (std::ranges::any_of(pending,[](const auto& item){return item.source->backupFlushPending;})) {
+        std::this_thread::sleep_for(10ms);
+      }
+    }
+    std::size_t budget=MaximumImageBytes;
+    for (const auto& candidate:pending) {
+      if (stop.stop_requested()||!budget) { break; }
+      const auto& value=*candidate.source;
+      if (!value.backupFlushCompleted||value.status.failure||value.stop||value.removing) { continue; }
+      auto resume=value.storage.prepareBackupResume(*impl_->managedLease,candidate.pieces);
+      if (!resume||resume->source.size()>budget||resume->destination.size()>budget-resume->source.size()) {
+        continue;
+      }
+      budget-=resume->source.size()+resume->destination.size();
+      const auto previous=std::ranges::find_if(result,[&](const auto& observation) {
+        return observation.admitted.hash==value.status.hash;
+      });
+      if (previous==result.end()) {
+        result.push_back({value.storage.capturedDownload(),value.status.cumulativeReceived,
+            value.status.cumulativeSent,std::move(resume)});
+      } else {
+        previous->resume=std::move(resume);
+      }
+    }
+  } catch (...) {} // Preserve the already-saved map when a live snapshot is unavailable.
   return result;
 }
 std::optional<core::QueueOriginalScrapeResponse> PersistentSession::managedTrackerResponse(

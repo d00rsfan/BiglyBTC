@@ -19,6 +19,8 @@ public:
   const core::TorrentHash& hash() const { return hash_; }
   bool recoveredBackup() const { return backup_; }
   bool prepared() const { return prepared_; }
+  const std::optional<std::string>& persistedBytes() const noexcept { return original_; }
+  std::expected<std::string,Error> encodeBackupResume(std::string resume,std::string attributes) const;
   std::expected<void, Error> replaceSection(std::string_view key, std::string encoded);
 private:
   friend class CheckpointBatch;
