@@ -308,6 +308,7 @@ int main(int argc,char** argv){
     // One saved tag UID spans the actual ordinary and dedicated private SDKs.
     constexpr char alphabet[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     const auto base32=[&](const biglybtc::core::TorrentHash& hash){std::string text;unsigned value=0,bits=0;for(auto byte:hash.bytes()){value=(value<<8)|std::to_integer<unsigned char>(byte);bits+=8;while(bits>=5){bits-=5;text+=alphabet[(value>>bits)&31];}}return text;};
+    const bool tagActivityLimit=QFile::exists(work+"/tag-activity-limit.request");
     lt::entry tags(lt::entry::dictionary_type{});auto& tag=tags["3"]["7"];tag["n"]="Generated shared Public private rate";tag["c"]["rl.down"]=8192;tag["o"]=lt::entry::list_type{lt::entry(base32(b.torrents[0].hash)),lt::entry(base32(b.torrents[1].hash))};write(b.profile+"/tag.config",encode(tags));
     publicSeed=std::make_unique<PublicSeed>(a);publicTracker.seedPort([&]{return publicSeed?publicSeed->port():0;});
     auto seedLease=biglybtc::storage::ProfileLease::acquire(a.profile.toStdString());require(seedLease.has_value(),"Cannot own I2P seed profile");
@@ -395,7 +396,18 @@ int main(int argc,char** argv){
         const auto saved=b.saved();require(savedRow(saved,0).originalState==75&&savedRow(saved,1).originalState==70&&savedRow(saved,2).originalState==70,"Original75/70/70 checkpoint changed");
         require(saved.paused.size()==2&&std::ranges::any_of(saved.paused,[&](const auto& p){return p.hash==b.torrents[1].hash;})&&std::ranges::any_of(saved.paused,[&](const auto& p){return p.hash==b.torrents[2].hash;}),"Original paused rows not preserved");
         for(std::size_t i=0;i<3;++i){const auto& v=savedRow(saved,i);require(v.downloaded&&v.uploaded&&*v.downloaded>=lastReceived[i]&&*v.uploaded>=lastSent[i],"Joined checkpoint lost current library counters");savedReceived[i]=*v.downloaded;}
-        b.networksIntact();auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Joined Host retained profile lock");b.writeSettings(false,1);output(work+"/leech-restart-ready.json",{{"status","ACTUAL_HOST_CLOSED_FOR_SAME_IDENTITY_RESTART"},{"original_state_A",75},{"original_state_B",70},{"original_state_C",70},{"B_paused",true},{"C_paused",true}});stage=Stage::WaitRetired;}break;
+        b.networksIntact();auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Joined Host retained profile lock");
+        b.writeSettings(false,tagActivityLimit?2:1);
+        if(tagActivityLimit){
+          lt::entry cohort(lt::entry::dictionary_type{});
+          auto& row=cohort["3"]["8"];
+          row["n"]="Generated shared download activity";
+          row["c"]["rl.maxadl"]=1;
+          row["c"]["rl.als"]=1;
+          row["o"]=lt::entry::list_type{lt::entry(base32(b.torrents[0].hash)),lt::entry(base32(b.torrents[1].hash))};
+          write(b.profile+"/tag.config",encode(cohort));
+        }
+        output(work+"/leech-restart-ready.json",{{"status","ACTUAL_HOST_CLOSED_FOR_SAME_IDENTITY_RESTART"},{"original_state_A",75},{"original_state_B",70},{"original_state_C",70},{"B_paused",true},{"C_paused",true}});stage=Stage::WaitRetired;}break;
       case Stage::WaitRetired:if(QFile::exists(work+"/leech-retired.json")){snapshot.reset();packet.reset();session=0;stage=Stage::Reopen;window.show();require(bridge->openNormal(b.profile.toStdString()),"Host refused same-profile reopen");}break;
       case Stage::Reopen:if(!bridge->busy()&&session&&session!=initialSession&&x&&row(1)&&row(1)->state.startsWith("Paused")){require(incomplete(0)&&x->providerGeneration!=initialGenerations[0],"Restart lacks new Public owner/incomplete work");stage=Stage::ResumeAfterRestart;}break;
       case Stage::ResumeAfterRestart:static_cast<void>(trigger(1,"classic-resume",Action::Resume,Stage::RestartStarted));break;
@@ -406,7 +418,7 @@ int main(int argc,char** argv){
         if(received(static_cast<std::size_t>(running))<savedReceived[static_cast<std::size_t>(running)]+16384){break;}
         if(!slotObserved){slotObserved=true;slotAge.start();slotRunningAdmission=r->providerAdmission;slotQueuedAdmission=w->providerAdmission;siblingBaseline=received(static_cast<std::size_t>(waiting));break;}
         if(r->providerAdmission!=slotRunningAdmission||w->providerAdmission!=slotQueuedAdmission||received(static_cast<std::size_t>(waiting))!=siblingBaseline){slotObserved=false;break;}
-        if(slotAge.elapsed()<1000){break;}stableAdmission=w->providerAdmission;stableGeneration=w->providerGeneration;result.insert("one_shared_download_slot",uiJson());stage=Stage::StopRunning;}break;
+        if(slotAge.elapsed()<1000){break;}stableAdmission=w->providerAdmission;stableGeneration=w->providerGeneration;result.insert("one_shared_download_slot",uiJson());if(tagActivityLimit){result.insert("shared_manual_tag_activity_slot",true);}stage=Stage::StopRunning;}break;
       case Stage::StopRunning:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-stop",Action::Stop,Stage::Handoff));break;
       case Stage::Handoff:{const auto i=static_cast<std::size_t>(waiting);const auto* v=active(i);if(!bridge->busy()&&!active(static_cast<std::size_t>(running))&&v&&hasTraffic(i)&&!queued(i)&&row(static_cast<std::size_t>(running))->state=="Stopped"){
         require(v->providerAdmission==stableAdmission&&v->providerGeneration==stableGeneration,"Cross-owner handoff readmitted sibling");if(received(i)>=siblingBaseline+16384){result.insert("cross_owner_slot_handoff",uiJson());stage=Stage::RestartStopped;}}break;}
