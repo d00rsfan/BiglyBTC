@@ -12,12 +12,13 @@ namespace biglybtc::services::i2p::dht {
 class Actor final:public QObject {
   Q_OBJECT
 public:
-  struct Options {Id localId{};std::uint16_t queryPort=0;std::vector<Contact> seeds;unsigned parallelism=3;bool inbound=false,inboundSleeping=false,inboundSuspended=false,routingMaintenance=false;std::vector<SavedContact> savedContacts{};};
+  struct Options {Id localId{};std::uint16_t queryPort=0;std::vector<Contact> seeds;unsigned parallelism=3;bool inbound=false,inboundSleeping=false,inboundSuspended=false,routingMaintenance=false;std::vector<SavedContact> savedContacts{};bool azureusValues=false;};
   explicit Actor(i2cp::InitialChannel&,QObject* parent=nullptr);
   ~Actor()override;
   bool begin(const Options&); // Exact local secure NID and explicit seed policy.
   Result<std::uint64_t> lookupPeers(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> announceSelf(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
+  Result<std::uint64_t> lookupAzureusValues(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);
   bool cancel(std::uint64_t);
   bool enableInbound(); // Accept/defer an explicit source-bound request; no grant setter.
   void stopInbound(); // Server state/replies only; client operation is preserved.

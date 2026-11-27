@@ -58,6 +58,18 @@ void checkFixture(const core::Node& fixture,Network route) {
       &&data->find("z")&&data->find("z")->integer==row.find("sig_data_size")->integer
       &&field(data->root(),"h")==field(fixture,"hash")&&field(data->root(),"s")==field(row,"sig"),
       "Keep exactly the hash, version, size, and signature supplied by Java");
+  const auto publicKey=field(row,"public_key");
+  const auto verified=search::verifySubscriptionPresence(*publication,publicKey,4);
+  require(verified&&verified->applicationKey==expectedKey&&verified->publicationHash==seed->publicationHash,
+      "Verify a signed record against the expected subscription and version");
+  require(!search::verifySubscriptionPresence(*publication,publicKey,5),"Reject a version mismatch");
+  auto forgedPublication=*publication;
+  const auto hashOffset=forgedPublication.find(field(fixture,"hash"));
+  require(hashOffset!=std::string::npos,"Publication contains the signed hash");
+  forgedPublication[hashOffset]^=1;
+  const auto forgedSignature=search::verifySubscriptionPresence(forgedPublication,publicKey,4);
+  require(!forgedSignature&&forgedSignature.error()==search::SubscriptionSeedError::Signature,
+      "Reject a substituted hash even when the record has the expected version");
 
   seed->metainfo=original;
   const auto encrypted=search::subscriptionSeedDdbResponse(*seed);

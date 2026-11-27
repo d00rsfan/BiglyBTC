@@ -5,6 +5,7 @@
 #include <openssl/core_names.h>
 #include <openssl/evp.h>
 #include <openssl/param_build.h>
+#include <zlib.h>
 
 #include <algorithm>
 #include <limits>
@@ -22,6 +23,7 @@ template<class T,void(*Release)(T*)>
 using Owned=std::unique_ptr<T,decltype(Release)>;
 
 constexpr std::size_t MaxBytes=4*1024*1024, PieceBytes=256*1024;
+constexpr std::size_t MaxPresenceWire=512, MaxPresenceBody=1024;
 constexpr std::int64_t MaxVersion=std::numeric_limits<std::int32_t>::max();
 using Hash=std::array<char,20>;
 
@@ -100,6 +102,34 @@ std::string shortSubscriptionId(const Hash& pubHash) {
   }
   return result;
 }
+
+std::string presenceKey(std::string_view shortId,std::uint32_t version) {
+  return "subscription:publish:"+std::string(shortId)+':'+std::to_string(version);
+}
+
+std::expected<std::string,Error> presenceBody(std::string_view wire) {
+  if (wire.size()<2 || wire.size()>=MaxPresenceWire) { return std::unexpected(Error::Limit); }
+  const char kind=wire.front();
+  wire.remove_prefix(1);
+  if (kind==0) { return std::string(wire); }
+  if (kind!=1) { return std::unexpected(Error::Malformed); }
+
+  z_stream stream{};
+  if (inflateInit2(&stream,MAX_WBITS+16)!=Z_OK) { return std::unexpected(Error::Limit); }
+  struct EndInflate {
+    z_stream& stream;
+    ~EndInflate() { inflateEnd(&stream); }
+  } end{stream};
+  std::array<unsigned char,MaxPresenceBody> output{};
+  stream.next_in=reinterpret_cast<unsigned char*>(const_cast<char*>(wire.data()));
+  stream.avail_in=static_cast<uInt>(wire.size());
+  stream.next_out=output.data();
+  stream.avail_out=output.size();
+  if (inflate(&stream,Z_FINISH)!=Z_STREAM_END || stream.avail_in) {
+    return std::unexpected(stream.avail_out?Error::Malformed:Error::Limit);
+  }
+  return std::string(reinterpret_cast<const char*>(output.data()),stream.total_out);
+}
 } // namespace
 
 std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
@@ -152,7 +182,7 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
   // Presence is advertised only for a public definition that also remains
   // public in the held subscription catalog.
   if (integer(*details,"is_public")==1 && (!row.find("is_public") || integer(row,"is_public")==1)) {
-    seed.presence=SignedSubscriptionPresence{"subscription:publish:"+id+':'+std::to_string(*version),
+    seed.presence=SignedSubscriptionPresence{presenceKey(id,static_cast<std::uint32_t>(*version)),
         std::string(*sig),*signedHash,static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size)};
   }
   const std::string_view payload=body->originalBytes();
@@ -178,9 +208,39 @@ std::expected<std::string,SubscriptionSeedError> encodeSubscriptionPresence(cons
   }
   auto body="d1:!"+intValue(publicationNonce)+"1:h"+byteString(hashBytes(presence.publicationHash))
       +"1:s"+byteString(presence.signature)+"1:v"+intValue(presence.version)+"1:z"+intValue(presence.signedSize)+'e';
-  if (body.size()+1>=512) { return std::unexpected(Error::Limit); }
+  if (body.size()+1>=MaxPresenceWire) { return std::unexpected(Error::Limit); }
   body.insert(body.begin(),'\0');
   return body;
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error::Limit);
+}
+
+std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscriptionPresence(
+    std::string_view wire,std::string_view expectedPublicKey,std::uint32_t expectedVersion) try {
+  if ((expectedPublicKey.size()!=25 && expectedPublicKey.size()!=49)
+      || !expectedVersion || expectedVersion>MaxVersion) {
+    return std::unexpected(Error::Malformed);
+  }
+  auto body=presenceBody(wire);
+  if (!body) { return std::unexpected(body.error()); }
+  const auto document=core::Document::parse(std::move(*body),{MaxPresenceBody,MaxPresenceBody,32,4});
+  if (!document || document->root().type!=Node::Type::Dictionary) { return std::unexpected(Error::Malformed); }
+
+  const auto& fields=document->root();
+  const auto hash=bytes(fields,"h"),signature=bytes(fields,"s");
+  const auto version=integer(fields,"v"),signedSize=integer(fields,"z");
+  if (!hash || hash->size()!=Hash{}.size() || !signature || signature->empty() || signature->size()>64
+      || version!=expectedVersion || !signedSize || *signedSize<=0 || *signedSize>static_cast<std::int64_t>(MaxBytes)) {
+    return std::unexpected(Error::Malformed);
+  }
+  Hash signedHash;
+  std::ranges::copy(*hash,signedHash.begin());
+  const auto size=static_cast<std::uint32_t>(*signedSize);
+  if (!verify(signedHash,expectedPublicKey,*signature,expectedVersion,size)) { return std::unexpected(Error::Signature); }
+  const auto publicHash=sha1(expectedPublicKey);
+  if (!publicHash) { return std::unexpected(Error::Crypto); }
+  return SignedSubscriptionPresence{presenceKey(shortSubscriptionId(*publicHash),expectedVersion),
+      std::string(*signature),signedHash,expectedVersion,size};
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error::Limit);
 }

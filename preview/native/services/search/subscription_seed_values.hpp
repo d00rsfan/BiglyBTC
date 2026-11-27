@@ -36,4 +36,6 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
 std::expected<std::string,SubscriptionSeedError> subscriptionSeedDdbResponse(const SubscriptionSeed&);
 std::expected<std::string,SubscriptionSeedError> encodeSubscriptionPresence(const SignedSubscriptionPresence&,
     std::int64_t publicationNonce);
+std::expected<SignedSubscriptionPresence,SubscriptionSeedError> verifySubscriptionPresence(
+    std::string_view wire,std::string_view expectedPublicKey,std::uint32_t expectedVersion);
 } // namespace biglybtc::search

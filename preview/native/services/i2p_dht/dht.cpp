@@ -6,6 +6,7 @@
 #include <limits>
 #include <map>
 #include <string_view>
+#include <utility>
 namespace biglybtc::services::i2p::dht {
 namespace {
 using B=core::Node;
@@ -21,6 +22,130 @@ template<std::size_t N>bool fixed(const B* p,std::array<Byte,N>& a){if(!is(p,B::
 bool flag(const B* p,bool& value){if(!p){value=false;return true;}if(!is(p,B::Type::Integer)){return false;}value=static_cast<std::uint32_t>(p->integer)!=0;return true;}
 bool lessDistance(const Id& a,const Id& b,const Id& target){for(std::size_t i=0;i<a.size();++i){auto x=Byte(a[i]^target[i]),y=Byte(b[i]^target[i]);if(x!=y){return x<y;}}return false;}
 bool allZero(const auto& v){return std::all_of(v.begin(),v.end(),[](auto b){return b==0;});}
+
+template<class T> bool readInteger(const B& row,std::string_view key,T& output) {
+  const auto* item=row.find(key);
+  if (!is(item,B::Type::Integer)||!std::in_range<T>(item->integer)) { return false; }
+  output=static_cast<T>(item->integer);
+  return true;
+}
+
+bool readAzureusContact(const B& row,AzureusContact& output,bool anonymousAllowed) {
+  auto& contact=output.contact;
+  std::uint8_t protocol=0;
+  if (!readInteger(row,"v",protocol)||!readInteger(row,"p",contact.port)
+      ||!fixed(row.find("i"),contact.id)||!fixed(row.find("h"),contact.hash)) { return false; }
+  output.protocol=protocol;
+  if (validContact(contact)) { return true; }
+  Id anonymousId{};
+  anonymousId[5]=1;
+  return anonymousAllowed&&!protocol&&contact.port==1&&contact.id==anonymousId&&allZero(contact.hash);
+}
+
+bool readAzureusValue(const B& row,AzureusValue& output) {
+  const auto* wire=row.find("w");
+  const auto* origin=row.find("o");
+  AzureusContact contact;
+  if (!is(wire,B::Type::Bytes)||wire->bytes.size()>512||!is(origin,B::Type::Dictionary)
+      ||!readInteger(row,"v",output.version)||!readInteger(row,"t",output.created)
+      ||!readInteger(row,"f",output.flags)||!readInteger(row,"l",output.lifetime)
+      ||!readAzureusContact(*origin,contact,true)) { return false; }
+  output.bytes.assign(wire->bytes.begin(),wire->bytes.end());
+  if (validContact(contact.contact)) { output.origin=std::move(contact); }
+  return true;
+}
+
+Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
+  AzureusMessage result;
+  if (row.type!=B::Type::Dictionary||!readInteger(row,"_i",result.instance)
+      ||!readInteger(row,"_f",result.flags)) { return bad("Invalid I2P Azureus envelope"); }
+  if (kind==Kind::Query) {
+    std::int32_t method=0;
+    if (!readInteger(row,"_m",method)||method!=2) {
+      return std::unexpected(Error{ErrorCode::Unsupported,"Unsupported I2P Azureus method"});
+    }
+    AzureusFindValue find;
+    if (!fixed(row.find("h"),find.key)||!readInteger(row,"m",find.maximum)||find.maximum<0
+        ||!readInteger(row,"f",find.flags)||!readInteger(row,"_t",find.now)) { return bad("Invalid I2P Azureus FIND_VALUE"); }
+    result.payload=find;
+    return result;
+  }
+
+  const auto* contacts=row.find("c");
+  const auto* values=row.find("v");
+  const auto* blocked=row.find("b");
+  if (unsigned(bool(contacts))+unsigned(bool(values))+unsigned(bool(blocked))!=1) {
+    return bad("Ambiguous I2P Azureus FIND_VALUE reply");
+  }
+  if (contacts) {
+    if (!is(contacts,B::Type::List)||contacts->children.size()>MaximumContacts) { return bad("Invalid I2P Azureus contact list"); }
+    auto& found=result.payload.emplace<std::vector<AzureusContact>>();
+    for (const auto& entry:contacts->children) {
+      AzureusContact item;
+      if (!readAzureusContact(entry,item,false)) { return bad("Invalid I2P Azureus contact"); }
+      found.push_back(std::move(item));
+    }
+  } else if (values) {
+    auto& hit=result.payload.emplace<AzureusValueHit>();
+    if (!is(values,B::Type::List)||values->children.size()>MaximumPeers||!readInteger(row,"d",hit.diversification)) {
+      return bad("Invalid I2P Azureus value list");
+    }
+    for (const auto& entry:values->children) {
+      AzureusValue item;
+      if (!readAzureusValue(entry,item)) { return bad("Invalid I2P Azureus value"); }
+      hit.values.push_back(std::move(item));
+    }
+  } else {
+    const auto* key=row.find("k");
+    const auto* signature=row.find("s");
+    if (!is(blocked,B::Type::Integer)||blocked->integer!=1||!is(key,B::Type::Bytes)||key->bytes.empty()
+        ||!is(signature,B::Type::Bytes)||signature->bytes.empty()) { return bad("Invalid I2P Azureus key block"); }
+    auto& block=result.payload.emplace<AzureusKeyBlock>();
+    block.key.assign(key->bytes.begin(),key->bytes.end());
+    block.signature.assign(signature->bytes.begin(),signature->bytes.end());
+  }
+  return result;
+}
+
+std::string writeAzureusContact(const AzureusContact& entry) {
+  return dict({{"h",bytes(entry.contact.hash)},{"i",bytes(entry.contact.id)},
+      {"p",number(entry.contact.port)},{"v",number(entry.protocol)}});
+}
+
+std::string writeAzureusValue(const AzureusValue& entry) {
+  AzureusContact anonymous;
+  anonymous.contact.port=1;
+  anonymous.contact.id[5]=1;
+  return dict({{"v",number(entry.version)},{"t",number(entry.created)},{"w",bytes(entry.bytes)},
+      {"o",writeAzureusContact(entry.origin?*entry.origin:anonymous)},
+      {"f",number(entry.flags)},{"l",number(entry.lifetime)}});
+}
+
+std::string writeAzureusMessage(const AzureusMessage& message) {
+  std::map<std::string,std::string> fields{{"_i",number(message.instance)},{"_f",number(message.flags)}};
+  if (const auto* find=std::get_if<AzureusFindValue>(&message.payload)) {
+    fields["_m"]=number(2);
+    fields["_t"]=number(find->now);
+    fields["h"]=bytes(find->key);
+    fields["m"]=number(find->maximum);
+    fields["f"]=number(find->flags);
+  } else if (const auto* contacts=std::get_if<std::vector<AzureusContact>>(&message.payload)) {
+    std::string list="l";
+    for (const auto& entry:*contacts) { list+=writeAzureusContact(entry); }
+    fields["c"]=list+'e';
+  } else if (const auto* hit=std::get_if<AzureusValueHit>(&message.payload)) {
+    std::string list="l";
+    for (const auto& entry:hit->values) { list+=writeAzureusValue(entry); }
+    fields["v"]=list+'e';
+    fields["d"]=number(hit->diversification);
+  } else {
+    const auto& blocked=std::get<AzureusKeyBlock>(message.payload);
+    fields["b"]=number(1);
+    fields["k"]=bytes(blocked.key);
+    fields["s"]=bytes(blocked.signature);
+  }
+  return dict(fields);
+}
 }
 bool validContact(const Contact& c)noexcept{
   if(!c.port||c.port>=65535||allZero(c.hash)||allZero(c.id)){return false;}
@@ -53,6 +178,7 @@ Result<Message> decode(View wire){
     else if(method->bytes=="find_node"){m.method=Method::FindNode;}
     else if(method->bytes=="get_peers"){m.method=Method::GetPeers;}
     else if(method->bytes=="announce_peer"){m.method=Method::AnnouncePeer;}
+    else if(method->bytes=="azrequest"){m.method=Method::AzureusFindValue;}
     else{return std::unexpected(Error{ErrorCode::Unsupported,"Unsupported DHT method"});}
   }else if(type->bytes=="r"){m.kind=Kind::Reply;body=root.find("r");}
   else if(type->bytes=="e"){
@@ -72,6 +198,17 @@ Result<Message> decode(View wire){
       // empty and cannot match the responder's original8-byte token map.
       if(is(p,B::Type::Bytes)&&!p->bytes.empty()&&p->bytes.size()<=64){m.token.assign(p->bytes.begin(),p->bytes.end());}
     }else{if(!is(p,B::Type::Bytes)||p->bytes.empty()||p->bytes.size()>64){return bad("DHT token invalid");}m.token.assign(p->bytes.begin(),p->bytes.end());}
+  }
+  if (m.method==Method::AzureusFindValue || (m.kind==Kind::Reply && body->find("p"))) {
+    const auto* payload=body->find("p");
+    if (!payload||m.version<MinimumAzureusProtocol||body->find("nodes")||body->find("values")||body->find("flags")) {
+      return bad("Invalid I2P Azureus message body");
+    }
+    auto azureus=readAzureusMessage(*payload,m.kind);
+    if (!azureus) { return std::unexpected(azureus.error()); }
+    m.method=Method::AzureusFindValue;
+    if (const auto* request=std::get_if<AzureusFindValue>(&azureus->payload)) { m.target=request->key; }
+    m.azureus=std::move(*azureus);
   }
   if(m.kind==Kind::Query){
     if(m.method==Method::FindNode){const auto* target=body->find("target");if(!is(target,B::Type::Bytes)){return bad("find_node target type invalid");}if(!fixed(target,m.target)){m.findNodeTarget=Bytes(target->bytes.begin(),target->bytes.end());}}
@@ -96,18 +233,26 @@ namespace {
 Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
   if(m.transaction.empty()||m.transaction.size()>16||m.token.size()>64||m.nodes.size()>MaximumContacts||m.peers.size()>MaximumPeers){return bad("DHT message capacity invalid");}
   if(m.kind!=Kind::Query&&m.kind!=Kind::Reply&&m.kind!=Kind::Error){return bad("DHT message kind invalid");}
-  if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer){return bad("DHT method invalid");}
+  if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer&&m.method!=Method::AzureusFindValue){return bad("DHT method invalid");}
+  if (m.azureus) {
+    if (m.method!=Method::AzureusFindValue || m.kind==Kind::Error || m.hasNodes || m.hasPeers
+        || (m.kind==Kind::Query)!=std::holds_alternative<AzureusFindValue>(m.azureus->payload)) {
+      return bad("Inconsistent I2P Azureus envelope");
+    }
+  } else if (m.method==Method::AzureusFindValue) { return bad("Missing I2P Azureus envelope"); }
   if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer&&m.token.empty()){return bad("Outgoing raw announce requires token");} // Preserve existing client encode contract.
   std::map<std::string,std::string> outer{{"t",bytes(m.transaction)}};
   if(m.kind==Kind::Error){outer["y"]=bytes("e");outer["e"]="l"+number(m.errorCode)+bytes("DHT request failed")+"e";}
   else{
     std::map<std::string,std::string> body{{"_v",bytes("AZ4")},{"id",bytes(m.id)}};
     if(!m.token.empty()){body["token"]=bytes(m.token);}
+    if (m.azureus) { body["p"]=writeAzureusMessage(*m.azureus); }
     if(m.kind==Kind::Query){
       outer["y"]=bytes("q");if(m.wakeRequested){outer["z"]=number(0);}const char* name="ping";
       if(m.method==Method::FindNode){name="find_node";body["target"]=bytes(m.findNodeTarget?View(*m.findNodeTarget):View(m.target));}
       else if(m.method==Method::GetPeers){name="get_peers";body["info_hash"]=bytes(m.target);if(m.noSeed){body["noseed"]=number(1);}}
       else if(m.method==Method::AnnouncePeer){name="announce_peer";body["info_hash"]=bytes(m.target);body["port"]=number(6881);body["seed"]=number(m.seed?1:0);}
+      else if(m.method==Method::AzureusFindValue){name="azrequest";}
       outer["q"]=bytes(name);outer["a"]=dict(body);
     }else{
       outer["y"]=bytes("r");if(m.hasNodes){Bytes contacts;for(const auto& c:m.nodes){auto n=encodeContact(c);if(!n){return std::unexpected(n.error());}contacts.insert(contacts.end(),n->begin(),n->end());}body["nodes"]=bytes(contacts);}
@@ -131,12 +276,13 @@ bool Lookup::offer(const Contact& contact){
 }
 bool Lookup::start(std::uint64_t operation,const LookupOptions& options,std::span<const Contact> seeds,std::int64_t now){
   if(running()||!operation||allZero(options.target)||now<0||!options.timeoutMilliseconds||options.timeoutMilliseconds>120000||!options.parallelism||options.parallelism>3||seeds.empty()||seeds.size()>20||now>std::numeric_limits<std::int64_t>::max()-options.timeoutMilliseconds){return false;}
+  if (options.azureus&&(options.announce||!options.azureus->maximum||options.azureus->maximum>MaximumPeers)) { return false; }
   for(const auto& s:seeds){if(!validContact(s)){return false;}}
-  options_=options;operation_=operation;phase_=Phase::Running;end_=now+options.timeoutMilliseconds;last_=now;nodes_.clear();peers_.clear();rejected_=0;publishing_=false;
+  options_=options;operation_=operation;phase_=Phase::Running;end_=now+options.timeoutMilliseconds;last_=now;nodes_.clear();peers_.clear();azureusValues_.clear();rejected_=0;publishing_=false;
   nodes_.reserve(MaximumContacts);peers_.reserve(MaximumPeers);for(const auto& s:seeds){offer(s);}return true;
 }
-void Lookup::cancel()noexcept{if(running()){phase_=Phase::Cancelled;}}
-void Lookup::close()noexcept{phase_=Phase::Closed;}
+void Lookup::cancel()noexcept{if(running()){phase_=Phase::Cancelled;azureusValues_.clear();}}
+void Lookup::close()noexcept{phase_=Phase::Closed;azureusValues_.clear();}
 void Lookup::tick(std::int64_t now)noexcept{
   if(!running()){return;}if(now<last_){phase_=Phase::Failed;return;}last_=now;if(now>=end_){phase_=Phase::TimedOut;return;}
   for(auto& n:nodes_){if((n.phase==NodePhase::Queued||n.phase==NodePhase::Sent||n.phase==NodePhase::Resolving)&&now>=n.end){n.phase=NodePhase::Failed;}}settle();
@@ -184,7 +330,25 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
   auto it=std::find_if(nodes_.begin(),nodes_.end(),[&](const auto& n){return n.phase==NodePhase::Sent&&n.transaction==message.transaction&&n.contact.port==port;});
   if(it==nodes_.end()||(message.kind!=Kind::Reply&&message.kind!=Kind::Error)){++rejected_;return false;}
   if(message.kind==Kind::Error){it->phase=NodePhase::Failed;settle();return true;}
+  if (bool(message.azureus)!=bool(options_.azureus)) { ++rejected_;return false; }
   if(message.id!=it->contact.id){++rejected_;return false;}it->phase=NodePhase::Replied;
+  if (message.azureus) {
+    const auto& payload=message.azureus->payload;
+    if (const auto* contacts=std::get_if<std::vector<AzureusContact>>(&payload)) {
+      for (const auto& candidate:*contacts) {
+        if (candidate.protocol>=MinimumAzureusProtocol) { offer(candidate.contact); }
+      }
+    } else if (const auto* hit=std::get_if<AzureusValueHit>(&payload)) {
+      for (const auto& entry:hit->values) {
+        if (azureusValues_.size()>=options_.azureus->maximum) { break; }
+        if (std::ranges::none_of(azureusValues_,[&](const auto& previous){return previous.bytes==entry.bytes;})) {
+          azureusValues_.push_back(entry);
+        }
+      }
+    }
+    settle();
+    return true;
+  }
   if(it->announcing){it->announced=true;it->announcing=false;settle();return true;}
   it->token=message.token;
   // Reserve128 at start prevents contact-vector reallocation under this copy.
@@ -194,6 +358,7 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
 }
 Snapshot Lookup::snapshot()const{
   Snapshot s;s.operation=operation_;s.phase=phase_;s.target=options_.target;s.peers=peers_;s.contacts=nodes_.size();s.rejected=rejected_;
+  s.azureusValues=azureusValues_;
   for(const auto& n:nodes_){if(n.phase==NodePhase::Replied){++s.replied;}if(n.announced){++s.announced;}}return s;
 }
 } // namespace biglybtc::services::i2p::dht

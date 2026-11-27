@@ -4,6 +4,7 @@
 #include "datagram.hpp"
 #include <array>
 #include <optional>
+#include <variant>
 #include <vector>
 namespace biglybtc::services::i2p::dht {
 using Id=std::array<Byte,20>;
@@ -13,9 +14,31 @@ bool validContact(const Contact&)noexcept;
 Result<Id> makeNodeId(const Hash&,std::uint16_t,View random14);
 Result<Contact> decodeContact(View);
 Result<Bytes> encodeContact(const Contact&);
-enum class Method {Ping,FindNode,GetPeers,AnnouncePeer};
+enum class Method {Ping,FindNode,GetPeers,AnnouncePeer,AzureusFindValue};
 enum class Kind {Query,Reply,Error};
 struct Peer {Hash hash{};bool seed=false;};
+inline constexpr unsigned MinimumAzureusProtocol=2;
+struct AzureusContact {
+  Contact contact;
+  unsigned protocol=0;
+};
+struct AzureusValue {
+  std::int32_t version=0;
+  std::int64_t created=0;
+  Bytes bytes;
+  std::optional<AzureusContact> origin;
+  std::uint16_t flags=0;
+  std::uint8_t lifetime=0;
+};
+struct AzureusValueHit {std::vector<AzureusValue> values;std::uint8_t diversification=1;};
+struct AzureusKeyBlock {Bytes key,signature;};
+struct AzureusFindValue {Id key{};std::int32_t maximum=0;std::int16_t flags=0;std::int64_t now=0;};
+using AzureusPayload=std::variant<AzureusFindValue,std::vector<AzureusContact>,AzureusValueHit,AzureusKeyBlock>;
+struct AzureusMessage {
+  std::int32_t instance=0;
+  std::int8_t flags=0;
+  AzureusPayload payload;
+};
 struct Message {
   Kind kind=Kind::Query;Method method=Method::Ping;Bytes transaction;
   Id id{},target{};bool seed=false,noSeed=false;unsigned version=0;
@@ -24,6 +47,7 @@ struct Message {
   bool wakeRequested=false; // Root z presence only; no source/storage grant.
   std::optional<Bytes> findNodeTarget; // Engaged only for non20-byte decoded/explicit find_node target.
   bool idIsTwentyBytes=true; // Raw announce ignores id; signed originators still require exact20.
+  std::optional<AzureusMessage> azureus;
 };
 Result<Message> decode(View);
 Result<Bytes> encode(const Message&);
@@ -31,11 +55,19 @@ enum class PeerReplyMode {Azureus,Ordinary};
 // Local _v stays AZ4 for every caller, exactly as original sendResponse.
 // Ordinary get_peers omits flags; filtering is the responder's separate policy.
 Result<Bytes> encodeReply(const Message&,PeerReplyMode);
-struct LookupOptions {Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;};
+struct AzureusLookup {std::uint8_t maximum=0;std::int16_t flags=0;};
+struct LookupOptions {
+  Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;
+  std::optional<AzureusLookup> azureus{};
+};
 enum class Phase {Idle,Running,Complete,TimedOut,Cancelled,Closed,Failed};
 enum class NodePhase {Candidate,Resolving,Queued,Sent,Replied,Failed};
 struct Node {Contact contact;NodePhase phase=NodePhase::Candidate;Bytes transaction,token;std::uint64_t ticket=0;std::int64_t end=0;bool announcing=false,announced=false,publish=false;};
-struct Snapshot {std::uint64_t operation=0;Phase phase=Phase::Idle;Id target{};std::vector<Peer> peers;std::size_t contacts=0,replied=0,announced=0;std::uint64_t rejected=0;};
+struct Snapshot {
+  std::uint64_t operation=0;Phase phase=Phase::Idle;Id target{};std::vector<Peer> peers;
+  std::size_t contacts=0,replied=0,announced=0;std::uint64_t rejected=0;
+  std::vector<AzureusValue> azureusValues{};
+};
 // Owns only observations/intents. The Qt actor supplies actual dispatch/reply
 // facts; a candidate contact or raw reply is never a source/effect grant.
 class Lookup final {
@@ -59,7 +91,7 @@ public:
 private:
   void settle()noexcept;
   bool offer(const Contact&);
-  LookupOptions options_;std::vector<Node> nodes_;std::vector<Peer> peers_;
+  LookupOptions options_;std::vector<Node> nodes_;std::vector<Peer> peers_;std::vector<AzureusValue> azureusValues_;
   std::uint64_t operation_=0,rejected_=0;Phase phase_=Phase::Idle;
   std::int64_t end_=0,last_=0;bool publishing_=false;
 };

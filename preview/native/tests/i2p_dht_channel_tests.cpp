@@ -629,6 +629,82 @@ private slots:
     QTRY_VERIFY(router.next());sent=cp::decodeDhtSendDatagram(router.take());QVERIFY(sent&&sent->skipLeaseSet);mux=cp::decodeDhtMuxDatagram(sent->payload);QVERIFY(mux&&mux->protocol==18&&mux->toPort==10003);auto announce=d::decode(mux->datagram);QVERIFY(announce&&announce->method==d::Method::AnnouncePeer&&announce->token==response.token&&announce->seed);
     d::Message ack;ack.kind=d::Kind::Reply;ack.id=seed.id;ack.transaction=announce->transaction;bytes=d::encode(ack);QVERIFY(bytes);reply=cp::encodeDhtMuxDatagram({18,10002,10001,*bytes},cp::GzipMode::Deflate);QVERIFY(reply);inbound(router,22,*reply,true);QTRY_COMPARE(actor.observation().phase,d::Phase::Complete);auto result=actor.observation();QVERIFY(result.operation==*op&&result.announced==1&&result.peers.size()==1&&result.peers[0].hash==seed.hash);actor.close();QCOMPARE(channel.state(),Channel::State::SessionCreated);
   }
+  void actualActorLooksUpAzureusValues() {
+    Router router;
+    QVERIFY(router.listen());
+    Channel channel;
+    registered(router,channel,"ed25519",true);
+    const auto remote=signer("dsa"),local=signer("ed25519");
+    d::Contact seed;
+    seed.hash=remote.destination()->hash;
+    seed.port=10002;
+    seed.destination=*remote.destination();
+    const auto rid=d::makeNodeId(seed.hash,seed.port,i2p::Bytes(14,0x32));
+    const auto lid=d::makeNodeId(local.destination()->hash,10000,i2p::Bytes(14,0x31));
+    QVERIFY(rid&&lid);
+    seed.id=*rid;
+    d::Actor actor(channel);
+    d::Actor::Options options{*lid,10000,{seed}};
+    d::Id key{};
+    key.fill(0x51);
+    QVERIFY(actor.begin(options));
+    QVERIFY(!actor.lookupAzureusValues(key,{4,16},3000));
+    QVERIFY(!router.next());
+    actor.close();
+    options.azureusValues=true;
+    QVERIFY(actor.begin(options));
+    const auto operation=actor.lookupAzureusValues(key,{4,16},3000);
+    QVERIFY(operation);
+    QTRY_VERIFY(router.next());
+    const auto sent=cp::decodeDhtSendDatagram(router.take());
+    QVERIFY(sent&&sent->recipient.wire==seed.destination->wire&&!sent->skipLeaseSet);
+    const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
+    QVERIFY(mux&&mux->protocol==17&&mux->fromPort==10000&&mux->toPort==10002);
+    const auto signedPacket=i2p::decode1(mux->datagram);
+    QVERIFY(signedPacket&&signedPacket->sender.wire==local.destination()->wire);
+    const auto packet=d::decode(signedPacket->payload);
+    QVERIFY(packet&&packet->method==d::Method::AzureusFindValue&&packet->azureus);
+    const auto* query=std::get_if<d::AzureusFindValue>(&packet->azureus->payload);
+    QVERIFY(query&&query->key==key&&query->maximum==4&&query->flags==16);
+
+    const auto deliver=[&](d::Message response,std::uint16_t from,std::uint32_t messageId) {
+      const auto encoded=d::encode(response);
+      QVERIFY(encoded);
+      const auto datagram=cp::encodeDhtMuxDatagram({18,from,10001,*encoded},cp::GzipMode::Deflate);
+      QVERIFY(datagram);
+      inbound(router,messageId,*datagram,true);
+    };
+    d::Message reply;
+    reply.kind=d::Kind::Reply;
+    reply.id=seed.id;
+    reply.transaction=packet->transaction;
+    reply.hasPeers=true;
+    reply.peers={{seed.hash,true}};
+    deliver(reply,10002,41);
+    QTRY_COMPARE(actor.observation().rejected,std::uint64_t(1));
+    QCOMPARE(actor.observation().phase,d::Phase::Running);
+
+    reply.hasPeers=false;
+    reply.peers.clear();
+    reply.method=d::Method::AzureusFindValue;
+    d::AzureusValue value;
+    value.bytes={0,0xff,0x51};
+    value.version=751;
+    value.created=Now;
+    value.flags=16;
+    reply.azureus=d::AzureusMessage{702,0,d::AzureusValueHit{{value}}};
+    deliver(reply,10004,42);
+    QTRY_COMPARE(actor.observation().rejected,std::uint64_t(2));
+    deliver(reply,10002,43);
+    QTRY_COMPARE(actor.observation().phase,d::Phase::Complete);
+    const auto result=actor.observation();
+    QVERIFY(result.operation==*operation&&result.target==key&&result.peers.empty()&&result.announced==0);
+    QCOMPARE(result.azureusValues.size(),std::size_t(1));
+    QCOMPARE(result.azureusValues.front().bytes,value.bytes);
+    QVERIFY(!result.azureusValues.front().origin);
+    actor.close();
+    QVERIFY(actor.observation().azureusValues.empty());
+  }
   void lookupResultsOwnEightTerminalsAndClearWithSession(){
     Router router;QVERIFY(router.listen());Channel channel;registered(router,channel,"ed25519",true);auto remote=signer("dsa");std::vector<std::uint64_t> operations;
     for(unsigned n=0;n<9;++n){

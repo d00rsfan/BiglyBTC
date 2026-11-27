@@ -36,15 +36,18 @@ bool validRouting(const RoutingSnapshot& routing,const Id& target){
   }return true;
 }
 }
-Responder::Responder(Contact local,std::unique_ptr<TokenBindings> tokens,std::unique_ptr<PeerStore> peers):local_(std::move(local)),tokens_(std::move(tokens)),peers_(std::move(peers)){}
+Responder::Responder(Contact local,std::unique_ptr<TokenBindings> tokens,std::unique_ptr<PeerStore> peers,
+    std::optional<std::int32_t> azureusInstance)
+    :local_(std::move(local)),tokens_(std::move(tokens)),peers_(std::move(peers)),azureusInstance_(azureusInstance){}
 Responder::~Responder(){close();}
-ReplyResult<std::unique_ptr<Responder>> Responder::create(Contact local,StoreLimits limits,std::optional<azureus_auth::Key> supplied){
+ReplyResult<std::unique_ptr<Responder>> Responder::create(Contact local,StoreLimits limits,std::optional<azureus_auth::Key> supplied,
+    std::optional<std::int32_t> azureusInstance){
   struct Clean {std::optional<azureus_auth::Key>& key;~Clean(){if(key){OPENSSL_cleanse(key->data(),key->size());}}} clean{supplied};
   try{
     if(!local.destination){return std::unexpected(ResponderError::Invalid);}auto actual=signedContact(*local.destination,local.id,local.port);if(!actual||actual->hash!=local.hash){return std::unexpected(ResponderError::Invalid);}
     auto tokens=TokenBindings::create(supplied);if(!tokens){return std::unexpected(stateError(tokens.error()));}
     auto peers=PeerStore::create(limits);if(!peers){return std::unexpected(stateError(peers.error()));}
-    return std::unique_ptr<Responder>(new Responder(std::move(*actual),std::move(*tokens),std::move(*peers)));
+    return std::unique_ptr<Responder>(new Responder(std::move(*actual),std::move(*tokens),std::move(*peers),azureusInstance));
   }catch(...){return std::unexpected(ResponderError::Resource);}
 }
 ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming,std::int64_t wall,RequestPolicy policy,const Current& current,const Route& route){
@@ -55,6 +58,9 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
     const auto unavailable=[&]{return closed_?ResponderError::Closed:ResponderError::NoAuthority;};
     if(!live()){return std::unexpected(unavailable());}if(!route){return std::unexpected(ResponderError::Routing);}
     auto request=decode(incoming.payload);if(!request||request->kind!=Kind::Query){return std::unexpected(ResponderError::Invalid);}
+    if (request->method==Method::AzureusFindValue&&(!azureusInstance_||!incoming.signedSender)) {
+      return std::optional<Response>{};
+    }
     if(policy.sleeping&&!request->wakeRequested){return std::optional<Response>{};}
     Contact originator;
     if(incoming.signedSender){
@@ -82,7 +88,11 @@ ReplyResult<std::optional<Response>> Responder::receive(const Incoming& incoming
     auto routing=route(originator,request->method,request->target,existing);if(!live()){return std::unexpected(unavailable());}
     if(!routing||!validRouting(*routing,request->target)){return std::unexpected(ResponderError::Routing);}
     Message response;response.kind=Kind::Reply;response.transaction=request->transaction;response.id=local_.id;
-    if(request->method==Method::FindNode){response.hasNodes=true;if(!request->findNodeTarget){response.nodes=std::move(routing->closest);}}
+    if (request->method==Method::AzureusFindValue) {
+      if (routing->closestAzureus.size()>10) { return std::unexpected(ResponderError::Routing); }
+      response.method=Method::AzureusFindValue;
+      response.azureus=AzureusMessage{*azureusInstance_,0,std::move(routing->closestAzureus)};
+    }else if(request->method==Method::FindNode){response.hasNodes=true;if(!request->findNodeTarget){response.nodes=std::move(routing->closest);}}
     else if(request->method==Method::GetPeers){
       if(!live()){return std::unexpected(unavailable());}auto token=tokens_->remember(originator);if(!token){return std::unexpected(stateError(token.error()));}response.token.assign(token->begin(),token->end());
       if(found->keyExists){

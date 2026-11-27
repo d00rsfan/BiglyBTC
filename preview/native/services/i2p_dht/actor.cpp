@@ -10,6 +10,7 @@
 #include <QDateTime>
 #include <QMetaObject>
 #include <QPointer>
+#include <QRandomGenerator>
 #include <QThread>
 #include <QTimer>
 #include <openssl/rand.h>
@@ -23,6 +24,8 @@ struct Actor::Impl {
   Actor* q;QPointer<i2cp::InitialChannel> channel;QTimer timer;Options options;
   Lookup lookup;std::uint64_t nextOperation=1,scope=0,resolver=0;std::optional<std::size_t> resolving;
   detail::TransactionHistory transactions;Bytes localDestination;Hash localHash{};
+  std::optional<std::int32_t> azureusInstance;
+  int azureusClockOffset=0;
   bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false;
   std::unique_ptr<inbound::Responder> responder;
   std::unique_ptr<azureus_router::RouterOwner> router;
@@ -131,7 +134,7 @@ struct Actor::Impl {
     if(responder){return true;}if(!inboundCurrent(Clock::time_point::max())){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{options.localId,localHash,options.queryPort,*identity};
-    auto made=inbound::Responder::create(local);if(!made){return false;}
+    auto made=inbound::Responder::create(local,{},{},azureusInstance);if(!made){return false;}
     auto tree=azureus_router::RouterOwner::create(options.localId,{10,2,5,false},scope,now(),QDateTime::currentMSecsSinceEpoch());if(!tree){return false;}
     routingContacts.reserve(azureus_router::MaximumRouterContacts);routingProtocols.reserve(azureus_router::MaximumRouterContacts);replyTickets.reserve(8);
     if(!inboundCurrent(Clock::time_point::max())){return false;}
@@ -149,9 +152,9 @@ struct Actor::Impl {
     return true;
   }
   std::optional<inbound::RoutingSnapshot> routeInbound(const Contact& actual,Method method,const Id& target,bool existing,unsigned version,Clock::time_point end){
-    if(!inboundCurrent(end)||!learnRouting(actual,true,end)){return {};}
+    if(!inboundCurrent(end)||!learnRouting(actual,true,end)||!rememberRoutingProtocol(actual,version,end)){return {};}
     inbound::RoutingSnapshot result;
-    if(method==Method::FindNode||method==Method::GetPeers){
+    if(method==Method::FindNode||method==Method::GetPeers||method==Method::AzureusFindValue){
       auto candidates=router->closest(target,10,true);if(!candidates){return {};}
       for(std::size_t i=0;i<candidates->count;++i){
         const auto id=candidates->values[i].id;auto at=std::find_if(routingContacts.begin(),routingContacts.end(),[&](const auto& c){return c.id==id;});
@@ -160,8 +163,18 @@ struct Actor::Impl {
       std::sort(result.closest.begin(),result.closest.end(),[&](const auto& a,const auto& b){for(std::size_t i=0;i<target.size();++i){const auto left=Byte(a.id[i]^target[i]),right=Byte(b.id[i]^target[i]);if(left!=right){return left<right;}}return false;});
       if(result.closest.size()>10){result.closest.resize(10);}
     }
+    if (method==Method::AzureusFindValue) {
+      for (const auto& contact:result.closest) {
+        if (contact.id==options.localId||contact.id==actual.id) { continue; }
+        const auto known=std::ranges::find(routingProtocols,contact.id,&RoutingProtocolObservation::id);
+        if (known!=routingProtocols.end()&&known->hash==contact.hash&&known->port==contact.port) {
+          const auto protocol=std::bit_cast<std::uint8_t>(known->protocolVersion);
+          if (protocol>=MinimumAzureusProtocol) { result.closestAzureus.push_back({contact,protocol}); }
+        }
+      }
+    }
     if(method==Method::AnnouncePeer){auto local=router->localInClosest(target,10,true);if(!local){return {};}result.allowStore=existing||*local;}
-    if(!rememberRoutingProtocol(actual,version,end)){return {};}return result;
+    return result;
   }
   void inboundPacket(const i2cp::InitialChannel::DhtDatagram& data,unsigned version){
     if(!inboundCurrent(data.end)){return;}if(!prepareInbound()){stopInbound();return;}
@@ -189,14 +202,20 @@ struct Actor::Impl {
     options=value;options.savedContacts=std::move(*saved);
     for(auto& c:options.seeds){if(c.destination){auto parsed=decodeDestination(c.destination->wire);if(!parsed||parsed->hash!=c.hash){return false;}c.destination=std::move(*parsed);}}
     localDestination=identity->wire;localHash=identity->hash;
+    azureusInstance.reset();
+    if (options.azureusValues) {
+      auto& random=*QRandomGenerator::system();
+      azureusInstance=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(random.generate()));
+      azureusClockOffset=random.bounded(-120000,120000);
+    }
     if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;if(value.inbound&&!enableInbound()){close();return false;}notify();return true;
   }
-  Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout){
-    if(!onThread()||!current()||lookup.running()){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
+  Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
+    if(!onThread()||!current()||lookup.running()||(azureus&&!azureusInstance)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
     if(!nextOperation){return std::unexpected(Error{ErrorCode::TooLarge,"DHT operation identifier space exhausted"});}
     cancelPending();
     const auto operation=nextOperation;
-    if(!lookup.start(operation,{target,seed,announce,timeout,options.parallelism},options.seeds,now())){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid finite DHT lookup options"});}
+    if(!lookup.start(operation,{target,seed,announce,timeout,options.parallelism,azureus},options.seeds,now())){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid finite DHT lookup options"});}
     if(options.routingMaintenance){pauseRefresh();}
     nextOperation=detail::nextOperationId(operation);if(options.routingMaintenance){maintenanceApplicationLookup=std::pair{operation,target};}pump();return operation;
   }
@@ -217,7 +236,12 @@ struct Actor::Impl {
       if(message->kind==Kind::Query){if(inboundRequested){inboundPacket(*data,message->version);}continue;}
       if(data->sender){continue;}
       std::erase_if(message->nodes,[&](const auto& c){return c.hash==localHash||c.id==options.localId;});
-      if(maintenanceReply(*message,data->fromPort,data->end)){continue;}
+      if(!message->azureus&&maintenanceReply(*message,data->fromPort,data->end)){continue;}
+      if (message->azureus) {
+        if (auto* contacts=std::get_if<std::vector<AzureusContact>>(&message->azureus->payload)) {
+          std::erase_if(*contacts,[&](const auto& c){return c.contact.hash==localHash||c.contact.id==options.localId;});
+        }
+      }
       std::optional<Contact> actual;
       if(inboundRequested){for(const auto& n:lookup.nodes()){if(n.phase==NodePhase::Sent&&n.transaction==message->transaction&&n.contact.port==data->fromPort){actual=n.contact;break;}}}
       if(lookup.reply(*message,data->fromPort,now())&&actual&&inboundCurrent(data->end)&&prepareInbound()){
@@ -261,6 +285,11 @@ struct Actor::Impl {
       auto tx=transaction(intended);if(!tx){close();return;}
       Message message;message.transaction=*tx;message.id=options.localId;message.target=lookup.options().target;
       message.method=node.phase==NodePhase::Replied?Method::AnnouncePeer:Method::GetPeers;message.noSeed=lookup.options().seed;message.seed=lookup.options().seed;message.token=node.token;
+      if (const auto& azureus=lookup.options().azureus) {
+        message.method=Method::AzureusFindValue;
+        message.azureus=AzureusMessage{*azureusInstance,0,AzureusFindValue{message.target,azureus->maximum,
+            azureus->flags,QDateTime::currentMSecsSinceEpoch()+azureusClockOffset}};
+      }
       auto packet=encode(message);if(!packet){lookup.failed(*index);continue;}
       const auto left=lookup.end()-now();if(left<=0){lookup.tick(now());break;}
       // announce_peer is raw18 to target Q+1; get_peers is signed17 to Q.
@@ -287,6 +316,10 @@ Actor::~Actor(){impl_->safeClose();}
 bool Actor::begin(const Options& value){try{return impl_->begin(value);}catch(...){impl_->safeClose();return false;}}
 Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,false,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
+Result<std::uint64_t> Actor::lookupAzureusValues(const Id& target,AzureusLookup options,unsigned timeout){
+  try{return impl_->start(target,false,false,timeout,options);}
+  catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}
+}
 bool Actor::enableInbound(){try{return impl_->enableInbound();}catch(...){impl_->stopInbound();return false;}}
 void Actor::stopInbound(){if(impl_->onThread()){impl_->stopInbound();}}
 bool Actor::inboundEnabled()const noexcept{return impl_->onThread()&&impl_->enabled&&impl_->inboundRequested&&bool(impl_->responder)&&impl_->channel&&impl_->scope==impl_->channel->dhtScopeGeneration();}
