@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "profile_backup.hpp"
 #include "profile_backup_relocation.hpp"
+#include "profile_restore_journal.hpp"
 #include "download_archive.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
@@ -100,6 +101,8 @@ unsigned nextSuffix(StateHandle parent, std::string_view date, std::stop_token s
 bool skipped(const fs::path& relative, std::string_view name, const StateStamp& stamp,
     bool includePlugins, bool restoring) {
   if (relative.empty()) {
+    if (name==RestoreDirectory || name==RestoreRequest || name==RestoreRequestSaving
+        || name==RestorePrevious || name==RestorePrior || name==RestorePriorSaving || name==RestoreApplied) { return true; }
     if (stamp.directory) {
       if (restoring) { return false; }
       constexpr std::array<std::string_view, 5> transient{"cache", "tmp", "logs", "updates", "debug"};
@@ -296,6 +299,37 @@ void retireSavedBackup(StateHandle parent, BackupCandidate backup, std::stop_tok
 
 struct DirectoryRelocation { std::string previous, destination; bool pauseDownloads=false; };
 
+struct PreparedProfileRestore {
+  ProfileFileSnapshot configuration;
+  DirectoryRelocation relocation;
+  std::string bytes;
+};
+
+PreparedProfileRestore prepareRestore(const ProfileLease& current, StateHandle source, const fs::path& destination) {
+  require(!take(stateStampAt(source, ConfigurationStage)), ErrorCode::Conflict, "Backup configuration is still being written");
+  auto configuration = take(captureProfileFile(source, Configuration, compatibleConfigLimits().inputBytes));
+  require(configuration.bytes.has_value(), ErrorCode::Missing, "Select a completed profile backup containing biglybt.config");
+  const auto sourceConfig = core::Document::parse(*configuration.bytes, compatibleConfigLimits());
+  const auto* original = sourceConfig ? sourceConfig->find("azureus.user.directory") : nullptr;
+  require(original && original->type == core::Node::Type::Bytes && absoluteSavedPath(original->bytes),
+      ErrorCode::InvalidFormat, "Backup does not contain the original profile directory");
+  const auto currentConfig=ConfigFile::load(current,Configuration,compatibleConfigLimits());
+  const auto* pause=currentConfig ? currentConfig->document().find("br.restore.autopause") : nullptr;
+  const bool pauseDownloads=pause&&pause->type==core::Node::Type::Integer
+      && static_cast<std::uint32_t>(pause->integer)!=0;
+  DirectoryRelocation relocation{std::string(original->bytes),platform::pathToUtf8(destination),pauseDownloads};
+  auto bytes = take(relocateBackupConfiguration(*configuration.bytes, relocation.previous, relocation.destination));
+  auto restoredConfig = core::Document::parse(std::move(bytes), compatibleConfigLimits());
+  require(restoredConfig && restoredConfig->replaceValue("azureus.user.directory",
+      std::to_string(relocation.destination.size()) + ':' + relocation.destination).has_value(), ErrorCode::InvalidFormat,
+      "Cannot save the restored profile directory");
+  if (pauseDownloads) {
+    require(restoredConfig->replaceValue("br.restore.autopause","i1e").has_value(),
+        ErrorCode::InvalidFormat,"Cannot save the restore pause preference");
+  }
+  return {std::move(configuration),std::move(relocation),restoredConfig->serialize()};
+}
+
 class BackupWriter {
 public:
   BackupWriter(StateHandle parent, fs::path name, StateDescriptor output, std::stop_token stop,
@@ -323,6 +357,8 @@ public:
     }
   }
 
+  void discard() noexcept { published_=false; }
+
   ProfileBackup write(StateHandle source, fs::path directory, const ProfileFileSnapshot& configuration,
       std::string bytes, bool includePlugins) {
     copyTree(source, output_.get(), {}, includePlugins, 1);
@@ -334,6 +370,7 @@ public:
     const auto stamp = take(stateStamp(config.get()));
     created_.emplace_back(ConfigurationStage, stamp);
     take(publishStateFile(output_.get(), ConfigurationStage, Configuration, config.get(), false, &stamp));
+    created_.back().first=Configuration;
     published_ = true;
     take(syncStateDirectory(output_.get()));
     if (parent_ != InvalidStateHandle) { take(syncStateDirectory(parent_)); }
@@ -532,40 +569,60 @@ std::expected<fs::path, Error> restoreProfileBackup(const ProfileLease& current,
       && !sameStateDirectory(take(stateStamp(current.directoryHandle())), take(stateStamp(output.get()))),
       ErrorCode::UnsafePath, "Keep the restored profile separate from the backup and the current profile");
   requireEmptyProfile(output.get(), stop);
-  require(!take(stateStampAt(source.get(), ConfigurationStage)), ErrorCode::Conflict, "Backup configuration is still being written");
-  const auto configuration = take(captureProfileFile(source.get(), Configuration, compatibleConfigLimits().inputBytes));
-  require(configuration.bytes.has_value(), ErrorCode::Missing, "Select a completed profile backup containing biglybt.config");
-  const auto sourceConfig = core::Document::parse(*configuration.bytes, compatibleConfigLimits());
-  const auto* original = sourceConfig ? sourceConfig->find("azureus.user.directory") : nullptr;
-  require(original && original->type == core::Node::Type::Bytes && absoluteSavedPath(original->bytes),
-      ErrorCode::InvalidFormat, "Backup does not contain the original profile directory");
-  const auto currentConfig=ConfigFile::load(current,Configuration,compatibleConfigLimits());
-  const auto* pause=currentConfig ? currentConfig->document().find("br.restore.autopause") : nullptr;
-  const bool pauseDownloads=pause&&pause->type==core::Node::Type::Integer
-      && static_cast<std::uint32_t>(pause->integer)!=0;
-  DirectoryRelocation relocation{std::string(original->bytes),platform::pathToUtf8(targetPath),pauseDownloads};
-  auto bytes = take(relocateBackupConfiguration(*configuration.bytes, relocation.previous, relocation.destination));
-  auto restoredConfig = core::Document::parse(std::move(bytes), compatibleConfigLimits());
-  require(restoredConfig && restoredConfig->replaceValue("azureus.user.directory",
-      std::to_string(relocation.destination.size()) + ':' + relocation.destination).has_value(), ErrorCode::InvalidFormat,
-      "Cannot save the restored profile directory");
-  if (pauseDownloads) {
-    require(restoredConfig->replaceValue("br.restore.autopause","i1e").has_value(),
-        ErrorCode::InvalidFormat,"Cannot save the restore pause preference");
-  }
+  auto prepared=prepareRestore(current,source.get(),targetPath);
   checkCancellation(stop);
   const auto target = take(ProfileLease::acquire(targetPath));
   require(sameStateDirectory(take(stateStamp(output.get())), take(stateStamp(target.directoryHandle()))),
       ErrorCode::Conflict, "Restore destination changed while opening it");
   requireEmptyProfile(target.directoryHandle(), stop);
-  BackupWriter writer(InvalidStateHandle, {}, take(duplicateStateDirectory(target.directoryHandle())), stop, std::move(relocation));
-  return writer.write(source.get(), targetPath, configuration, restoredConfig->serialize(), true).directory;
+  BackupWriter writer(InvalidStateHandle, {}, take(duplicateStateDirectory(target.directoryHandle())),
+      stop, std::move(prepared.relocation));
+  return writer.write(source.get(), targetPath, prepared.configuration, std::move(prepared.bytes), true).directory;
 } catch (const Error& error) {
   return std::unexpected(error);
 } catch (const std::filesystem::filesystem_error&) {
   return std::unexpected(Error{ErrorCode::UnsafePath, "Cannot resolve the backup or restore destination"});
 } catch (const std::exception&) {
   return std::unexpected(Error{ErrorCode::Io, "Profile restoration did not finish"});
+}
+
+std::expected<void, Error> stageProfileRestore(const ProfileLease& current,
+    const fs::path& backup, std::stop_token stop) try {
+  checkCancellation(stop);
+  require(backup.is_absolute(),ErrorCode::UnsafePath,"Choose an absolute path to the backup");
+  auto access=take(current.sourceAccess(true));
+  const auto profile=current.directoryHandle();
+  const auto path=take(stateDirectoryPath(profile));
+  const auto source=take(openStatePathDirectory(fs::canonical(backup)));
+  const auto backupPath=take(stateDirectoryPath(source.get()));
+  require(!containsPath(path,backupPath)&&!containsPath(backupPath,path)
+      &&!sameStateDirectory(take(stateStamp(profile)),take(stateStamp(source.get()))),
+      ErrorCode::UnsafePath,"Choose a backup separate from the current profile");
+  require(!take(stateStampAt(profile,RestoreDirectory))&&!take(stateStampAt(profile,RestoreRequest))
+      &&!take(stateStampAt(profile,RestoreRequestSaving))&&!take(stateStampAt(profile,RestoreApplied)),ErrorCode::Busy,"A saved profile restore is already pending");
+  require(!hasPendingArchiveRestore(current)&&!hasPendingFileOperation(current)&&!hasPendingOriginalCompaction(current)
+      &&!hasPendingCategoryDeletion(current)&&!hasPendingTorrentIntake(current),
+      ErrorCode::Conflict,"Finish the pending profile recovery before staging a restore");
+  take(requireNoPendingSubscriptionAcquisition(current));
+  auto prepared=prepareRestore(current,source.get(),path);
+  checkCancellation(stop);
+  auto directory=take(createDirectoryAt(profile,RestoreDirectory));
+  const auto identity=take(stateStamp(directory.get()));
+  BackupWriter writer(profile,RestoreDirectory,std::move(directory),stop,std::move(prepared.relocation));
+  static_cast<void>(writer.write(source.get(),path/RestoreDirectory,prepared.configuration,std::move(prepared.bytes),true));
+  const auto published=publishProfileRestoreRequest(profile,identity,stop);
+  if (!published) {
+    const auto ready=stateStampAt(profile,RestoreRequest);
+    const auto saving=stateStampAt(profile,RestoreRequestSaving);
+    if (ready&&!*ready&&saving&&!*saving) { writer.discard(); }
+  }
+  return published;
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::filesystem::filesystem_error&) {
+  return std::unexpected(Error{ErrorCode::UnsafePath,"Cannot resolve the backup directory"});
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io,"Cannot stage the restore for the next profile startup"});
 }
 
 std::expected<std::size_t, Error> rotateSavedProfileBackups(const ProfileLease& lease,

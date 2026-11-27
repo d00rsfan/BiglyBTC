@@ -152,6 +152,7 @@ public:
   bool backupSavedProfile(quint64 session, QString destination);
   bool runAutomaticProfileBackup(quint64 session);
   bool restoreProfileBackup(quint64 session, QString backup, QString destination);
+  bool stageProfileRestore(quint64 session, QString backup);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);

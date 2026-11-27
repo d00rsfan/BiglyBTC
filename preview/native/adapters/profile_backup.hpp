@@ -18,6 +18,11 @@ std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease&,
 std::expected<std::filesystem::path, Error> restoreProfileBackup(const ProfileLease& current,
     const std::filesystem::path& backup, const std::filesystem::path& destination, std::stop_token = {});
 
+std::expected<void, Error> stageProfileRestore(const ProfileLease& current,
+    const std::filesystem::path& backup, std::stop_token = {});
+
+std::expected<bool, Error> applyPendingProfileRestore(const ProfileLease&, std::stop_token = {});
+
 std::expected<std::size_t, Error> rotateSavedProfileBackups(const ProfileLease&, const ProfileBackup& completed,
     std::uint32_t retain, std::stop_token = {});
 

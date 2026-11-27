@@ -435,6 +435,24 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       emit restoreProfileBackupRequested(session, std::move(backupFolder), std::move(directory));
     }
   });
+  auto* restoreAtStartup = tools->addAction(tr("Restore Backup on Next Start…"));
+  restoreAtStartup->setObjectName(QStringLiteral("classic-stage-profile-restore"));
+  connect(tools, &QMenu::aboutToShow, restoreAtStartup, [this, restoreAtStartup] {
+    restoreAtStartup->setEnabled(canImport());
+  });
+  connect(restoreAtStartup, &QAction::triggered, this, [this] {
+    if (!canImport()) { return; }
+    const auto session=columnSession_;
+    const QPointer<LibraryWindow> guard(this);
+    auto backupFolder=QFileDialog::getExistingDirectory(this, tr("Select the Profile Backup"));
+    if (!guard || !canImport() || session!=columnSession_ || backupFolder.isEmpty()) { return; }
+    const auto confirmed=QMessageBox::question(this,tr("Restore Profile on Next Start"),
+        tr("The selected backup will replace matching files in the current profile the next time BiglyBTC opens. Schedule the restore?"),
+        QMessageBox::Yes|QMessageBox::Cancel,QMessageBox::Cancel);
+    if (guard && confirmed==QMessageBox::Yes && canImport() && session==columnSession_) {
+      emit stageProfileRestoreRequested(session,std::move(backupFolder));
+    }
+  });
   auto* plugins = menuBar()->addMenu(tr("&Plugins"));
   plugins->setObjectName(QStringLiteral("classic-plugins-menu"));
   auto* community = menuBar()->addMenu(tr("&Community"));

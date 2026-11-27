@@ -287,6 +287,77 @@ void verifyRetentionRefusesSharedFile() {
       && read(external) == "unrelated payload", "Preflight preserves the entire older copy and the shared file");
 }
 
+void verifyRestoreCanStageWithoutOverwritingLiveState() {
+  Fixture files;
+  write(files.profile/"biglybt.config","de");
+  write(files.profile/"downloads.config","d9:downloadslee");
+  write(files.profile/"demo.config","d3:key3:olde");
+  const auto backup=take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-27"));
+  write(files.profile/"demo.config","d3:key3:newe");
+  write(files.profile/"biglybt.config","d6:marker4:livee");
+  const auto staged=storage::stageProfileRestore(*files.lease,backup.directory);
+  check(staged.has_value(),staged?"Stage an owned backup":staged.error().message.c_str());
+  check(read(files.profile/"demo.config")=="d3:key3:newe"
+      && read(files.profile/"biglybt.config")=="d6:marker4:livee","Keep applying state independent of the live profile");
+  check(read(files.profile/".BiglyBTC.restore-data"/"demo.config")=="d3:key3:olde",
+      "Preserve the backup postimage for the next startup");
+  const auto recorded=core::Document::parse(read(files.profile/".BiglyBTC.restore-request"));
+  check(recorded&&recorded->find("version")&&recorded->find("version")->integer==1,
+      "Publish the restore request only with a complete staged copy");
+  const auto repeat=storage::stageProfileRestore(*files.lease,backup.directory);
+  check(!repeat&&repeat.error().code==storage::ErrorCode::Busy,"Do not replace a pending restore");
+  const auto current=take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-28"));
+  check(read(current.directory/"demo.config")=="d3:key3:newe"
+      &&!fs::exists(current.directory/".BiglyBTC.restore-request")
+      &&!fs::exists(current.directory/".BiglyBTC.restore-data"),"Backup reads the active profile and omits its pending restore");
+  write(files.profile/"untouched.bin","unrelated live file");
+  files.lease.reset();
+  files.lease.emplace(take(storage::ProfileLease::acquire(files.profile)));
+  check(take(storage::applyPendingProfileRestore(*files.lease)),"Apply the pending journal on a new profile lease");
+  check(read(files.profile/"demo.config")=="d3:key3:olde"
+      &&read(files.profile/"untouched.bin")=="unrelated live file","Restore selected backup files and keep new unselected files");
+  const auto applied=core::Document::parse(read(files.profile/"biglybt.config"));
+  check(applied&&applied->find("azureus.user.directory")&&!applied->find("marker"),
+      "Publish the restored main configuration");
+  check(!fs::exists(files.profile/".BiglyBTC.restore-request")
+      &&!fs::exists(files.profile/".BiglyBTC.restore-data")
+      &&!fs::exists(files.profile/".BiglyBTC.restore-applied")
+      &&!take(storage::applyPendingProfileRestore(*files.lease)),"Clean the finished journal and resume normal startup");
+  check(read(backup.directory/"demo.config")=="d3:key3:olde","Preserve the selected backup after applying it");
+}
+
+void verifyRestoreRefusesBackupWithItsOwnPendingOperation() {
+  Fixture files;
+  write(files.profile/"biglybt.config","de");
+  write(files.profile/"demo.config","d3:key3:olde");
+  const auto backup=take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-27"));
+  write(backup.directory/"BiglyBTC.archive-restore","de");
+  const auto staged=storage::stageProfileRestore(*files.lease,backup.directory);
+  check(!staged&&staged.error().code==storage::ErrorCode::Conflict
+      &&!fs::exists(files.profile/".BiglyBTC.restore-request")
+      &&!fs::exists(files.profile/".BiglyBTC.restore-data"),
+      "Refuse to import a suspended backup transaction and clean the unpublished stage");
+  check(read(backup.directory/"BiglyBTC.archive-restore")=="de"
+      &&read(files.profile/"demo.config")=="d3:key3:olde","Leave both selected directories intact");
+}
+
+void verifyRestoreRefusesChangedStagedData() {
+  Fixture files;
+  write(files.profile/"biglybt.config","de");
+  write(files.profile/"demo.config","d3:key3:olde");
+  const auto backup=take(storage::backupSavedProfile(*files.lease,files.destination,"2026-11-27"));
+  write(files.profile/"demo.config","d3:key3:newe");
+  check(storage::stageProfileRestore(*files.lease,backup.directory).has_value(),"Seal the staged copy before testing changes");
+  const auto staged=files.profile/".BiglyBTC.restore-data"/"demo.config";
+  const auto timestamp=fs::last_write_time(staged);
+  write(staged,"d3:key3:bade");
+  fs::last_write_time(staged,timestamp);
+  const auto applied=storage::applyPendingProfileRestore(*files.lease);
+  check(!applied&&applied.error().code==storage::ErrorCode::Conflict
+      &&read(files.profile/"demo.config")=="d3:key3:newe"
+      &&read(files.profile/"biglybt.config")=="de","Refuse altered staged data before replacing the saved profile");
+}
+
 void verifyRestorePausesDownloads() {
   Fixture files;
   const auto active=std::string(20,'a');
@@ -419,6 +490,9 @@ int main() try {
   verifyRefusalsAndCleanup();
   verifyRestore();
   verifyRestorePausesDownloads();
+  verifyRestoreCanStageWithoutOverwritingLiveState();
+  verifyRestoreRefusesChangedStagedData();
+  verifyRestoreRefusesBackupWithItsOwnPendingOperation();
   verifyAutomaticBackup();
   verifyBackupStatus();
   verifyRetention();

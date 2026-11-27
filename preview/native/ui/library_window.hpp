@@ -307,6 +307,7 @@ signals:
   void backupSavedProfileRequested(quint64 session, QString destination);
   void automaticProfileBackupRequested(quint64 session);
   void restoreProfileBackupRequested(quint64 session, QString backup, QString destination);
+  void stageProfileRestoreRequested(quint64 session, QString backup);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
   void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);

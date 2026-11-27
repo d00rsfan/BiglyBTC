@@ -2550,7 +2550,10 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     static_cast<void>(take(storage::recoverArchiveRestore(lease)));
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
-    if(!reviewOnly){static_cast<void>(take(recoverTorrentIntakeBeforeHost(lease,profile)));}
+    if (!reviewOnly) {
+      static_cast<void>(take(recoverTorrentIntakeBeforeHost(lease, profile)));
+      static_cast<void>(take(storage::applyPendingProfileRestore(lease, stop)));
+    }
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     host_->i2pOptions=i2pOptions_;
@@ -2605,7 +2608,10 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     static_cast<void>(take(storage::recoverArchiveRestore(lease)));
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     const bool reviewOnly=recoverOrReviewReplacement(lease);
-    if(!reviewOnly){static_cast<void>(take(recoverTorrentIntakeBeforeHost(lease,profile)));}
+    if (!reviewOnly) {
+      static_cast<void>(take(recoverTorrentIntakeBeforeHost(lease, profile)));
+      static_cast<void>(take(storage::applyPendingProfileRestore(lease, stop)));
+    }
     // Do not let dispatch's repairable-policy fallback publish an ordinary Host
     // after storage recovery failed. Only a validated review gets a read-only Host.
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
@@ -3876,6 +3882,18 @@ bool SessionBridge::restoreProfileBackup(quint64 session, QString backup, QStrin
     const auto target = platform::pathFromUtf8(destination.toUtf8().toStdString());
     const auto restored = take(storage::restoreProfileBackup(host_->lease, source, target, stop));
     ready(host_->lastSnapshot, tr("Profile restored in %1").arg(text(platform::pathToUtf8(restored))));
+  }, false);
+}
+
+bool SessionBridge::stageProfileRestore(quint64 session, QString backup) {
+  if (!session || session != publishedColumnLayoutSession_ || backup.isEmpty() || busy_ || closingSession_) { return false; }
+  return dispatch([this, session, backup = std::move(backup)](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session || host_->fileRecoveryRequired || guardedLibraryRecovery(host_->lease)) {
+      throw Failure{{storage::ErrorCode::Conflict, "The current profile is unavailable for restoration"}};
+    }
+    const auto source=platform::pathFromUtf8(backup.toUtf8().toStdString());
+    take(storage::stageProfileRestore(host_->lease,source,stop));
+    ready(host_->lastSnapshot,tr("Profile restore is ready. Close and reopen BiglyBTC to apply it."));
   }, false);
 }
 
