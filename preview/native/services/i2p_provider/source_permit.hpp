@@ -46,7 +46,7 @@ private:
       bool ok=false;
       try{
         auto access=source_->lease()->sourceAccess();
-        if(access&&!stop.stop_requested()&&source_->validate()){
+        if(access&&!stop.stop_requested()&&source_->validate(*access)){
           std::unique_lock lock(mutex_);
           if(!stopped_&&!stop.stop_requested()){
             revision_=access->revision();phase_=Phase::Ready;wake();

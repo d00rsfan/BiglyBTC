@@ -12,6 +12,8 @@
 #include "private_tag_source_refresh.hpp"
 #include "retirement_counters.hpp"
 #include "metadata_disk_router.hpp"
+#include "subscription_seed_owner.hpp"
+#include "subscription_source.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tag_state.hpp"
 #include "biglybtc/queue_observations.hpp"
@@ -82,6 +84,18 @@ struct OwnedProfile::PreparedMagnet::Impl {
 };
 OwnedProfile::PreparedMagnet::PreparedMagnet(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 OwnedProfile::PreparedMagnet::~PreparedMagnet()=default;
+struct OwnedProfile::PreparedSubscription::Impl {
+  std::shared_ptr<SubscriptionSource> source;
+  std::shared_ptr<engine::detail::MetadataDiskPolicy> disks;
+  std::filesystem::path slot;
+  engine::detail::PreparedSubscriptionTorrent torrent;
+  std::uint64_t admission = 0;
+  ~Impl() {
+    if (disks) { disks->releaseOriginalPath(slot, torrent.files); }
+  }
+};
+OwnedProfile::PreparedSubscription::PreparedSubscription(std::unique_ptr<Impl> value):impl_(std::move(value)){}
+OwnedProfile::PreparedSubscription::~PreparedSubscription()=default;
 struct OwnedProfile::QueueState::Impl {
   struct Row {core::TorrentHash hash;std::uint64_t admission;std::optional<std::int64_t> position;bool force;};
   std::vector<Row> rows;std::uint64_t revision=0;
@@ -132,6 +146,14 @@ struct OwnedProfile::Impl {
     std::chrono::steady_clock::time_point end{};
     auto& data(){return *prepared->impl_;}const auto& data()const{return *prepared->impl_;}
   };
+  struct Subscription {
+    explicit Subscription(std::unique_ptr<PreparedSubscription> value):prepared(std::move(value)){}
+    std::unique_ptr<PreparedSubscription> prepared;
+    lt::torrent_handle handle;
+    std::chrono::steady_clock::time_point deadline{};
+    bool registered=false, checked=false, ready=false, removed=false, retiring=false, barrier=false;
+    auto& data() const { return *prepared->impl_; }
+  };
   std::map<std::string,std::unique_ptr<Magnet>> magnets;
   std::optional<dht::Actor::Options> discoveryOptions;std::shared_ptr<ContactExchange> contactExchange;
   std::shared_ptr<const engine::detail::MixedManagedOrigin> metadataOrigin=std::make_shared<engine::detail::MixedManagedOrigin>();
@@ -140,6 +162,7 @@ struct OwnedProfile::Impl {
   std::unique_ptr<lt::session> session;std::optional<lt::session_proxy> joining;
   std::unique_ptr<i2cp::InitialChannel> channel;std::unique_ptr<Bridge> bridge;std::unique_ptr<SourcePermit> permit;
   std::map<std::string,std::unique_ptr<Member>> members;
+  std::map<std::string,Subscription> subscriptions;
   QTimer timer;Options options;core::QueuePolicy queuePolicy;Rates rates;Phase phase=Phase::Prepared;
   std::uint64_t admission=0,generation=0;bool startRequested=false,bridgeRequested=false,installQueued=false,memberInstallRequested=false;std::int64_t started=nowMillis();
   std::uint32_t queueUnavailable=0;std::string failure;
@@ -148,9 +171,21 @@ struct OwnedProfile::Impl {
   std::optional<core::SessionRateLimits> externalRates;
   bool onThread()const{return QThread::currentThread()==q->thread();}
   Member* find(const core::TorrentHash& h)const{const auto i=members.find(h.hex());return i==members.end()?nullptr:i->second.get();}
+  std::size_t privateAdmissionCount() const {
+    const auto pending=std::ranges::count_if(magnets,[](const auto& entry){return !entry.second->released.load();});
+    return members.size()+static_cast<std::size_t>(pending)+subscriptions.size();
+  }
+  void makeRoomForDownload(const std::string& key) {
+    if (const auto seed=subscriptions.find(key); seed!=subscriptions.end()) { retireSubscription(seed->second); }
+    else if (privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
+      const auto last=std::ranges::find_if(subscriptions,[](const auto& entry){ return !entry.second.retiring; });
+      if (last!=subscriptions.end()) { retireSubscription(last->second); }
+    }
+  }
   void requestInstall(){
     if(phase!=Phase::Starting||!bridge||installQueued||bridge->observation().phase!=Bridge::Phase::Ready){return;}
-    if(std::ranges::none_of(members,[](const auto& entry){return !entry.second->retired.requested;})&&std::ranges::none_of(magnets,[](const auto& entry){return !entry.second->cancel&&!entry.second->released.load();})){return;}
+    if(std::ranges::none_of(members,[](const auto& entry){return !entry.second->retired.requested;})&&std::ranges::none_of(magnets,[](const auto& entry){return !entry.second->cancel&&!entry.second->released.load();})
+        && std::ranges::none_of(subscriptions,[](const auto& entry){ return !entry.second.data().source->revoked(); })){return;}
     installQueued=true;if(!bridge->installProvider([this](void* policy){installQueued=false;return installSession(policy);})){installQueued=false;close();}
   }
   void close(const char* reason=nullptr){
@@ -162,6 +197,7 @@ struct OwnedProfile::Impl {
         ?"I2P metadata session withdrew; original intent retained":failure};}
     }
     for(auto& [key,m]:members){(void)key;m->handle={};if(m->retired.requested&&!m->retired.readyForJoin&&!m->retired.failure){m->retired.failure=Error{Code::Conflict,"Shared I2P session withdrew before target retirement; recheck retained"};}}
+    for (auto& [key, seed] : subscriptions) { (void)key; seed.data().source->revoke(); seed.handle = {}; }
   }
   void fail(Member& m,Error e){m.failure=e.message;m.retired.failure=std::move(e);/* Preserve siblings; this member cannot checkpoint. */if(m.handle.is_valid()){m.handle.pause();}}
   lt::BiglybtcPrivateI2pTorrentV1 registration(const Member& m)const{
@@ -174,9 +210,18 @@ struct OwnedProfile::Impl {
     if(requested.has_v1()){tuple.hashes|=1;std::copy(requested.v1.begin(),requested.v1.end(),tuple.torrent_v1.begin());}
     if(requested.has_v2()){tuple.hashes|=2;std::copy(requested.v2.begin(),requested.v2.end(),tuple.torrent_v2.begin());}return tuple;
   }
-  template<class Target>bool discovered(Target& m,const Hash& peer,std::uint64_t operation){
+  lt::BiglybtcPrivateI2pTorrentV1 registration(const Subscription& seed) const {
+    lt::BiglybtcPrivateI2pTorrentV1 tuple;
+    tuple.generation = generation;
+    tuple.admission = seed.data().admission;
+    tuple.hashes = 1;
+    std::ranges::transform(seed.data().source->hash().bytes(), tuple.torrent_v1.begin(),
+        [](std::byte value) { return std::to_integer<unsigned char>(value); });
+    return tuple;
+  }
+  template<class Target>bool deliverDiscovered(Target& m,const Hash& peer,std::uint64_t operation){
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
-    if(!session||phase!=Phase::Active||!operation||!m.handle.is_valid()||!m.data().source->prepared()||!m.data().source->discoveryAllowed()){return false;}
+    if(!session||phase!=Phase::Active||!operation||!m.handle.is_valid()){return false;}
     lt::BiglybtcI2pDiscoveredPeerV1 request;request.torrent=registration(m);request.operation=operation;
     std::copy(peer.begin(),peer.end(),request.peer_hash.begin());
     const auto deliver=reinterpret_cast<decltype(&lt::biglybtc_discovered_i2p_peer_v1)>(platform::loadedSymbol(pin.get(),"biglybtc_discovered_i2p_peer_v1"));
@@ -184,6 +229,10 @@ struct OwnedProfile::Impl {
 #else
     (void)m;(void)peer;(void)operation;return false;
 #endif
+  }
+  template<class Target>bool discovered(Target& m,const Hash& peer,std::uint64_t operation){
+    return m.data().source->prepared() && m.data().source->discoveryAllowed()
+        && deliverDiscovered(m,peer,operation);
   }
   void startDiscovery(Member& m){
     if(!bridge||!discoveryOptions||!m.installed||m.retired.requested||!m.data().source->discoveryAllowed()){return;}
@@ -194,6 +243,87 @@ struct OwnedProfile::Impl {
     if(!bridge||!discoveryOptions||!m.installed||m.cancel||!m.data().source->discoveryAllowed()){return;}
     dht::Id wire{};const auto& hash=m.data().intent.hash;std::transform(hash.bytes().begin(),hash.bytes().end(),wire.begin(),[](std::byte value){return std::to_integer<Byte>(value);});const auto id=m.data().admission;
     (void)bridge->discover(m.data().source,hash,wire,id,false,[this,id,hash](const Hash& peer,std::uint64_t op){const auto at=magnets.find(hash.hex());return at!=magnets.end()&&at->second->data().admission==id&&!at->second->cancel&&!at->second->removing&&discovered(*at->second,peer,op);});
+  }
+  bool subscriptionCurrent(const Subscription& seed, std::uint64_t revision) const {
+    return source->revisionCurrent(revision) && seed.data().source->current(revision);
+  }
+  bool startDiscovery(Subscription& seed) {
+    if (!bridge || !discoveryOptions) { return false; }
+    const auto key = seed.data().source->hash().hex();
+    const auto id = seed.data().admission;
+    return bridge->discoverSubscription(seed.data().source, id, [this,key,id](const Hash& peer, std::uint64_t op) {
+      const auto found = subscriptions.find(key);
+      return found != subscriptions.end() && found->second.data().admission == id && found->second.ready
+          && subscriptionCurrent(found->second, source->lease()->sourceRevision())
+          && deliverDiscovered(found->second, peer, op);
+    });
+  }
+  bool install(Subscription& seed, std::uint64_t revision, bool configured = false) {
+    seed.registered = configured;
+    if (!session || !subscriptionCurrent(seed, revision)) { return false; }
+    const auto tuple = registration(seed);
+    if (!configured && lt::biglybtc_admit_private_i2p_torrent_v1(session.get(), &tuple) != 0) { return false; }
+    seed.registered = true;
+    lt::error_code error;
+    seed.handle = session->add_torrent(std::move(seed.data().torrent.parameters), error);
+    seed.deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    return !error && seed.handle.is_valid();
+  }
+  void retireSubscription(Subscription& seed) {
+    if (seed.retiring) { return; }
+    seed.data().source->revoke();
+    seed.retiring = true;
+    seed.ready = false;
+    if (bridge) { bridge->cancelDiscovery(seed.data().admission); }
+    seed.deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    if (seed.handle.is_valid()) {
+      seed.handle.pause();
+      session->remove_torrent(seed.handle);
+    } else { seed.removed = true; }
+  }
+  void advanceSubscriptions(std::optional<std::uint64_t> permitRevision = {}) {
+    if (!session) { return; }
+    const auto now = std::chrono::steady_clock::now();
+    for (auto at = subscriptions.begin(); at != subscriptions.end();) {
+      auto& seed = at->second;
+      if (seed.data().source->revoked()) { retireSubscription(seed); }
+      if (!seed.retiring && seed.registered) {
+        const auto status = seed.handle.is_valid() ? seed.handle.status({}) : lt::torrent_status{};
+        if (!seed.handle.is_valid() || status.errc || (!seed.ready && now >= seed.deadline)
+            || (seed.checked && (status.flags & lt::torrent_flags::paused) && !status.is_seeding)) {
+          retireSubscription(seed);
+        } else if (!seed.ready && seed.checked && status.is_seeding && (status.flags & lt::torrent_flags::paused)) {
+          if (!permitRevision) { requestStartup(); }
+          else if (subscriptionCurrent(seed, *permitRevision) && startDiscovery(seed)) {
+            seed.ready = true;
+            seed.handle.resume();
+          }
+        }
+      }
+      if (seed.retiring && seed.removed && !seed.handle.is_valid()) {
+        if (!seed.barrier && seed.registered) {
+          (void)session->get_settings();
+          seed.barrier = true;
+        } else {
+          const auto tuple = registration(seed);
+          if (seed.registered && lt::biglybtc_revoke_private_i2p_torrent_v1(session.get(), &tuple) != 0) {
+            close("Cannot withdraw the I2P subscription registration");
+            return;
+          }
+          at = subscriptions.erase(at);
+          if (!members.empty() || !magnets.empty()) {
+            memberInstallRequested = true;
+            requestStartup();
+          }
+          continue;
+        }
+      }
+      if (seed.retiring && now >= seed.deadline) {
+        close("I2P subscription storage removal did not settle");
+        return;
+      }
+      ++at;
+    }
   }
   bool install(Magnet& m,bool configured=false){
 #if defined(BIGLYBTC_I2P_DISCOVERY_ABI_V1)
@@ -306,9 +436,14 @@ struct OwnedProfile::Impl {
     // A queued bridge-install turn may race a genuine never-installed Stop.
     // Keep the shared endpoint unconfigured until another live member exists.
     auto firstMagnet=std::ranges::find_if(magnets,[](const auto& entry){return !entry.second->cancel&&!entry.second->released.load();});
-    if(firstLive==members.end()&&firstMagnet==magnets.end()){return true;}
+    const auto revision = source->lease()->sourceRevision();
+    const auto firstSeed = std::ranges::find_if(subscriptions, [&](const auto& entry) {
+      return subscriptionCurrent(entry.second, revision);
+    });
+    if(firstLive==members.end()&&firstMagnet==magnets.end()&&firstSeed==subscriptions.end()){return true;}
     auto& policy=*static_cast<lt::BiglybtcPrivateI2pOwnerPolicyV1*>(opaque);generation=policy.generation;
-    const auto tuple=firstLive!=members.end()?registration(*firstLive->second):registration(*firstMagnet->second);
+    const auto tuple=firstLive!=members.end()?registration(*firstLive->second)
+        :firstMagnet!=magnets.end()?registration(*firstMagnet->second):registration(firstSeed->second);
     policy.admission=tuple.admission;policy.hashes=tuple.hashes;policy.torrent_v1=tuple.torrent_v1;policy.torrent_v2=tuple.torrent_v2;
     if(lt::biglybtc_configure_private_i2p_owner_v1(session.get(),&policy)!=0){return false;}
     lt::settings_pack network;network.set_str(lt::settings_pack::i2p_hostname,"127.0.0.1");network.set_int(lt::settings_pack::i2p_port,policy.bridge_port);session->apply_settings(network);
@@ -322,6 +457,12 @@ struct OwnedProfile::Impl {
     }
     bool firstRecord=true;for(auto& [key,m]:members){(void)key;if(m->retired.requested){continue;}if(!install(*m,firstRecord)){return false;}firstRecord=false;}
     for(auto& [key,m]:magnets){(void)key;if(m->cancel||m->released.load()){continue;}if(!install(*m,firstRecord)){return false;}firstRecord=false;}
+    for (auto& [key, seed] : subscriptions) {
+      (void)key;
+      if (!subscriptionCurrent(seed, revision)) { continue; }
+      if (!install(seed, revision, firstRecord)) { retireSubscription(seed); }
+      firstRecord = false;
+    }
     phase=Phase::Active;if(discoveryOptions&&!bridge->beginDiscovery(*discoveryOptions,contactExchange)){return false;}
     for(auto& [key,m]:members){(void)key;startDiscovery(*m);}for(auto& [key,m]:magnets){(void)key;startDiscovery(*m);}timer.start(250);return true;
   }
@@ -330,6 +471,18 @@ struct OwnedProfile::Impl {
     for(const auto* alert:batch){
       if(lt::alert_cast<lt::alerts_dropped_alert>(alert)||lt::alert_cast<lt::session_error_alert>(alert)){failure="Shared I2P provider lost an essential observation";close();return;}
       const auto* torrent=dynamic_cast<const lt::torrent_alert*>(alert);if(!torrent){continue;}
+      const auto subscription = std::ranges::find_if(subscriptions, [&](const auto& entry) {
+        return entry.second.registered && entry.second.handle == torrent->handle;
+      });
+      if (subscription != subscriptions.end()) {
+        auto& seed = subscription->second;
+        if (lt::alert_cast<lt::torrent_checked_alert>(alert)) { seed.checked = true; }
+        if (lt::alert_cast<lt::torrent_removed_alert>(alert)) { seed.removed = true; retireSubscription(seed); }
+        if (lt::alert_cast<lt::file_error_alert>(alert) || lt::alert_cast<lt::torrent_error_alert>(alert)) {
+          retireSubscription(seed);
+        }
+        continue;
+      }
       Magnet* pending=nullptr;for(auto& [key,m]:magnets){(void)key;if(m->handle==torrent->handle){pending=m.get();break;}}
       if(pending){
         if(pending->ready){continue;}
@@ -367,6 +520,7 @@ struct OwnedProfile::Impl {
       if(lt::alert_cast<lt::torrent_removed_alert>(alert)){if(!m.removing){fail(m,{Code::Conflict,"Target I2P disappeared before flush"});}else{m.removed=true;}}
     }
     advanceMagnets();if(!session){return;}
+    advanceSubscriptions();if(!session){return;}
     for(auto& [key,m]:members){(void)key;if(!m->retired.requested||m->retired.failure||m->retired.readyForJoin){continue;}
       if(std::chrono::steady_clock::now()>=m->deadline){fail(*m,{Code::Io,"Target I2P retirement deadline expired before its final fence"});continue;}
       if(m->removed&&m->removing&&!m->handle.is_valid()){
@@ -456,14 +610,26 @@ struct OwnedProfile::Impl {
   void startup(){
     if(sourcePaused||(phase!=Phase::Starting&&phase!=Phase::Active)||!permit){return;}auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close("I2P owner source validation failed");}return;}
     struct Ack{SourcePermit& p;~Ack(){p.acknowledge();}} ack{*permit};
+    for (auto& [key, seed] : subscriptions) {
+      (void)key;
+      if (seed.data().source->revoked()) { retireSubscription(seed); }
+    }
     if(!source->revisionCurrent(*revision)||!channel->resumeAuthorizedEffects()){close("I2P owner effect authority refused");return;}
     if(startRequested){startRequested=false;const auto wall=QDateTime::currentMSecsSinceEpoch();if(!identity||wall<=0||!channel->createLeaseSession(std::move(*identity),options.session,static_cast<std::uint64_t>(wall))){close();return;}identity.reset();}
     if(phase==Phase::Active&&memberInstallRequested){
       memberInstallRequested=false;
-      try{for(auto& [key,m]:members){(void)key;if(m->installed||m->retired.requested||!m->failure.empty()){continue;}if(!source->revisionCurrent(*revision)||!install(*m)){fail(*m,{Code::Io,"Cannot install measured I2P member under its fresh source permit"});}else{startDiscovery(*m);}}
-        for(auto& [key,m]:magnets){(void)key;if(m->installed||m->cancel||m->released.load()){continue;}if(!source->revisionCurrent(*revision)||!install(*m)){m->failure=Error{Code::Io,"Cannot install authorized I2P metadata member"};retireMagnet(*m);}else{startDiscovery(*m);}}}
+      const bool waitForCapacity = !subscriptions.empty() && privateAdmissionCount()>Bridge::MaximumDiscoveryJobs;
+      try{for(auto& [key,m]:members){if(waitForCapacity||subscriptions.contains(key)||m->installed||m->retired.requested||!m->failure.empty()){continue;}if(!source->revisionCurrent(*revision)||!install(*m)){fail(*m,{Code::Io,"Cannot install measured I2P member under its fresh source permit"});}else{startDiscovery(*m);}}
+        for(auto& [key,m]:magnets){if(waitForCapacity||subscriptions.contains(key)||m->installed||m->cancel||m->released.load()){continue;}if(!source->revisionCurrent(*revision)||!install(*m)){m->failure=Error{Code::Io,"Cannot install authorized I2P metadata member"};retireMagnet(*m);}else{startDiscovery(*m);}}
+        for (auto& [key, seed] : subscriptions) {
+          (void)key;
+          if (!seed.registered && !seed.retiring && (!subscriptionCurrent(seed,*revision)||!install(seed,*revision))) {
+            retireSubscription(seed);
+          }
+        }}
       catch(...){failure="I2P member installation ownership became uncertain; recheck retained";close();return;}
     }
+    if (phase==Phase::Active) { advanceSubscriptions(*revision); }
     if(bridgeRequested){if(!channel->ownedTransportIdle()){return;}bridgeRequested=false;auto actual=channel->ownedLeaseDestination();if(!actual||actual->wire!=source->destination().wire){close();return;}
       bridge=std::make_unique<Bridge>(source,*channel,q);QObject::connect(bridge.get(),&Bridge::changed,q,[this]{if(!bridge||(phase!=Phase::Starting&&phase!=Phase::Active)){return;}const auto v=bridge->observation();if(v.phase==Bridge::Phase::Withdrawn){close(bridge->failureReason());}else if(v.phase==Bridge::Phase::Ready&&phase==Phase::Starting){requestInstall();}});
       if(!bridge->begin(options.ports,admission)){close();}}
@@ -479,6 +645,28 @@ OwnedProfile::OwnedProfile(std::unique_ptr<Impl> p):impl_(std::move(p)){
   QObject::connect(s.channel.get(),&i2cp::InitialChannel::closed,this,[this]{if(impl_->phase==Phase::Starting||impl_->phase==Phase::Active){impl_->close("I2CP transport ended");}});
 }
 OwnedProfile::~OwnedProfile(){impl_->close();join();}
+
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareSession(
+    const storage::ProfileLease& lease, const storage::TagManagerStartupMode* startup, std::shared_ptr<void> runtimePin) {
+  auto source = ProfileSource::createSession(lease, "azneti2phelper", startup);
+  if (!source) { return std::unexpected(source.error()); }
+  auto state = std::make_unique<Impl>();
+  state->source = *source;
+  state->pin = std::move(runtimePin);
+  auto owner = std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(state)));
+  auto identity = (*source)->takeIdentity();
+  if (!identity) { return std::unexpected(identity.error()); }
+  owner->impl_->identity.emplace(std::move(*identity));
+  auto settings = (*source)->policy().settings();
+  settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error | lt::alert_category::status
+      | lt::alert_category::storage | lt::alert_category::tracker));
+  settings.set_int(lt::settings_pack::alert_queue_size, 4096);
+  lt::session_params parameters(std::move(settings));
+  parameters.disk_io_constructor = engine::detail::metadataDiskConstructor(owner->impl_->disks);
+  owner->impl_->session = std::make_unique<lt::session>(std::move(parameters));
+  return owner;
+}
+
 std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration){
  return prepareImpl(lease,hash,external,startup,expectedConfiguration,nullptr);
 }
@@ -488,11 +676,9 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareWithTagR
 std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareImpl(const storage::ProfileLease& lease,const core::TorrentHash& hash,const Retained& external,const storage::TagManagerStartupMode* startup,std::optional<std::string_view> expectedConfiguration,engine::ProfileTagRates* tagRates){
   try{auto pin=privateOwnerRuntimePin();if(!pin||lt::biglybtc_private_i2p_torrents_abi_v1()!=lt::BiglybtcPrivateI2pTorrentsAbiV1){return std::unexpected(Error{Code::Unsupported,"Approved multi-torrent private I2P provider required"});}
     {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
-    auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto s=std::make_unique<Impl>();s->source=*source;s->pin=std::move(pin);
-    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(s)));
-    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
-    auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
-    lt::session_params params(std::move(settings));params.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(params));
+    auto prepared = prepareSession(lease, startup, std::move(pin));
+    if (!prepared) { return std::unexpected(prepared.error()); }
+    auto owner = std::move(*prepared);
     auto first=tagRates?owner->prepareTorrentWithTagRates(hash,external,*tagRates,expectedConfiguration):[&]()->std::expected<std::unique_ptr<Prepared>,Error>{
       auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
       return owner->prepareTorrent(hash,external);
@@ -514,11 +700,9 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePendingI
     if(!abi||abi()!=lt::BiglybtcI2pDiscoveryAbiV1){return std::unexpected(Error{Code::Unsupported,"Qualified discovery ABI required"});}
     {auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}}
     if(tagRates&&(!startup||!tagRates->matchesProfile(lease,*startup))){return std::unexpected(Error{Code::Conflict,"Pending tag controller must match original profile/startup"});}
-    auto source=ProfileSource::createSession(lease,"azneti2phelper",startup);if(!source){return std::unexpected(source.error());}auto state=std::make_unique<Impl>();state->source=*source;state->pin=std::move(pin);
-    auto owner=std::unique_ptr<OwnedProfile>(new OwnedProfile(std::move(state)));
-    auto identity=(*source)->takeIdentity();if(!identity){return std::unexpected(identity.error());}owner->impl_->identity.emplace(std::move(*identity));
-    auto settings=(*source)->policy().settings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::error|lt::alert_category::status|lt::alert_category::storage|lt::alert_category::tracker));settings.set_int(lt::settings_pack::alert_queue_size,4096);
-    lt::session_params parameters(std::move(settings));parameters.disk_io_constructor=engine::detail::metadataDiskConstructor(owner->impl_->disks);owner->impl_->session=std::make_unique<lt::session>(std::move(parameters));
+    auto prepared = prepareSession(lease, startup, std::move(pin));
+    if (!prepared) { return std::unexpected(prepared.error()); }
+    auto owner = std::move(*prepared);
     auto first=tagRates?owner->prepareMagnetWithTagRates(intent,*tagRates):[&]()->std::expected<std::unique_ptr<PreparedMagnet>,Error>{
       auto access=bootstrapSourceAccess(lease,expectedConfiguration);if(!access){return std::unexpected(access.error());}
       return owner->prepareMagnet(intent);
@@ -528,6 +712,95 @@ std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::preparePendingI
 #else
   (void)tagRates;(void)lease;(void)intent;(void)startup;(void)expectedConfiguration;return std::unexpected(Error{Code::Unsupported,"Qualified discovery SDK unavailable"});
 #endif
+}
+std::expected<std::unique_ptr<OwnedProfile>,Error> OwnedProfile::prepareSubscription(
+    const storage::ProfileLease& lease, const core::TorrentHash& hash, engine::HeldSubscriptionSeedResolver resolve,
+    const storage::TagManagerStartupMode* startup, std::optional<std::string_view> expectedConfiguration) {
+  try {
+    auto pin = privateOwnerRuntimePin();
+    if (!pin || lt::biglybtc_private_i2p_torrents_abi_v1() != lt::BiglybtcPrivateI2pTorrentsAbiV1
+        || !engine::detail::SubscriptionSeedOwner::supported()) {
+      return std::unexpected(Error{Code::Unsupported, "Approved private I2P subscription provider required"});
+    }
+    { const auto access = bootstrapSourceAccess(lease, expectedConfiguration);
+      if (!access) { return std::unexpected(access.error()); } }
+    auto owner = prepareSession(lease, startup, std::move(pin));
+    if (!owner) { return std::unexpected(owner.error()); }
+    auto first = (*owner)->prepareSubscriptionSeed(hash, std::move(resolve));
+    if (!first) { return std::unexpected(first.error()); }
+    (*owner)->impl_->admission = (*first)->impl_->admission;
+    const auto added = (*owner)->addSubscriptionSeed(std::move(*first));
+    if (!added) { return std::unexpected(added.error()); }
+    return std::move(*owner);
+  } catch (...) {
+    return std::unexpected(Error{Code::Io, "Cannot prepare the first private I2P subscription"});
+  }
+}
+
+std::expected<std::unique_ptr<OwnedProfile::PreparedSubscription>,Error> OwnedProfile::prepareSubscriptionSeed(
+    const core::TorrentHash& hash, engine::HeldSubscriptionSeedResolver resolve) {
+  auto& state = *impl_;
+  if (state.ioWorker != std::this_thread::get_id() || !state.source->prepared()
+      || !engine::detail::SubscriptionSeedOwner::supported()) {
+    return std::unexpected(Error{Code::Conflict, "Live private I2P subscription I/O worker required"});
+  }
+  try {
+    auto source = state.source->prepareSubscriptionSource(hash, std::move(resolve));
+    if (!source) { return std::unexpected(source.error()); }
+    auto seed = std::make_unique<PreparedSubscription::Impl>();
+    seed->source = std::move(*source);
+    if (!entropy(seed->admission)) { return std::unexpected(Error{Code::Io, "I2P subscription admission entropy unavailable"}); }
+    seed->slot = seed->source->initial_.directory / (".BiglyBTC-i2p-subscription-" + std::to_string(seed->admission));
+    seed->disks = state.disks;
+    lt::sha1_hash selected;
+    std::ranges::transform(hash.bytes(), selected.begin(), [](std::byte value) { return std::to_integer<char>(value); });
+    const auto stillCurrent = [source = seed->source] { return !source->revoked(); };
+    auto torrent = engine::detail::prepareSubscriptionTorrent(selected, seed->source->initial_, seed->slot,
+        *seed->disks, stillCurrent);
+    if (!torrent) { return std::unexpected(Error{Code::Conflict, "Cannot open the original I2P subscription payload"}); }
+    seed->torrent = std::move(*torrent);
+    return std::unique_ptr<PreparedSubscription>(new PreparedSubscription(std::move(seed)));
+  } catch (...) {
+    return std::unexpected(Error{Code::Io, "Cannot prepare private I2P subscription storage"});
+  }
+}
+
+std::expected<void,Error> OwnedProfile::addSubscriptionSeed(std::unique_ptr<PreparedSubscription> prepared) {
+  auto& state = *impl_;
+  if (!state.onThread() || state.phase == Phase::Withdrawn || !prepared || prepared->impl_->source->revoked()
+      || prepared->impl_->disks != state.disks) {
+    return std::unexpected(Error{Code::Conflict, "I2P subscription admission is stale"});
+  }
+  if (state.phase != Phase::Prepared && !state.discoveryOptions) {
+    return std::unexpected(Error{Code::Unsupported, "I2P subscription discovery is disabled"});
+  }
+  if (state.subscriptions.size()>=MaximumSubscriptionSeeds
+      || state.privateAdmissionCount()>=Bridge::MaximumDiscoveryJobs) {
+    return std::unexpected(Error{Code::Busy, "I2P subscription seed limit reached"});
+  }
+  const auto key = prepared->impl_->source->hash().hex();
+  if (state.members.contains(key) || state.magnets.contains(key) || state.subscriptions.contains(key)) {
+    return std::unexpected(Error{Code::Conflict, "The I2P subscription hash is already owned"});
+  }
+  state.subscriptions.try_emplace(key, std::move(prepared));
+  if (state.phase == Phase::Active) { state.memberInstallRequested = true; state.requestStartup(); }
+  else if (state.phase == Phase::Starting) { state.requestInstall(); }
+  return {};
+}
+
+std::vector<core::TorrentHash> OwnedProfile::retainSubscriptionSeeds(std::span<const core::TorrentHash> wanted) {
+  auto& state = *impl_;
+  std::vector<core::TorrentHash> retained;
+  if (!state.onThread() || state.phase == Phase::Withdrawn) { return retained; }
+  for (auto& [key, seed] : state.subscriptions) {
+    (void)key;
+    const auto& hash = seed.data().source->hash();
+    if (std::ranges::find(wanted, hash) == wanted.end() || seed.data().source->revoked()) {
+      state.retireSubscription(seed);
+    } else { retained.push_back(hash); }
+  }
+  state.advanceSubscriptions();
+  return retained;
 }
 std::expected<std::unique_ptr<OwnedProfile::PreparedMagnet>,Error> OwnedProfile::prepareMagnetWithTagRates(
     const engine::PendingMagnet& intent,engine::ProfileTagRates& rates){
@@ -574,6 +847,7 @@ std::expected<void,Error> OwnedProfile::startMagnet(std::unique_ptr<PreparedMagn
   auto& s=*impl_;if(s.onThread()){std::erase_if(s.magnets,[](const auto& entry){return entry.second->released.load();});}
   if(!s.onThread()||s.phase==Phase::Withdrawn||!prepared||!prepared->impl_->seal||prepared->impl_->seal->origin_!=s.metadataOrigin||!prepared->impl_->seal->current()||!prepared->impl_->source->prepared()||!prepared->impl_->source->lease()->sharesOwnership(*s.source->lease())||s.members.contains(prepared->impl_->intent.hash.hex())||s.members.size()+s.magnets.size()>=32){return std::unexpected(Error{Code::Conflict,"I2P metadata member unavailable or bound reached"});}
   const auto key=prepared->impl_->intent.hash.hex();const auto old=s.magnets.find(key);if(old!=s.magnets.end()){if(!old->second->released.load()){return std::unexpected(Error{Code::Conflict,"Metadata identity still retained"});}s.magnets.erase(old);}
+  s.makeRoomForDownload(key);
   auto value=std::make_unique<Impl::Magnet>();value->prepared=std::move(prepared);s.magnets.emplace(key,std::move(value));
   if(s.phase==Phase::Active){s.memberInstallRequested=true;s.requestStartup();}else if(s.phase==Phase::Starting){s.requestInstall();}return {};
 }
@@ -837,7 +1111,9 @@ std::expected<void,Error> OwnedProfile::applyExternalRateLimits(const core::Sess
 std::expected<void,Error> OwnedProfile::add(std::unique_ptr<Prepared> p){
   auto& s=*impl_;if(!s.onThread()||s.phase==Phase::Withdrawn||!p||s.members.size()>=32||s.members.contains(p->impl_->hash.hex())){return std::unexpected(Error{Code::Conflict,"I2P member is duplicate, stale or exceeds the32-torrent bound"});}
   s.externalSnapshotValid=false;
-  const auto key=p->impl_->hash.hex();auto m=std::make_unique<Impl::Member>();m->prepared=std::move(p);m->livePosition=m->data().storage.capturedDownload().position;m->forceStart=m->data().storage.capturedDownload().forceStart;auto [i,ok]=s.members.emplace(key,std::move(m));(void)ok;
+  const auto key=p->impl_->hash.hex();
+  s.makeRoomForDownload(key);
+  auto m=std::make_unique<Impl::Member>();m->prepared=std::move(p);m->livePosition=m->data().storage.capturedDownload().position;m->forceStart=m->data().storage.capturedDownload().forceStart;auto [i,ok]=s.members.emplace(key,std::move(m));(void)ok;
   if(s.phase==Phase::Active){s.memberInstallRequested=true;s.requestStartup();}else if(s.phase==Phase::Starting){s.requestInstall();}return {};
 }
 bool OwnedProfile::retire(const core::TorrentHash& hash,std::chrono::steady_clock::time_point end){

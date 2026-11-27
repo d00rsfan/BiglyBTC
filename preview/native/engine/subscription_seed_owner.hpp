@@ -23,7 +23,8 @@ struct PreparedSubscriptionTorrent {
 // Prepare on the filesystem worker. The session must use the same disk policy.
 std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(
     const libtorrent::sha1_hash&,const SubscriptionSeedSource&,
-    const std::filesystem::path& storageSlot,MetadataDiskPolicy&);
+    const std::filesystem::path& storageSlot,MetadataDiskPolicy&,
+    std::function<bool()> sourceCurrent = {});
 
 class SubscriptionSeedOwner {
 public:

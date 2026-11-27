@@ -34,6 +34,7 @@
 #include <unistd.h>
 #endif
 #include <cerrno>
+#include <variant>
 #include <openssl/rand.h>
 #include <openssl/crypto.h>
 #include <algorithm>
@@ -96,8 +97,9 @@ struct Bridge::Impl {
   std::array<Byte,32> capability{};std::array<Byte,12> peerIdMask{};std::uint64_t generation=0,admission=0,activeRevision=0,rejectedClients=0;
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
   std::function<bool(void*)> install;const char* failure=nullptr;
+  using DiscoverySource = std::variant<std::shared_ptr<ProfileSource>, std::shared_ptr<SubscriptionSource>>;
   struct Discovery {
-    std::shared_ptr<ProfileSource> source;core::TorrentHash selected;dht::Id wire;
+    DiscoverySource source;core::TorrentHash selected;dht::Id wire;
     std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
     std::function<bool(const Hash&,std::uint64_t)> deliver;std::vector<Hash> delivered;
   };
@@ -116,32 +118,66 @@ struct Bridge::Impl {
         ||!child->discoveryAllowed()||child->hash()!=selected||!child->lease()
         ||!source->lease()||!child->lease()->sharesOwnership(*source->lease())
         ||child->destination().wire!=source->destination().wire||child->mixedMode()!=source->mixedMode()){return false;}
+    return addDiscovery(std::move(child), selected, wire, route, seeding, std::move(deliver));
+  }
+  bool discoverSubscription(std::shared_ptr<SubscriptionSource> child, std::uint64_t route,
+      std::function<bool(const Hash&,std::uint64_t)> deliver) {
+    if (!onThread() || !discovery || !current() || !route || !deliver || !child || child->revoked()
+        || source->mixedMode() || !source->lease() || !child->lease_->sharesOwnership(*source->lease())) { return false; }
+    const auto selected = child->hash();
+    if (selected.bytes().size() != dht::Id{}.size()) { return false; }
+    dht::Id wire{};
+    std::ranges::transform(selected.bytes(), wire.begin(), [](std::byte value) { return std::to_integer<Byte>(value); });
+    return addDiscovery(std::move(child), selected, wire, route, true, std::move(deliver));
+  }
+  bool addDiscovery(DiscoverySource child, const core::TorrentHash& selected, const dht::Id& wire,
+      std::uint64_t route, bool seeding, std::function<bool(const Hash&,std::uint64_t)> deliver) {
     auto found=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& value){return value.admission==route;});
     if(found!=discoveries.end()){return found->source==child&&found->selected==selected&&found->wire==wire;}
-    if(discoveries.size()>=32){return false;}
+    if(discoveries.size()>=MaximumDiscoveryJobs){return false;}
     discoveries.push_back({std::move(child),selected,wire,route,seeding,Clock::now(),{},std::move(deliver),{}});schedule();return true;
+  }
+  bool discoveryRetired(const Discovery& job) const {
+    if (const auto* child = std::get_if<std::shared_ptr<ProfileSource>>(&job.source)) {
+      return !(*child)->prepared() || !(*child)->discoveryAllowed();
+    }
+    return std::get<std::shared_ptr<SubscriptionSource>>(job.source)->revoked();
+  }
+  bool discoveryCurrent(const Discovery& job) const {
+    if (discoveryRetired(job)) { return false; }
+    if (const auto* child = std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source)) {
+      return (*child)->current(activeRevision);
+    }
+    return true;
   }
   void cancelDiscovery(std::uint64_t route){
     if(discoveryAdmission&&*discoveryAdmission==route){if(discovery&&discoveryOperation){discovery->cancel(discoveryOperation);}discoveryAdmission.reset();discoveryOperation=0;}
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
+  void withdrawRetiredDiscoveries() {
+    for(auto at=discoveries.begin();at!=discoveries.end();){
+      if(discoveryRetired(*at)){
+        const auto id=at->admission;++at;cancelDiscovery(id);at=discoveries.begin();
+      }else{++at;}
+    }
+  }
   void pumpDiscovery(){
     if(!discovery||!executing||!current()){return;}discovery->resumeAuthorizedInbound();if(!current()){return;}
     if(contactExchange&&contactExchange->pending()){static_cast<void>(contactExchange->capture(*discovery,*channel,source));}
     const auto now=Clock::now();
-    for(auto at=discoveries.begin();at!=discoveries.end();){
-      if(!at->source->prepared()||!at->source->discoveryAllowed()){
-        const auto id=at->admission;++at;cancelDiscovery(id);at=discoveries.begin();
-      }else{++at;}
-    }
     if(discoveryAdmission){
       auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
       if(job==discoveries.end()){discovery->cancel(discoveryOperation);discoveryAdmission.reset();discoveryOperation=0;}
+      else if (!discoveryCurrent(*job)) {
+        discovery->cancel(discoveryOperation);
+        discoveryAdmission.reset();
+        discoveryOperation=0;
+      }
       else{
         const auto value=discovery->observation();
         if(value.operation!=discoveryOperation||value.target!=job->wire){cancelDiscovery(job->admission);return;}
         for(const auto& peer:value.peers){
-          if(!current()||!job->source->prepared()||!job->source->discoveryAllowed()){return;}
+          if(!current()||!discoveryCurrent(*job)){return;}
           if(peer.hash==source->destination().hash||std::find(job->delivered.begin(),job->delivered.end(),peer.hash)!=job->delivered.end()){continue;}
           if(job->deliver(peer.hash,value.operation)){job->delivered.push_back(peer.hash);}
           if(phase==Phase::Withdrawn){return;}
@@ -154,7 +190,10 @@ struct Bridge::Impl {
       }
     }
     if(!discoveryAdmission){
-      auto job=std::min_element(discoveries.begin(),discoveries.end(),[](const auto& a,const auto& b){return a.next<b.next;});
+      auto job=discoveries.end();
+      for (auto candidate=discoveries.begin();candidate!=discoveries.end();++candidate) {
+        if (discoveryCurrent(*candidate) && (job==discoveries.end() || candidate->next<job->next)) { job=candidate; }
+      }
       if(job!=discoveries.end()&&now>=job->next){
         auto operation=discovery->announceSelf(job->wire,job->seeding,120000);
         if(operation){discoveryAdmission=job->admission;discoveryOperation=*operation;job->end=now+std::chrono::seconds(150);job->delivered.clear();}
@@ -438,6 +477,9 @@ struct Bridge::Impl {
       auto revision=permit->take();if(!revision){if(permit->phase()==SourcePermit::Phase::Failed||permit->phase()==SourcePermit::Phase::Stopped){close("I2P bridge source validation failed");return;}if(wanted&&permit->phase()==SourcePermit::Phase::Idle){permit->request();}arm();return;}
       struct Ack {SourcePermit& permit;~Ack(){permit.acknowledge();}} ack{*permit};
       activeRevision=*revision;executing=true;wanted=false;
+      // The fresh observation may have withdrawn a subscription while its
+      // announce was queued. Cancel its Actor tickets before I2CP can flush.
+      withdrawRetiredDiscoveries();
       if(!current()||!channel->resumeAuthorizedEffects()){close("I2P bridge effect authority refused");executing=false;return;}
       if(phase==Phase::Preparing){
         if(!server.listen(QHostAddress::LocalHost,0)||!current()){close();executing=false;return;}phase=Phase::Ready;notify();
@@ -670,5 +712,9 @@ bool Bridge::discover(std::shared_ptr<ProfileSource> source,const core::TorrentH
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return impl_->discover(std::move(source),hash,wire,admission,seeding,std::move(deliver));}
 bool Bridge::discover(std::shared_ptr<PendingMagnetSource> source,const core::TorrentHash& hash,const dht::Id& wire,
     std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)> deliver){return source&&impl_->discover(source->source_,hash,wire,admission,seeding,std::move(deliver));}
+bool Bridge::discoverSubscription(std::shared_ptr<SubscriptionSource> source, std::uint64_t admission,
+    std::function<bool(const Hash&,std::uint64_t)> deliver) {
+  return impl_->discoverSubscription(std::move(source), admission, std::move(deliver));
+}
 void Bridge::cancelDiscovery(std::uint64_t admission){if(impl_->onThread()){impl_->cancelDiscovery(admission);}}
 }

@@ -11,6 +11,7 @@
 #include <string>
 #include <string_view>
 
+namespace biglybtc::storage { class ProfileSourceAccess; }
 namespace biglybtc::engine {
 
 using SubscriptionSeedHash = std::array<char, 20>;
@@ -32,5 +33,7 @@ struct SubscriptionSeedSource {
 // checks the staged file and returns its metainfo and path without a grant.
 using SubscriptionSeedResolver = std::function<std::optional<SubscriptionSeedSource>(
     std::string_view, SubscriptionSeedRead)>;
+using HeldSubscriptionSeedResolver = std::function<std::optional<SubscriptionSeedSource>(
+    const storage::ProfileSourceAccess&, std::string_view, SubscriptionSeedRead)>;
 
 } // namespace biglybtc::engine

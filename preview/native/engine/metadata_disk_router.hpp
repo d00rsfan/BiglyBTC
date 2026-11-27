@@ -32,6 +32,7 @@ public:
   // reserved directory, so selected payload cannot enter the discard backend.
   bool isMetadataPath(const std::filesystem::path&) const;
   std::expected<void,storage::Error> registerOriginalPath(const std::filesystem::path&,std::shared_ptr<OriginalDiskFiles>);
+  void releaseOriginalPath(const std::filesystem::path&,const std::shared_ptr<OriginalDiskFiles>&) noexcept;
   // Optional exact full-metadata best hash + exact save root, not a parent or
   // GUI-selected alias. One live admission may claim exactly one mmap slot.
   bool registerMmapLatency(const std::filesystem::path&,const std::array<unsigned char,20>&,

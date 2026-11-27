@@ -30,6 +30,7 @@ public:
 signals:
   void changed(); // Queued, coalesced, deletion/restart safe.
 private:
+  static constexpr std::size_t MaximumDiscoveryJobs = 32;
   friend class OwnedTorrent;
   friend class OwnedProfile;
   // Trusted owned tag-source transaction only. Stop on Qt,join on Host I/O,
@@ -45,6 +46,8 @@ private:
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
   bool discover(std::shared_ptr<PendingMagnetSource>,const core::TorrentHash&,const dht::Id&,
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
+  bool discoverSubscription(std::shared_ptr<SubscriptionSource>,std::uint64_t admission,
+      std::function<bool(const Hash&,std::uint64_t)>);
   void cancelDiscovery(std::uint64_t admission);
   bool installProvider(std::function<bool(void*)>);
   bool installMixedProvider(std::function<bool(void*)>);

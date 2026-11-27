@@ -3,6 +3,7 @@
 #include "profile.hpp"
 #include "manual_tag_store.hpp"
 #include "../engine/coexist_queue.hpp"
+#include "../engine/subscription_seed_runtime.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/library.hpp"
 #include "biglybtc/download_action.hpp"
@@ -87,6 +88,10 @@ public:
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPending(
       const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions={},
       const storage::TagManagerStartupMode* startup=nullptr);
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startSubscription(
+      const storage::ProfileLease&,const core::TorrentHash&,engine::HeldSubscriptionSeedResolver,I2pServiceOptions,
+      const storage::TagManagerStartupMode* startup);
+  void updateSubscriptionSeeds(std::span<const core::TorrentHash>,const engine::HeldSubscriptionSeedResolver&);
   std::expected<void,storage::Error> addMagnet(const engine::PendingMagnet&);
   std::expected<void,storage::Error> cancelMagnet(const core::TorrentHash&);
   std::vector<engine::PendingMagnetStatus> pendingMagnets()const;
@@ -145,6 +150,10 @@ public:
   std::expected<void,storage::Error> closeWithoutCheckpoint();
   bool joined()const noexcept; // Actual terminal lifetime fact; Host worker only.
 private:
+  template<class Prepare>
+  static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPrepared(
+      const storage::ProfileLease&,I2pServiceOptions,Prepare&&,bool needsDiscovery=false,
+      const engine::PendingMagnet* firstIntent=nullptr);
   static std::expected<std::unique_ptr<OwnedI2pService>,storage::Error> startPendingImpl(
       const storage::ProfileLease&,const engine::PendingMagnet&,I2pServiceOptions,
       const storage::TagManagerStartupMode*,engine::ProfileTagRates*);

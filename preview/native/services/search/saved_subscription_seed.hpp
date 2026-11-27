@@ -45,4 +45,7 @@ std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSave
 std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
     const storage::ProfileLease&,std::string_view publicationHash,SubscriptionSeedNetwork,
     std::int64_t creationSeconds,SubscriptionSeedFile);
+std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
+    const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view publicationHash,
+    SubscriptionSeedNetwork,std::int64_t creationSeconds,SubscriptionSeedFile);
 } // namespace biglybtc::search

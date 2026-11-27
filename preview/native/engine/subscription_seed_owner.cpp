@@ -39,7 +39,8 @@ std::string_view bytes(const lt::sha1_hash& hash) { return {hash.data(), 20}; }
 } // namespace
 
 std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::sha1_hash& hash,
-    const SubscriptionSeedSource& source, const std::filesystem::path& slot, MetadataDiskPolicy& disks) {
+    const SubscriptionSeedSource& source, const std::filesystem::path& slot, MetadataDiskPolicy& disks,
+    std::function<bool()> sourceCurrent) {
   if (!source.directoryHandle || source.metainfo.empty()) { return {}; }
   const auto parent = source.directoryHandle->get();
   const auto resolved = state::stateDirectoryPath(parent);
@@ -59,8 +60,12 @@ std::optional<PreparedSubscriptionTorrent> prepareSubscriptionTorrent(const lt::
   const auto stamp = state::stateStamp(fd);
   const auto payloadSize = metadata->files().file_size(index);
   if (!stamp || payloadSize <= 0 || stamp->size != payloadSize || !stamp->owned || !stamp->regular) { return {}; }
-  const auto verifyFile = [parent = source.directoryHandle, leaf, fd, accepted = *stamp]()
+  const auto verifyFile = [parent = source.directoryHandle, leaf, fd, accepted = *stamp,
+                           sourceCurrent = std::move(sourceCurrent)]()
       -> std::expected<void, storage::Error> {
+    if (sourceCurrent && !sourceCurrent()) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Subscription seed source withdrew"});
+    }
     const auto held = state::stateStamp(fd);
     const auto named = state::stateStampAt(parent->get(), leaf);
     if (!held || !named || !*named || !state::sameStateSnapshot(*held, accepted)

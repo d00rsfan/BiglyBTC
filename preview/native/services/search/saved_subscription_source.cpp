@@ -236,11 +236,20 @@ std::expected<std::optional<SavedSubscriptionSeed>,SavedRssSourceError> readSave
 std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
     const storage::ProfileLease& lease,std::string_view publicationHash,SubscriptionSeedNetwork network,
     std::int64_t creationSeconds,SubscriptionSeedFile operation) {
-  std::filesystem::path directory;
-  std::shared_ptr<const StateDescriptor> directoryHandle;
   const auto access=lease.sourceAccess(operation==SubscriptionSeedFile::Prepare);
   if(!access) { return std::unexpected(E::SourceChanged); }
-  auto checked=subscriptionSeedFromProfile(lease,*access,publicationHash,SubscriptionSeedKey::Publication,network,
+  return resolveVersionedSubscriptionSeed(lease,*access,publicationHash,network,creationSeconds,operation);
+}
+
+std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resolveVersionedSubscriptionSeed(
+    const storage::ProfileLease& lease,const storage::ProfileSourceAccess& access,std::string_view publicationHash,
+    SubscriptionSeedNetwork network,std::int64_t creationSeconds,SubscriptionSeedFile operation) {
+  if (operation==SubscriptionSeedFile::Prepare && !lease.authorizesMutation(access)) {
+    return std::unexpected(E::SourceChanged);
+  }
+  std::filesystem::path directory;
+  std::shared_ptr<const StateDescriptor> directoryHandle;
+  auto checked=subscriptionSeedFromProfile(lease,access,publicationHash,SubscriptionSeedKey::Publication,network,
       creationSeconds,VersionedSeedAccess{directory,directoryHandle,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }

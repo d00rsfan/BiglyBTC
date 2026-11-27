@@ -4,6 +4,7 @@
 #include "owner.hpp"
 #include "coexist_queue.hpp"
 #include "pending_magnet_source.hpp"
+#include "subscription_seed_runtime.hpp"
 #include "../i2p_dht/actor.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include "biglybtc/tag_runtime_registry.hpp"
@@ -74,6 +75,24 @@ public:
       const storage::ProfileLease&,const engine::PendingMagnet&,
       const storage::TagManagerStartupMode* startup=nullptr,
       std::optional<std::string_view> expectedConfiguration=std::nullopt);
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepareSubscription(
+      const storage::ProfileLease&,const core::TorrentHash&,engine::HeldSubscriptionSeedResolver,
+      const storage::TagManagerStartupMode* startup=nullptr,
+      std::optional<std::string_view> expectedConfiguration=std::nullopt);
+  static constexpr std::size_t MaximumSubscriptionSeeds = 4;
+  class PreparedSubscription final {
+  public:
+    ~PreparedSubscription();
+  private:
+    friend class OwnedProfile;
+    struct Impl;
+    explicit PreparedSubscription(std::unique_ptr<Impl>);
+    std::unique_ptr<Impl> impl_;
+  };
+  std::expected<std::unique_ptr<PreparedSubscription>,storage::Error> prepareSubscriptionSeed(
+      const core::TorrentHash&,engine::HeldSubscriptionSeedResolver); // Host I/O.
+  std::expected<void,storage::Error> addSubscriptionSeed(std::unique_ptr<PreparedSubscription>); // Owner Qt.
+  std::vector<core::TorrentHash> retainSubscriptionSeeds(std::span<const core::TorrentHash>); // Owner Qt.
   class TagSourceUpdate final {
   public:~TagSourceUpdate();
   private:friend class OwnedProfile;struct Impl;
@@ -163,6 +182,8 @@ public:
   void close();
   void join(); // External lifetime only, after close.
 private:
+  static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> prepareSession(
+      const storage::ProfileLease&,const storage::TagManagerStartupMode*,std::shared_ptr<void> runtimePin);
   static std::expected<std::unique_ptr<OwnedProfile>,storage::Error> preparePendingImpl(
       const storage::ProfileLease&,const engine::PendingMagnet&,const storage::TagManagerStartupMode*,
       std::optional<std::string_view>,engine::ProfileTagRates*);

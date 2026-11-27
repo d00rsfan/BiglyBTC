@@ -269,6 +269,7 @@ struct ProfileSource::Impl {
   const char* keyName()const noexcept{return mixed?"dest_key.dat":"dest_key1.dat";}
   std::shared_ptr<ProfileSource> anchor;
   std::vector<std::weak_ptr<ProfileSource>> children;
+  std::vector<std::weak_ptr<SubscriptionSource>> subscriptions;
   std::vector<engine::detail::ManagedPayloadClaim> claimed;
   std::vector<storage::OriginalTorrentIdentity> retainedIdentities;
   std::vector<engine::detail::ManagedPayloadClaim> admissionClaims;
@@ -557,23 +558,74 @@ std::expected<void,storage::Error> ProfileSource::acceptTagSources(std::span<con
 }
 
 std::expected<void,storage::Error> ProfileSource::validate()const{
-  try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());
+  try {
+    auto access=take(impl_->lease->sourceAccess());
+    return validate(access);
+  } catch(const Rejected& error){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(error.error);}
+  catch(...){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P source access failed"});}
+}
+std::expected<void,storage::Error> ProfileSource::validate(const storage::ProfileSourceAccess& access)const{
+  try{
     require(!impl_->revoked,ErrorCode::Conflict,"Owned I2P source is revoked");
     require(impl_->privateRatesCurrent(),ErrorCode::Conflict,"Private tag SDK/source preparation is no longer current");
     require(!impl_->stamp||impl_->managedCurrent(),ErrorCode::Conflict,"Mixed engine admission is no longer current");
     if(impl_->anchor){
-      auto valid=impl_->anchor->validate();if(!valid){return std::unexpected(valid.error());}
+      auto valid=impl_->anchor->validate(access);if(!valid){return std::unexpected(valid.error());}
       require(impl_->namedCurrent(),ErrorCode::Conflict,"I2P child metadata path changed");
       const auto now=impl_->memberSnapshot(true);require(!impl_->snapshot()||now==*impl_->snapshot(),ErrorCode::Conflict,"I2P selected source changed");
     }else{
       require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P identity source is no longer current");
       const auto now=capture(*impl_->lease,impl_->session?nullptr:&impl_->hash,impl_->directory,true,impl_->mixed);
       require(!impl_->stamp||now==*impl_->stamp,ErrorCode::Conflict,"Owned I2P profile source changed");
-      if(impl_->session){for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->snapshot()){
-        require(child->impl_->namedCurrent()&&child->impl_->memberSnapshot(true)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}}
+      if(impl_->session){
+        for(const auto& weak:impl_->children){if(auto child=weak.lock();child&&!child->impl_->revoked&&child->impl_->snapshot()){
+          require(child->impl_->namedCurrent()&&child->impl_->memberSnapshot(true)==*child->impl_->snapshot(),ErrorCode::Conflict,"Active I2P child source changed");}}
+        if (impl_->lease->authorizesObservation(access)) {
+          for (const auto& weak : impl_->subscriptions) {
+            if (auto subscription = weak.lock()) { subscription->refresh(access); }
+          }
+        }
+      }
     }
     require(impl_->namedCurrent(),ErrorCode::Conflict,"Original I2P source changed while reading");impl_->dirty=false;return {};
   }catch(const Rejected& error){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(error.error);}catch(...){const_cast<ProfileSource*>(this)->revoke();return std::unexpected(Error{ErrorCode::Io,"Owned I2P source validation failed"});}
+}
+
+std::expected<std::shared_ptr<SubscriptionSource>,storage::Error> ProfileSource::prepareSubscriptionSource(
+    const core::TorrentHash& hash, engine::HeldSubscriptionSeedResolver resolver) {
+  try {
+    auto access = take(impl_->lease->sourceAccess(true));
+    require(impl_->session && !impl_->mixed && !impl_->publishing && hash.bytes().size() == 20 && bool(resolver),
+        ErrorCode::Conflict, "An I2P subscription requires its pure session and signed file source");
+    const auto valid = validate(access);
+    if (!valid) { return std::unexpected(valid.error()); }
+    std::erase_if(impl_->subscriptions, [](const auto& weak) {
+      const auto source = weak.lock();
+      return !source || source->revoked();
+    });
+    for (const auto& weak : impl_->subscriptions) {
+      if (const auto source = weak.lock()) {
+        require(source->hash() != hash, ErrorCode::Conflict, "I2P subscription is already retained");
+      }
+    }
+    require(impl_->subscriptions.size() < 32, ErrorCode::Unsupported, "I2P subscription source limit reached");
+    const auto raw = hash.bytes();
+    const std::string_view key(reinterpret_cast<const char*>(raw.data()), raw.size());
+    auto initial = resolver(access, key, engine::SubscriptionSeedRead::Prepare);
+    require(initial && initial->directoryHandle && !initial->metainfo.empty(), ErrorCode::Missing,
+        "The signed I2P subscription version is unavailable");
+    auto source = std::shared_ptr<SubscriptionSource>(new SubscriptionSource(impl_->lease, hash, std::move(*initial),
+        std::move(resolver)));
+    source->refresh(access);
+    require(source->current(access.revision()), ErrorCode::Conflict, "The signed I2P subscription version changed");
+    impl_->subscriptions.push_back(source);
+    if (impl_->authority) { impl_->authority->revision_ = access.revision(); }
+    return source;
+  } catch (const Rejected& error) {
+    return std::unexpected(error.error);
+  } catch (...) {
+    return std::unexpected(Error{ErrorCode::Io, "Cannot retain the signed I2P subscription source"});
+  }
 }
 std::expected<void,storage::Error> ProfileSource::validateTransportSnapshot()const{
   try{auto alias=take(impl_->lease->retain());auto access=take(alias->sourceAccess());

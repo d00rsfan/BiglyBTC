@@ -227,6 +227,15 @@ std::expected<void,storage::Error> MetadataDiskPolicy::registerOriginalPath(cons
     originals_.emplace(key,files);return {};
   }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::UnsafePath,"Invalid original storage reservation"});}
 }
+void MetadataDiskPolicy::releaseOriginalPath(const std::filesystem::path& path,
+    const std::shared_ptr<OriginalDiskFiles>& files) noexcept {
+  try {
+    const auto key = normalized(path);
+    const std::lock_guard lock(mutex_);
+    const auto found = originals_.find(key);
+    if (files && found != originals_.end() && found->second.lock() == files) { originals_.erase(found); }
+  } catch (...) { /* Keep the reservation if its identity is uncertain. */ }
+}
 bool MetadataDiskPolicy::registerMmapLatency(const std::filesystem::path& path,const std::array<unsigned char,20>& hash,
     const std::shared_ptr<MmapDiskLatency>& latency) noexcept {
   if(!latency||!latency->admission()||!latency->active()){return false;}

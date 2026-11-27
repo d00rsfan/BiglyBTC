@@ -4,6 +4,7 @@
 #include "managed_storage.hpp"
 #include "identity.hpp"
 #include "effect_authority.hpp"
+#include "subscription_source.hpp"
 #include <atomic>
 #include <memory>
 #include <functional>
@@ -91,6 +92,8 @@ private:
   friend class PendingMagnetSource;
   friend class OwnedTorrent;
   friend class OwnedProfile;
+  friend class SourcePermit;
+  std::expected<void,storage::Error> validate(const storage::ProfileSourceAccess&) const;
   // Read-only final CAS preflight after the friend's actual flush/remove/join.
   // Accepts intentionally revoked effects ONLY when every held named source
   // and exact prepared snapshot still matches; never restores effect authority.
@@ -123,6 +126,8 @@ private:
   std::expected<void,storage::Error> publishImpl(const std::optional<core::TorrentHash>&,
       const std::function<std::expected<void,storage::Error>()>&,bool pendingPublication=false);
   std::expected<void,storage::Error> bindPendingMetadata(std::shared_ptr<const engine::PendingMetadataSource>);
+  std::expected<std::shared_ptr<SubscriptionSource>,storage::Error> prepareSubscriptionSource(
+      const core::TorrentHash&,engine::HeldSubscriptionSeedResolver);
   struct Impl;
   explicit ProfileSource(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

@@ -149,6 +149,23 @@ void checkSavedSource(const core::Node& fixture,Network route) {
   const auto missing=resolve(FileOperation::Verify);
   require(!missing&&missing.error()==search::SavedRssSourceError::SourceChanged&&!std::filesystem::exists(versioned),
       "Revalidation does not create a missing payload");
+  {
+    auto access=lease->sourceAccess();
+    require(bool(access),"Hold one actual observation permit");
+    const auto denied=search::resolveVersionedSubscriptionSeed(*lease,*access,field(fixture,"hash"),route,1000,
+        FileOperation::Prepare);
+    require(!denied&&!std::filesystem::exists(versioned),"Read-only permit cannot publish a versioned file");
+  }
+  {
+    auto access=lease->sourceAccess(true);
+    require(bool(access),"Hold the exact mutation permit used by the private worker");
+    const auto prepared=search::resolveVersionedSubscriptionSeed(*lease,*access,field(fixture,"hash"),route,1000,
+        FileOperation::Prepare);
+    const auto verified=search::resolveVersionedSubscriptionSeed(*lease,*access,field(fixture,"hash"),route,1000,
+        FileOperation::Verify);
+    require(prepared&&*prepared&&verified&&*verified&&(**prepared).directoryHandle,
+        "One owned worker permit stages and revalidates the signed version");
+  }
   const auto ready=resolve(FileOperation::Prepare);
   require(ready&&*ready&&(**ready).directory==root/"subs"&&(**ready).directoryHandle,
       "Prepared file retains the owned subscriptions directory");
