@@ -14,6 +14,8 @@
 #endif
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QCryptographicHash>
+#include <QDateTime>
 #include <QNetworkProxy>
 #include <QPointer>
 #include <QThread>
@@ -141,6 +143,26 @@ struct Bridge::Impl {
     value.flags=0x0010; // DHT.FLAG_ANON from the pure I2P single-value DDB write.
     return value;
   }
+  std::optional<Bytes> readSubscriptionMetainfo(const dht::Id& handler,const dht::Id& key) const {
+    if (!executing||!current()||source->mixedMode()) { return {}; }
+    constexpr auto name=engine::SubscriptionSeedTransferType;
+    static const auto expected=QCryptographicHash::hash(
+        QByteArrayView(name.data(),static_cast<qsizetype>(name.size())),QCryptographicHash::Sha1);
+    const QByteArrayView requested(reinterpret_cast<const char*>(handler.data()),handler.size());
+    if (requested!=expected) { return {}; }
+    const std::string_view target(reinterpret_cast<const char*>(key.data()),key.size());
+    std::shared_ptr<const engine::SubscriptionSeedMetainfo> match;
+    for (const auto& job:discoveries) {
+      const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
+      if (!child) { continue; }
+      const auto row=(*child)->metainfo(activeRevision);
+      if (!row||std::string_view(row->lookupKey.data(),row->lookupKey.size())!=target) { continue; }
+      if (match) { return {}; }
+      match=row;
+    }
+    if (!match||!current()) { return {}; }
+    return Bytes(match->encoded.begin(),match->encoded.end());
+  }
   bool beginDiscovery(const dht::Actor::Options& options,std::shared_ptr<ContactExchange> contacts,
       const i2cp::InitialChannel::Options* routerOptions){
     if(discovery||!channel||phase==Phase::Idle||phase==Phase::Withdrawn||(contacts&&(!options.inbound||!options.routingMaintenance))){return false;}
@@ -149,10 +171,12 @@ struct Bridge::Impl {
     selected.azureusValues=!source->mixedMode();
     selected.azureusReplicas=selected.azureusValues;
     dht::AzureusLocalRead read;
+    dht::AzureusMetainfoRead metainfo;
     if (selected.azureusValues) {
       read=[this](const dht::Id& key){return readSubscriptionPresence(key);};
+      metainfo=[this](const dht::Id& handler,const dht::Id& key){return readSubscriptionMetainfo(handler,key);};
     }
-    if(!actor->begin(selected,std::move(read))){return false;}
+    if(!actor->begin(selected,std::move(read),std::move(metainfo))){return false;}
     if (selected.azureusValues&&routerOptions) {
       publicationRouter=*routerOptions;
       publicationRoutes.seeds=options.seeds;

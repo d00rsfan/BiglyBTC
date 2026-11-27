@@ -7,6 +7,7 @@
 #include "profile_backup.hpp"
 #include "saved_subscription_seed.hpp"
 #include "stream.hpp"
+#include <QCryptographicHash>
 #include <QDateTime>
 #include <QtEndian>
 #include <future>
@@ -248,8 +249,7 @@ class DhtChannelTests final:public QObject {
       auto staged=search::resolveVersionedSubscriptionSeed(*profile.lease,access,id,search::SubscriptionSeedNetwork::I2P,1000,mode);
       if (!staged || !*staged) { return {}; }
       auto& checked=**staged;
-      engine::SubscriptionSeedSource result{std::move(checked.metainfo.metainfo),std::move(checked.directory),
-          std::move(checked.directoryHandle)};
+      engine::SubscriptionSeedSource result;
       if (publication&&checked.metainfo.presence) {
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,-315);
@@ -257,7 +257,16 @@ class DhtChannelTests final:public QObject {
           result.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),
               static_cast<std::int32_t>(presence.version)};
         }
+        if (checked.ddbTransferAllowed) {
+          auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
+          if (response) {
+            result.ddbMetainfo=engine::SubscriptionSeedMetainfo{checked.metainfo.lookupKey,std::move(*response)};
+          }
+        }
       }
+      result.metainfo=std::move(checked.metainfo.metainfo);
+      result.directory=std::move(checked.directory);
+      result.directoryHandle=std::move(checked.directoryHandle);
       return result;
     };
   }
@@ -351,6 +360,13 @@ private slots:
     QVERIFY(originalSeed&&originalSeed->presence&&originalSeed->anonymous&&row.find("public_key"));
     d::Id versionKey{};
     std::ranges::copy(originalSeed->presence->dhtKey,versionKey.begin());
+    d::Id handler{},lookupKey{};
+    const auto handlerDigest=QCryptographicHash::hash(
+        "org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent",QCryptographicHash::Sha1);
+    std::copy_n(handlerDigest.begin(),handler.size(),handler.begin());
+    std::ranges::copy(originalSeed->lookupKey,lookupKey.begin());
+    const auto metainfo=search::subscriptionSeedDdbResponse(*originalSeed);
+    QVERIFY(metainfo);
 
     auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile,true));
     QVERIFY2(owner,owner?"":owner.error().message.c_str());
@@ -363,6 +379,44 @@ private slots:
     QVERIFY(signedSeedQuery(router.take(),*contact));
 
     i2p::Bytes token;
+    const auto readMetainfo=[&](d::Id transferHandler,d::Id transferKey,std::uint8_t sequence,bool serve,
+        std::int32_t offset=0,std::int32_t length=0) {
+      d::Message query;
+      query.id=contact->id;
+      query.transaction={sequence,1,2,3};
+      query.method=d::Method::AzureusData;
+      query.wakeRequested=true;
+      const auto time=QDateTime::currentMSecsSinceEpoch();
+      d::AzureusReadPacket read{d::AzureusReadPacketType::Request,transferHandler,transferKey,time,
+          -1337-sequence,offset,length,0,{}};
+      query.azureus=d::AzureusMessage{191,0,read};
+      const auto plain=d::encode(query);
+      QVERIFY(plain);
+      const auto signedPacket=i2p::encode1(remote.destination()->wire,remote.signingPrivateKey(),*plain);
+      QVERIFY(signedPacket);
+      const auto packet=cp::encodeDhtMuxDatagram({17,10002,10000,*signedPacket},cp::GzipMode::Deflate);
+      QVERIFY(packet);
+      for (unsigned n=0;n<(serve?4U:1U)&&!router.next();++n) {
+        inbound(router,400+sequence*4+n,*packet,true);
+        if (QTest::qWaitFor([&]{return router.next().has_value();},serve?800:180)) { break; }
+      }
+      QCOMPARE(router.next().has_value(),serve);
+      if (!serve) { return; }
+      const auto out=cp::decodeDhtSendDatagram(router.take());
+      QVERIFY(out&&!out->skipLeaseSet&&out->recipient.wire==remote.destination()->wire);
+      const auto mux=cp::decodeDhtMuxDatagram(out->payload);
+      QVERIFY(mux&&mux->protocol==17&&mux->fromPort==10000&&mux->toPort==10002);
+      const auto actual=i2p::decode1(mux->datagram);
+      QVERIFY(actual&&router.registeredDestination&&actual->sender.wire==router.registeredDestination->wire);
+      const auto reply=d::decode(actual->payload);
+      QVERIFY(reply&&reply->method==d::Method::AzureusData&&reply->kind==d::Kind::Query&&reply->azureus);
+      const auto* data=std::get_if<d::AzureusReadPacket>(&reply->azureus->payload);
+      QVERIFY(data&&data->type==d::AzureusReadPacketType::Reply&&data->connection==read.connection&&data->handler==handler
+          &&data->key==lookupKey&&data->total==static_cast<std::int32_t>(metainfo->size())&&data->start==offset);
+      const auto expected=metainfo->substr(static_cast<std::size_t>(offset),length?static_cast<std::size_t>(length):std::string::npos);
+      QCOMPARE(QByteArray(reinterpret_cast<const char*>(data->fragment.data()),data->fragment.size()),
+          QByteArray::fromStdString(expected));
+    };
     const auto request=[&](d::Id key,std::uint8_t number,bool hit) {
       d::Message query;
       query.id=contact->id;
@@ -404,6 +458,14 @@ private slots:
       QVERIFY(signedRecord&&signedRecord->publicationHash==originalSeed->publicationHash&&signedRecord->dhtKey==originalSeed->presence->dhtKey);
     };
     request(versionKey,1,true);
+    readMetainfo(handler,lookupKey,21,true);
+    readMetainfo(handler,lookupKey,22,true,3,9);
+    auto otherHandler=handler;
+    otherHandler.front()^=1;
+    readMetainfo(otherHandler,lookupKey,23,false);
+    auto otherKey=lookupKey;
+    otherKey.back()^=1;
+    readMetainfo(handler,otherKey,24,false);
     auto unknown=versionKey;
     unknown.front()^=1;
     request(unknown,2,false);
@@ -413,9 +475,11 @@ private slots:
     QVERIFY(locallyPrivate&&locallyPrivate->replaceValue("is_public","i0e"));
     replaceSubscriptionRows(*profile.lease,"l"+locallyPrivate->serialize()+'e');
     request(versionKey,3,false);
+    readMetainfo(handler,lookupKey,25,false);
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     replaceSubscriptionRows(*profile.lease,"l"+*encoded+'e');
     request(versionKey,4,true);
+    readMetainfo(handler,lookupKey,26,true);
     replaceSubscriptionRows(*profile.lease,"le");
     request(versionKey,5,false);
 
@@ -458,6 +522,7 @@ private slots:
     QVERIFY(ack&&ack->azureus&&ack->transaction==store.transaction&&ack->method==d::Method::AzureusStore);
     QVERIFY(std::get<d::AzureusStoreAck>(ack->azureus->payload).diversification==i2p::Bytes{1});
     request(versionKey,9,true);
+    readMetainfo(handler,lookupKey,27,false);
     QCOMPARE((*owner)->phase(),provider::OwnedProfile::Phase::Active);
     (*owner)->close();
     (*owner)->join();

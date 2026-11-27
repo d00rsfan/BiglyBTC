@@ -15,7 +15,7 @@ public:
   struct Options {Id localId{};std::uint16_t queryPort=0;std::vector<Contact> seeds;unsigned parallelism=3;bool inbound=false,inboundSleeping=false,inboundSuspended=false,routingMaintenance=false;std::vector<SavedContact> savedContacts{};bool azureusValues=false,azureusReplicas=false;};
   explicit Actor(i2cp::InitialChannel&,QObject* parent=nullptr);
   ~Actor()override;
-  bool begin(const Options&,AzureusLocalRead={}); // Exact local secure NID and explicit seed policy.
+  bool begin(const Options&,AzureusLocalRead={},AzureusMetainfoRead={});
   Result<std::uint64_t> lookupPeers(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> announceSelf(const Id&,bool seeding,unsigned timeoutMilliseconds=120000);
   Result<std::uint64_t> lookupAzureusValues(const Id&,AzureusLookup,unsigned timeoutMilliseconds=120000);

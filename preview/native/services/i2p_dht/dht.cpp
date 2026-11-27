@@ -57,6 +57,7 @@ bool readAzureusValue(const B& row,AzureusValue& output) {
 
 constexpr std::size_t MaximumAzureusStoreKeys=8;
 constexpr std::size_t AzureusStoreTokenBytes=8;
+constexpr std::int32_t MaximumAzureusRead=16*1024;
 
 bool readAzureusValues(const B* row,std::vector<AzureusValue>& output) {
   if (!is(row,B::Type::List)||row->children.size()>MaximumPeers) { return false; }
@@ -89,6 +90,28 @@ Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
         }
         store.entries.push_back(std::move(entry));
       }
+      return result;
+    }
+    if (method==4) {
+      auto& read=result.payload.emplace<AzureusReadPacket>();
+      std::uint8_t type=0;
+      const auto* fragment=row.find("d");
+      if (!readInteger(row,"p",type)||type>1||!readInteger(row,"_t",read.now)||!readInteger(row,"c",read.connection)
+          ||!readInteger(row,"s",read.start)||!readInteger(row,"l",read.length)||!readInteger(row,"t",read.total)
+          ||!fixed(row.find("z"),read.handler)||!fixed(row.find("r"),read.key)||!is(fragment,B::Type::Bytes)
+          ||read.start<0||read.length<0||read.total<0||read.total>MaximumAzureusRead) {
+        return bad("Invalid I2P Azureus DATA read fields");
+      }
+      read.type=static_cast<AzureusReadPacketType>(type);
+      if (read.type==AzureusReadPacketType::Request) {
+        if (!fragment->bytes.empty()||read.total||read.start>MaximumAzureusRead||read.length>MaximumAzureusRead-read.start) {
+          return bad("Invalid I2P Azureus DATA read range");
+        }
+      } else if (read.start>read.total||read.length>read.total-read.start
+          ||fragment->bytes.size()!=static_cast<std::size_t>(read.length)) {
+        return bad("Invalid I2P Azureus DATA fragment");
+      }
+      read.fragment.assign(fragment->bytes.begin(),fragment->bytes.end());
       return result;
     }
     if (method!=2) {
@@ -188,6 +211,17 @@ std::string writeAzureusMessage(const AzureusMessage& message) {
     fields["v"]=values+'e';
   } else if (const auto* ack=std::get_if<AzureusStoreAck>(&message.payload)) {
     fields["d"]=bytes(ack->diversification);
+  } else if (const auto* read=std::get_if<AzureusReadPacket>(&message.payload)) {
+    fields["_m"]=number(4);
+    fields["_t"]=number(read->now);
+    fields["c"]=number(read->connection);
+    fields["p"]=number(static_cast<std::uint8_t>(read->type));
+    fields["z"]=bytes(read->handler);
+    fields["r"]=bytes(read->key);
+    fields["s"]=number(read->start);
+    fields["l"]=number(read->length);
+    fields["t"]=number(read->total);
+    fields["d"]=bytes(read->fragment);
   } else {
     const auto& blocked=std::get<AzureusKeyBlock>(message.payload);
     fields["b"]=number(1);
@@ -260,6 +294,8 @@ Result<Message> decode(View wire){
     if (const auto* request=std::get_if<AzureusFindValue>(&azureus->payload)) { m.target=request->key; }
     else if (std::holds_alternative<AzureusStore>(azureus->payload)||std::holds_alternative<AzureusStoreAck>(azureus->payload)) {
       m.method=Method::AzureusStore;
+    } else if (std::holds_alternative<AzureusReadPacket>(azureus->payload)) {
+      m.method=Method::AzureusData;
     }
     m.azureus=std::move(*azureus);
   }
@@ -286,7 +322,7 @@ namespace {
 Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
   if(m.transaction.empty()||m.transaction.size()>16||m.token.size()>64||m.nodes.size()>MaximumContacts||m.peers.size()>MaximumPeers){return bad("DHT message capacity invalid");}
   if(m.kind!=Kind::Query&&m.kind!=Kind::Reply&&m.kind!=Kind::Error){return bad("DHT message kind invalid");}
-  const bool azureus=m.method==Method::AzureusFindValue||m.method==Method::AzureusStore;
+  const bool azureus=m.method==Method::AzureusFindValue||m.method==Method::AzureusStore||m.method==Method::AzureusData;
   if(m.kind==Kind::Query&&m.method!=Method::Ping&&m.method!=Method::FindNode&&m.method!=Method::GetPeers&&m.method!=Method::AnnouncePeer&&!azureus){return bad("DHT method invalid");}
   if (m.azureus) {
     const auto& payload=m.azureus->payload;
@@ -294,8 +330,10 @@ Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
     const bool store=std::holds_alternative<AzureusStore>(payload);
     const bool blocked=std::holds_alternative<AzureusKeyBlock>(payload);
     const bool ack=std::holds_alternative<AzureusStoreAck>(payload);
+    const bool data=std::holds_alternative<AzureusReadPacket>(payload);
     if (!azureus || m.kind==Kind::Error || m.hasNodes || m.hasPeers
-        || (m.kind==Kind::Query)!=(find||store) || (!blocked&&(m.method==Method::AzureusStore)!=(store||ack))
+        || (m.kind==Kind::Query)!=(find||store||data) || (!blocked&&(m.method==Method::AzureusStore)!=(store||ack))
+        || (m.method==Method::AzureusData)!=data
         || (store&&m.token.size()!=AzureusStoreTokenBytes)) {
       return bad("Inconsistent I2P Azureus envelope");
     }

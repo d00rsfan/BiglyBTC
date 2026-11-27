@@ -53,15 +53,23 @@
       auto seed=search::resolveVersionedSubscriptionSeed(*profile,access,key,network,creation,operation);
       if (!seed || !*seed) { return {}; }
       auto& checked=**seed;
-      engine::SubscriptionSeedSource source{std::move(checked.metainfo.metainfo),
-          std::move(checked.directory),std::move(checked.directoryHandle)};
+      engine::SubscriptionSeedSource source;
       if (checked.metainfo.presence) {
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,nonce);
         if (wire) {
           source.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),static_cast<std::int32_t>(presence.version)};
         }
+        if (checked.ddbTransferAllowed) {
+          auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
+          if (response) {
+            source.ddbMetainfo=engine::SubscriptionSeedMetainfo{checked.metainfo.lookupKey,std::move(*response)};
+          }
+        }
       }
+      source.metainfo=std::move(checked.metainfo.metainfo);
+      source.directory=std::move(checked.directory);
+      source.directoryHandle=std::move(checked.directoryHandle);
       return source;
     };
     if (!i2p) {

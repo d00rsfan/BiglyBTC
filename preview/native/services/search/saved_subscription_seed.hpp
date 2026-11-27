@@ -21,6 +21,7 @@ struct PreparedSubscriptionSeed {
   SubscriptionSeed metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle;
+  bool ddbTransferAllowed=false;
 };
 
 struct SavedSubscriptionSeedCandidate {

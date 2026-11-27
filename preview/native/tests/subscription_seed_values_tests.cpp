@@ -205,6 +205,12 @@ void checkSavedSource(const core::Node& fixture,Network route) {
   const auto checked=resolve(FileOperation::Verify);
   require(checked&&*checked&&(**checked).directory==(**ready).directory&&!(**checked).directoryHandle
       &&(**checked).metainfo.metainfo==(**ready).metainfo.metainfo,"Confirm the prepared version under the same profile");
+  require(!(**checked).ddbTransferAllowed,"The disabled DDB switch excludes the held metadata response");
+  require(settings->replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i1e").has_value(),"Enable the saved transfer option");
+  write(root/"biglybt.config",settings->serialize());
+  const auto transfer=resolve(FileOperation::Verify);
+  require(transfer&&*transfer&&(**transfer).ddbTransferAllowed==(route==Network::I2P),
+      "The held I2P projection reflects the enabled transfer option");
   const auto repeated=resolve(FileOperation::Prepare);
   require(repeated&&*repeated&&readVersioned()==body,"Retry reuses the identical versioned file");
   write(versioned,"sentinel");

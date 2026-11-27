@@ -19,6 +19,7 @@ namespace biglybtc::storage { class ProfileSourceAccess; }
 namespace biglybtc::engine {
 
 using SubscriptionSeedHash = std::array<char, 20>;
+inline constexpr std::string_view SubscriptionSeedTransferType="org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent";
 inline constexpr std::size_t PrivateSubscriptionCandidateLimit = 16;
 
 inline std::size_t nextSubscriptionSeedCandidate(std::span<const core::TorrentHash> candidates,
@@ -37,11 +38,18 @@ struct SubscriptionSeedPresence {
   bool operator==(const SubscriptionSeedPresence&) const=default;
 };
 
+struct SubscriptionSeedMetainfo {
+  SubscriptionSeedHash lookupKey{};
+  std::string encoded;
+  bool operator==(const SubscriptionSeedMetainfo&) const=default;
+};
+
 struct SubscriptionSeedSource {
   std::string metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle{};
   std::optional<SubscriptionSeedPresence> presence{};
+  std::optional<SubscriptionSeedMetainfo> ddbMetainfo{};
 
   bool sameVersion(const SubscriptionSeedSource& other) const {
     return metainfo == other.metainfo && directory == other.directory;

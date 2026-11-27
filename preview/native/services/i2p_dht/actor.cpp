@@ -27,6 +27,7 @@ struct Actor::Impl {
   std::optional<std::int32_t> azureusInstance;
   int azureusClockOffset=0;
   AzureusLocalRead azureusLocalRead;
+  AzureusMetainfoRead azureusMetainfoRead;
   bool enabled=false,pumping=false,wakeQueued=false,notificationQueued=false,inboundRequested=false,fullInbound=false;
   std::unique_ptr<inbound::Responder> responder;
   std::unique_ptr<azureus_router::RouterOwner> router;
@@ -67,7 +68,7 @@ struct Actor::Impl {
   }
   void close(){
     const auto ownedScope=scope;
-    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};
+    stopInbound();timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};azureusMetainfoRead={};
     if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
   void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();enabled=false;scope=0;lookup.close();}}
@@ -188,15 +189,50 @@ struct Actor::Impl {
     auto sent=channel->submitDhtReply(scope,(*reply)->recipient.destination->wire,(*reply)->payload,(*reply)->toPort,data.end);
     if(sent){replyTickets.push_back(*sent);}
   }
+  void metainfoPacket(const i2cp::InitialChannel::DhtDatagram& data,const Message& message) {
+    if (!azureusMetainfoRead||!inboundCurrent(data.end)||!data.sender||data.toPort!=options.queryPort
+        ||options.inboundSuspended||(options.inboundSleeping&&!message.wakeRequested)) { return; }
+    const Contact requester{message.id,data.sender->hash,data.fromPort,data.sender};
+    if (!validContact(requester)) { return; }
+    const auto& request=std::get<AzureusReadPacket>(message.azureus->payload);
+    if (request.type!=AzureusReadPacketType::Request) { return; }
+    auto whole=azureusMetainfoRead(request.handler,request.key);
+    if (!whole||whole->empty()||whole->size()>4096||static_cast<std::size_t>(request.start)>=whole->size()) { return; }
+    const auto remaining=whole->size()-static_cast<std::size_t>(request.start);
+    if (request.length&&static_cast<std::size_t>(request.length)>remaining) { return; }
+    const auto length=request.length?static_cast<std::size_t>(request.length):remaining;
+    auto tx=transaction(now());
+    if (!tx) { return; }
+    AzureusReadPacket response{AzureusReadPacketType::Reply,request.handler,request.key,
+        QDateTime::currentMSecsSinceEpoch()+azureusClockOffset,request.connection,request.start,
+        static_cast<std::int32_t>(length),static_cast<std::int32_t>(whole->size()),{}};
+    const auto fragment=View(*whole).subspan(static_cast<std::size_t>(request.start),length);
+    response.fragment.assign(fragment.begin(),fragment.end());
+    Message outgoing;
+    outgoing.method=Method::AzureusData;
+    outgoing.id=options.localId;
+    outgoing.transaction=std::move(*tx);
+    outgoing.wakeRequested=true;
+    outgoing.azureus=AzureusMessage{*azureusInstance,0,std::move(response)};
+    const auto bytes=encode(outgoing);
+    const auto left=std::chrono::duration_cast<std::chrono::milliseconds>(data.end-Clock::now()).count();
+    // Write under the current source permit without deferring the response
+    // past this turn. A busy socket can take the peer's ordinary read retry.
+    if (!bytes||!inboundCurrent(data.end)||!channel->ownedTransportIdle()
+        ||channel->dhtScopeObservation(scope).queuedWrites||left<=0) { return; }
+    const auto written=channel->submitDhtDatagram(requester.destination->wire,*bytes,true,requester.port,
+        static_cast<unsigned>(std::min<std::int64_t>(left,30000)));
+    if (written) { replyTickets.push_back(*written); }
+  }
   bool resumeInbound(){
     if(!onThread()||!inboundRequested){return false;}if(!current()){close();return false;}if(!channel->dhtScopeObservation(scope).granted){return false;}
     const bool starting=!responder;if(!prepareInbound()){stopInbound();return false;}if(starting){notify();}
     if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance
         ||(lookup.running()&&lookup.options().azureus&&lookup.options().announce)){pump(true);}return inboundRequested&&current();
   }
-  bool begin(const Options& value,AzureusLocalRead read){
+  bool begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
-        ||((read||value.azureusReplicas)&&!value.azureusValues)){return false;}
+        ||((read||metainfo||value.azureusReplicas)&&!value.azureusValues)){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{value.localId,identity->hash,value.queryPort,{}};if(!validContact(local)){return false;}
     if(std::any_of(value.seeds.begin(),value.seeds.end(),[&](const auto& c){return !validContact(c)||c.hash==identity->hash;})){return false;}
@@ -213,8 +249,8 @@ struct Actor::Impl {
       azureusClockOffset=random.bounded(-120000,120000);
     }
     if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;
-    if ((value.inbound||value.azureusReplicas||read)&&!enableInbound(value.inbound)) { close();return false; }
-    azureusLocalRead=std::move(read);notify();return true;
+    if ((value.inbound||value.azureusReplicas||read||metainfo)&&!enableInbound(value.inbound)) { close();return false; }
+    azureusLocalRead=std::move(read);azureusMetainfoRead=std::move(metainfo);notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
     if(!onThread()||!current()||lookup.running()||(azureus&&!azureusInstance)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
@@ -243,6 +279,7 @@ struct Actor::Impl {
       auto data=channel->takeDhtDatagram();if(!data){break;}progressed=true;if(Clock::now()>=data->end){continue;}
       auto message=decode(data->payload);if(!message){continue;}
       if(message->kind==Kind::Query){
+        if (message->method==Method::AzureusData) { metainfoPacket(*data,*message);continue; }
         const bool allowed=message->method==Method::AzureusStore?options.azureusReplicas
             :fullInbound||message->method==Method::AzureusFindValue;
         if (inboundRequested&&allowed) { inboundPacket(*data,message->version); }
@@ -340,7 +377,8 @@ struct Actor::Impl {
 };
 Actor::Actor(i2cp::InitialChannel& c,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,c)){}
 Actor::~Actor(){impl_->safeClose();}
-bool Actor::begin(const Options& value,AzureusLocalRead read){try{return impl_->begin(value,std::move(read));}catch(...){impl_->safeClose();return false;}}
+bool Actor::begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo){
+  try{return impl_->begin(value,std::move(read),std::move(metainfo));}catch(...){impl_->safeClose();return false;}}
 Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,false,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::lookupAzureusValues(const Id& target,AzureusLookup options,unsigned timeout){

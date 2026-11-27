@@ -2,8 +2,9 @@
 namespace {
 const std::string& subscriptionSeedReadHandler() {
  // DDBaseHelpers preserves the Azureus transfer type's original class name.
+ constexpr auto name=engine::SubscriptionSeedTransferType;
  static const auto handler=QCryptographicHash::hash(
-     "org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent",QCryptographicHash::Sha1).toStdString();
+     QByteArrayView(name.data(),static_cast<qsizetype>(name.size())),QCryptographicHash::Sha1).toStdString();
  return handler;
 }
 

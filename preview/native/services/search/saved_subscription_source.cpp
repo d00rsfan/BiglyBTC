@@ -97,6 +97,7 @@ bool eligibleSubscriptionSeed(const core::Node& row,SubscriptionSeedNetwork netw
 struct VersionedSeedAccess {
   std::filesystem::path& directory;
   std::shared_ptr<const StateDescriptor>& directoryHandle;
+  bool& ddbTransferAllowed;
   SubscriptionSeedFile operation;
 };
 
@@ -113,14 +114,16 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
   if(!config->present) { return std::optional<SavedSubscriptionSeed>{}; }
   auto settings=named(root,"biglybt.config",MetaBytes);
   if(!settings) { return std::unexpected(settings.error()); }
-  if(kind==SubscriptionSeedKey::DdbLookup&&settings->present){
+  const bool checkTransfer=kind==SubscriptionSeedKey::DdbLookup||(versioned&&network==SubscriptionSeedNetwork::I2P);
+  bool transferEnabled=checkTransfer;
+  if(checkTransfer&&settings->present){
     const auto configured=core::Document::parse(settings->bytes,ConfigLimits);
-    if(!configured||configured->root().type!=core::Node::Type::Dictionary||!unique(configured->root())) {
-      return std::unexpected(E::Malformed);
-    }
-    if(!integer(configured->root(),"Plugin.DHT.dht.torrent_xfer.enable",1,1,1)) {
-      return std::optional<SavedSubscriptionSeed>{};
-    }
+    const bool valid=configured&&configured->root().type==core::Node::Type::Dictionary&&unique(configured->root());
+    if (!valid&&kind==SubscriptionSeedKey::DdbLookup) { return std::unexpected(E::Malformed); }
+    transferEnabled=valid&&integer(configured->root(),"Plugin.DHT.dht.torrent_xfer.enable",1,1,1);
+  }
+  if (kind==SubscriptionSeedKey::DdbLookup&&!transferEnabled) {
+    return std::optional<SavedSubscriptionSeed>{};
   }
   const auto catalog=core::Document::parse(config->bytes,ConfigLimits);
   if(!catalog||!unique(catalog->root())) { return std::unexpected(E::Malformed); }
@@ -177,6 +180,7 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
       }
     }
     versioned->directory=std::move(*path);
+    versioned->ddbTransferAllowed=transferEnabled;
   }
   return std::optional{SavedSubscriptionSeed{std::move(*seed),std::move(body->bytes)}};
 } catch(const std::bad_alloc&) { return std::unexpected(E::Memory); }
@@ -249,12 +253,13 @@ std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resol
   }
   std::filesystem::path directory;
   std::shared_ptr<const StateDescriptor> directoryHandle;
+  bool ddbTransferAllowed=false;
   auto checked=subscriptionSeedFromProfile(lease,access,publicationHash,SubscriptionSeedKey::Publication,network,
-      creationSeconds,VersionedSeedAccess{directory,directoryHandle,operation});
+      creationSeconds,VersionedSeedAccess{directory,directoryHandle,ddbTransferAllowed,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
   return std::optional{PreparedSubscriptionSeed{
-      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle)}};
+      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle),ddbTransferAllowed}};
 }
 
 struct SavedSubscriptionSourceSnapshot::Impl {
