@@ -281,6 +281,7 @@ static bool membershipEffectsPolicy(const SavedDownloadTags& tags,const Node& re
     if((key=="vis"||key=="pp.enabled.constraint")&&value.type==Node::Type::Integer){continue;}
     // The queue reads these limits from the committed membership snapshot on each owner.
     if((key=="rl.maxadl"||key=="rl.maxacd"||key=="rl.als")&&value.type==Node::Type::Integer){continue;}
+    if((key=="rl.fps"||key=="rl.nfps")&&value.type==Node::Type::Integer&&(value.integer==0||value.integer==1)){continue;}
     // TagBase persists sharing separately from configured assignment actions.
     // Related Content reads the committed flags and checks the source route.
     if(key=="pub"&&value.type==Node::Type::Integer&&(value.integer==0||value.integer==1)){continue;}

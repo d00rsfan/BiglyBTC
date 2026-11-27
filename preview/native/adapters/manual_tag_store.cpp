@@ -12,6 +12,7 @@
 #include <biglybtc/download_state_names.hpp>
 #include <algorithm>
 #include <new>
+#include <set>
 
 namespace biglybtc::storage {
 namespace {
@@ -27,6 +28,37 @@ bool supportedRateSubject(const core::SavedDownloadTags& tags,const core::Torren
   if(!supported(rate->upload)||!supported(rate->download)||++count>MaximumTagRateGroups){return false;}
  }return true;
 }
+bool savedSeedPriority(const core::Node& record) {
+  const auto* settings=record.find("c");
+  if (!settings) { return false; }
+  return std::ranges::any_of(std::array{"rl.fps","rl.nfps"},[&](const char* key) {
+    const auto* flag=settings->find(key);
+    return flag&&flag->type==core::Node::Type::Integer&&flag->integer==1;
+  });
+}
+
+bool overlapsSeedPriority(const core::SavedDownloadTags& before,const core::SavedDownloadTags& after,
+    std::int32_t selected,const core::Node& manual) {
+  const auto previous=std::ranges::find(before.tags,std::optional{selected},&core::SavedDownloadTag::id);
+  const auto updated=std::ranges::find(after.tags,std::optional{selected},&core::SavedDownloadTag::id);
+  if (previous==before.tags.end()||updated==after.tags.end()) { return true; }
+
+  std::set<std::string> changed;
+  for (const auto& hash:previous->uniqueHashes) { changed.insert(hash.hex()); }
+  for (const auto& hash:updated->uniqueHashes) {
+    auto key=hash.hex();
+    if (!changed.erase(key)) { changed.insert(std::move(key)); }
+  }
+  if (changed.empty()) { return false; }
+  for (const auto& tag:before.tags) {
+    if (tag.id==selected||!savedSeedPriority(manual.children[tag.sourceIndex*2+1])) { continue; }
+    if (std::ranges::any_of(tag.uniqueHashes,[&](const auto& hash){return changed.contains(hash.hex());})) {
+      return true;
+    }
+  }
+  return false;
+}
+
 constexpr std::array<const char*,3> Names{"tag.config","tag.config.bak","tag.config.saving"};
 constexpr std::array<const char*,3> SettingsNames{"biglybt.config","biglybt.config.bak","biglybt.config.saving"};
 struct Stamp {
@@ -468,6 +500,9 @@ std::expected<ManualTagCommit,Error> ManualTagStore::applySequence(const ManualT
         }
       }
       if(memberId){const auto* type=before->source->find("3");const auto* record=type?type->find(std::to_string(*memberId)):nullptr;
+        if (record&&savedSeedPriority(*record)&&overlapsSeedPriority(*before,candidate->value,*memberId,*type)) {
+          return std::unexpected(Error{ErrorCode::Unsupported,"The selected download has overlapping seeding-priority tags"});
+        }
         const bool ordinary=record&&core::ordinarySavedTagMembershipEffects(*before,*record);
         const bool lifecycle=lifecycleExecutor&&record&&core::lifecycleSavedTagMembershipEffects(*before,*record);
         const bool rateReady=(lifecycleExecutor||rateOnlyExecutor)&&record&&rates&&rates->matches(*lease_,*this,expected,*memberId)

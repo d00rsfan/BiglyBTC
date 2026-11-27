@@ -169,6 +169,28 @@ void actualConfiguredGroupMembershipRefusesWithoutPublication(){
   check(area.read("tag.config")==before&&stamp(area.root/"tag.config")==identity&&!std::filesystem::exists(area.root/"tag.config.bak")&&!std::filesystem::exists(area.root/"tag.config.saving")&&snapshot(*store).generation()==expected.generation(),"Group policy refusal wrote/rotated sources or changed lineage");
   check(bool(store->close()),"Actual grouped writer close");
 }
+void ordinaryMembershipPublishesExclusiveSeedPriority() {
+  Area area;
+  const auto priority=[](std::string_view name,std::string_view key) {
+    return dict({{"n",bytes(name)},{"c",dict({{std::string(key),"i1e"}})}});
+  };
+  area.write("tag.config",dict({{"3",dict({{"1",priority("First","rl.fps")},
+      {"2",priority("Not first","rl.nfps")}})}}));
+  auto store=opened(area);
+  const auto key=hash().hex();
+  const auto rules=[&] { return c::savedTagQueueRules(*snapshot(*store).tags()); };
+  const auto first=apply(*store,c::SavedTagAddMember{1,hash(),100});
+  check(first.changed&&rules().at(key).first&&!rules().at(key).notFirst,"Exclusive first-priority assignment failed");
+  const auto before=area.read("tag.config");
+  refused(*store,first.snapshot,c::SavedTagAddMember{2,hash(),101},s::ErrorCode::Unsupported);
+  check(area.read("tag.config")==before&&snapshot(*store).generation()==first.snapshot.generation(),
+      "Overlapping priority rejection published membership");
+  check(apply(*store,c::SavedTagRemoveMember{1,hash()}).changed&&!rules().contains(key),
+      "Removing the priority tag left a forced priority rule");
+  const auto other=apply(*store,c::SavedTagAddMember{2,hash(),102});
+  check(other.changed&&!rules().at(key).first&&rules().at(key).notFirst,"Exclusive not-first-priority assignment failed");
+  check(bool(store->close()),"Exclusive priority membership close failed");
+}
 void actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged(){
   for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"pp.trackers",list({bytes("tracker")})},{"pp.constraint",list({bytes("size>0")})}}),dict({{"pp.trackers",list({"i1e"})}}),dict({{"pp.trackers",list({bytes("caf\xc3\xa9.test")})}}),dict({{"future-effect","i0e"}})}){
     Area area;const auto before=dict({{"future",bytes("keep")},{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config},{"o",list({bytes("AAAQEAYEAUDAOCAJBIFQYDIOB4IBCEQT")})}})}})}});area.write("tag.config",before);
@@ -262,4 +284,4 @@ int main(){try{membershipPlanIsImmutableAndPublishesOnlyItsExactReplay();members
 #ifndef _WIN32
   uncertainSavePoisonsCounter();
 #endif
-  workerAndOfdLifetime();customLocaleBundleSuppressesStockLabels();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS manual-tag store, immutable membership plans and profile locale\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
+  workerAndOfdLifetime();customLocaleBundleSuppressesStockLabels();actualConfiguredGroupMembershipRefusesWithoutPublication();actualConfiguredTagChangesRefuseButNoEventNoopsStayUnchanged();ordinaryMembershipPublishesExclusiveSeedPriority();actualGroupSaveNoopStaleAndReopenPreserveOriginalBytes();actualColourCanonicalSaveClearRefusalAndReopen();std::cout<<"PASS manual-tag store, immutable membership plans and profile locale\n";return 0;}catch(const std::exception& error){std::cerr<<"FAIL "<<error.what()<<'\n';return 1;}}
