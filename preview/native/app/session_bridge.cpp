@@ -3856,6 +3856,9 @@ void populateDownloadArchive(ui::DownloadArchivePacket& packet, const storage::P
     const auto* showPath = settings->document().find("ArchivedFilesView.show.full.path");
     packet.showFullFilePaths = showPath && showPath->type == core::Node::Type::Integer
         && static_cast<std::uint32_t>(showPath->integer) != 0;
+    const auto* removeMeta = settings->document().find("def.deletetorrent");
+    packet.removeMetainfoByDefault = removeMeta && removeMeta->type == core::Node::Type::Integer
+        && static_cast<std::uint32_t>(removeMeta->integer) != 0;
   }
 }
 }

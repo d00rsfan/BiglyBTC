@@ -15,6 +15,7 @@ struct DownloadArchivePacket {
   QString error;
   bool openContainingFolder = false;
   bool showFullFilePaths = false;
+  bool removeMetainfoByDefault = false;
 };
 using DownloadArchivePresentation = std::shared_ptr<const DownloadArchivePacket>;
 }

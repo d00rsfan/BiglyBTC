@@ -347,6 +347,7 @@ int main(int argc, char** argv) try {
   auto parentPacket = std::make_shared<ui::DownloadArchivePacket>(*packet);
   parentPacket->openContainingFolder = true;
   parentPacket->showFullFilePaths = true;
+  parentPacket->removeMetainfoByDefault = true;
   parentPacket->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder);
   parentPacket->rows[0].metadata.fileEntries[0].path = "payload.bin";
   ui::DownloadArchiveDialog dialog(std::move(packet));
@@ -421,6 +422,21 @@ int main(int argc, char** argv) try {
   require(parentFiles->actions().size()==1&&parentFiles->actions().front()->isEnabled(),"Reveal a selected archived file");
   parentFiles->actions().front()->trigger();
   require(!revealParent&&openedParents==QStringList{nativeFolder(savedFolder)},"Open the selected archived file's containing folder");
+  auto* removeFromParent=parentDialog.findChild<QPushButton*>("remove-archived-downloads");
+  require(removeFromParent&&removeFromParent->isEnabled(),"A saved torrent can be removed from the archive");
+  bool configuredDefault=false, removedFromParent=false;
+  QObject::connect(&parentDialog,&ui::DownloadArchiveDialog::removeRequested,&parentDialog,
+      [&](quint64,QStringList,bool){removedFromParent=true;});
+  QTimer::singleShot(0,&parentDialog,[&] {
+    const auto questions=parentDialog.findChildren<QMessageBox*>();
+    for(auto* question:questions){
+      if(!question->isVisible()){continue;}
+      configuredDefault=question->checkBox()&&question->checkBox()->isChecked();
+      question->reject();break;
+    }
+  });
+  removeFromParent->click();
+  require(configuredDefault&&!removedFromParent,"Show the configured metainfo preference in the confirmation");
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");

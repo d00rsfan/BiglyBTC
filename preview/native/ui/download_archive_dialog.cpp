@@ -274,7 +274,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       };
       connect(restore, &QPushButton::clicked, this, [request] { request(false); });
       connect(restoreAndStart, &QPushButton::clicked, this, [request] { request(true); });
-      connect(remove, &QPushButton::clicked, this, [this, session = packet->session, selectedHashes] {
+      connect(remove, &QPushButton::clicked, this, [this, session = packet->session, selectedHashes, removeMetainfoByDefault = packet->removeMetainfoByDefault] {
         auto hashes = selectedHashes();
         if (hashes.isEmpty()) { return; }
         const QPointer<DownloadArchiveDialog> guard(this);
@@ -282,6 +282,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
             tr("Remove the selected downloads from the archive?"),QMessageBox::Yes|QMessageBox::Cancel,this);
         confirmation->setDefaultButton(QMessageBox::Cancel);
         auto* metainfo=new QCheckBox(tr("Also remove the saved .torrent files"),confirmation);
+        metainfo->setChecked(removeMetainfoByDefault);
         confirmation->setCheckBox(metainfo);
         const auto accepted=confirmation->exec();
         if (guard&&confirmation) {
