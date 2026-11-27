@@ -418,7 +418,8 @@ struct OwnedProfile::Impl {
     if (!bridge || !discoveryOptions) { return false; }
     const auto key = seed.data().source->hash().hex();
     const auto id = seed.data().admission;
-    return bridge->discoverSubscription(seed.data().source, id, [this,key,id](const Hash& peer, std::uint64_t op) {
+    return bridge->discoverSubscription(seed.data().source, id, seed.data().source->initial_.servePayload,
+        [this,key,id](const Hash& peer, std::uint64_t op) {
       const auto found = subscriptions.find(key);
       if (found==subscriptions.end() || found->second.data().admission!=id || found->second.retiring
           || !subscriptionCurrent(found->second,source->lease()->sourceRevision())) { return false; }
@@ -440,7 +441,7 @@ struct OwnedProfile::Impl {
     });
   }
   bool install(Subscription& seed, std::uint64_t revision) {
-    if (!session || !subscriptionCurrent(seed, revision)) { return false; }
+    if (!session || !seed.data().source->initial_.servePayload || !subscriptionCurrent(seed, revision)) { return false; }
     const auto tuple = registration(seed);
     if (!seed.registered && lt::biglybtc_admit_private_i2p_torrent_v1(session.get(), &tuple) != 0) { return false; }
     seed.registered = true;
@@ -983,6 +984,9 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedSubscription>,Error> OwnedPr
     auto seed = std::make_unique<PreparedSubscription::Impl>();
     seed->source = std::move(*source);
     if (!entropy(seed->admission)) { return std::unexpected(Error{Code::Io, "I2P subscription admission entropy unavailable"}); }
+    if (!seed->source->initial_.servePayload) {
+      return std::unique_ptr<PreparedSubscription>(new PreparedSubscription(std::move(seed)));
+    }
     seed->slot = seed->source->initial_.directory / (".BiglyBTC-i2p-subscription-" + std::to_string(seed->admission));
     seed->disks = state.disks;
     lt::sha1_hash selected;
@@ -1001,7 +1005,7 @@ std::expected<std::unique_ptr<OwnedProfile::PreparedSubscription>,Error> OwnedPr
 std::expected<void,Error> OwnedProfile::addSubscriptionSeed(std::unique_ptr<PreparedSubscription> prepared) {
   auto& state = *impl_;
   if (!state.onThread() || state.phase == Phase::Withdrawn || !prepared || prepared->impl_->source->revoked()
-      || prepared->impl_->disks != state.disks) {
+      || (prepared->impl_->source->initial_.servePayload && prepared->impl_->disks != state.disks)) {
     return std::unexpected(Error{Code::Conflict, "I2P subscription admission is stale"});
   }
   if (state.phase != Phase::Prepared && !state.discoveryOptions) {

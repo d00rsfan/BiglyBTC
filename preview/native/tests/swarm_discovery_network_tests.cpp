@@ -212,7 +212,7 @@ private slots:
   };
   std::optional<std::string> actual;
   const auto refresh=[&] {
-   client.service->updateSubscriptionSeeds(std::span{&hash,1},1000);
+   client.service->updateSubscriptionCatalog(std::span{&hash,1},{},1000);
    actual=readPresence();
    return actual&&!actual->empty();
   };
@@ -234,7 +234,7 @@ private slots:
   QTRY_VERIFY_WITH_TIMEOUT(replicated(),9000);
 
   const auto associationReplicated=[&](std::string_view association,std::uint8_t expectedFlags) {
-   client.service->updateSubscriptionSeeds(std::span{&hash,1},1000);
+   client.service->updateSubscriptionCatalog(std::span{&hash,1},{},1000);
    Wall clock;
    const auto stored=peer.database->read(association,contact(peer.endpoint()),24,0,clock);
    return stored&&*stored&&std::ranges::any_of((**stored).values,[&](const auto& value) {
@@ -269,7 +269,7 @@ private slots:
   const auto anonymousKey=QCryptographicHash::hash(QByteArray::fromStdString(anonymousSeed.presence->applicationKey),
       QCryptographicHash::Sha1);
   std::copy_n(reinterpret_cast<const std::uint8_t*>(anonymousKey.data()),key.size(),key.begin());
-  client.service->updateSubscriptionSeeds(std::span{&anonymousSeed.publicationHash,1},1000);
+  client.service->updateSubscriptionCatalog(std::span{&anonymousSeed.publicationHash,1},{},1000);
   QTest::qWait(2200);
   const auto notPublic=readPresence();
   QVERIFY(notPublic&&notPublic->empty());
@@ -371,7 +371,8 @@ private slots:
   QVERIFY(saved&&*saved);
   const auto expected=search::subscriptionSeedDdbResponse((**saved).metainfo);
   QVERIFY(expected);
-  client.service->updateSubscriptionSeeds(std::span{&(**saved).metainfo.publicationHash,1},creationSeconds);
+  const auto hashes=std::span{&(**saved).metainfo.publicationHash,1};
+  client.service->updateSubscriptionCatalog(hashes,{},creationSeconds);
 
   const auto handler=QCryptographicHash::hash(
       "org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent",QCryptographicHash::Sha1).toStdString();
@@ -383,6 +384,11 @@ private slots:
    return peer.actor->readTransfer({client.ip,client.port},55,handler,std::string(key),this,
        [&](auto result){reply.emplace(std::move(result));},std::chrono::steady_clock::now()+time);
   };
+  QVERIFY(request(lookup,1s));
+  QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),2000);
+  QVERIFY(!*reply);
+
+  client.service->updateSubscriptionCatalog(hashes,hashes,creationSeconds);
   QVERIFY(request(lookup,5s));
   QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),6000);
   QVERIFY2(bool(*reply),qPrintable(QString("DDB outcome %1").arg(reply->has_value()?-1:static_cast<int>(reply->error()))));
@@ -397,7 +403,7 @@ private slots:
   auto config=storage::ConfigFile::load(*client.lease,"biglybt.config");
   QVERIFY(config&&config->document().replaceValue("Plugin.DHT.dht.torrent_xfer.enable","i0e"));
   QVERIFY(config->save(*client.lease));
-  client.service->updateSubscriptionSeeds(std::span{&(**saved).metainfo.publicationHash,1},creationSeconds);
+  client.service->updateSubscriptionCatalog(hashes,hashes,creationSeconds);
   QVERIFY(request(lookup,1s));
   QTRY_VERIFY_WITH_TIMEOUT(reply.has_value(),2000);
   QVERIFY(!*reply);

@@ -147,7 +147,8 @@ public:
  bool peekDownloadChat(core::TorrentHash);
  bool cancelDownloadChatPeek(core::TorrentHash);
  bool updateTorrents(std::vector<engine::AzureusTorrentTarget>);
- void updateSubscriptionSeeds(std::span<const engine::SubscriptionSeedHash>,std::int64_t creationSeconds=0);
+ void updateSubscriptionCatalog(std::span<const engine::SubscriptionSeedHash> publications,
+     std::span<const engine::SubscriptionSeedHash> serving, std::int64_t creationSeconds=0);
  std::function<bool(std::string_view,std::string_view)> subscriptionRelay(const storage::ProfileLease&)const;
  std::vector<engine::AzureusPeerBatch> takeTorrentPeers();
  void recordDeliveredTorrentPeers(std::size_t)noexcept;

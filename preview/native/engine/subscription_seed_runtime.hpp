@@ -62,9 +62,10 @@ struct SubscriptionSeedSource {
   std::optional<SubscriptionSeedMetainfo> ddbMetainfo{};
   std::optional<SubscriptionSeedUpgradeProbe> upgrade{};
   std::vector<SubscriptionSeedPublication> associations{};
+  bool servePayload = true;
 
   bool sameVersion(const SubscriptionSeedSource& other) const {
-    return metainfo == other.metainfo && directory == other.directory;
+    return metainfo == other.metainfo && directory == other.directory && servePayload == other.servePayload;
   }
 };
 

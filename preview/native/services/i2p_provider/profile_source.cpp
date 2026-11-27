@@ -630,7 +630,8 @@ std::expected<std::shared_ptr<SubscriptionSource>,storage::Error> ProfileSource:
     const auto raw = hash.bytes();
     const std::string_view key(reinterpret_cast<const char*>(raw.data()), raw.size());
     auto initial = resolver(access, key, engine::SubscriptionSeedRead::Prepare);
-    require(initial && initial->directoryHandle && !initial->metainfo.empty(), ErrorCode::Missing,
+    require(initial && initial->directoryHandle && !initial->metainfo.empty()
+        && (initial->servePayload || initial->presence), ErrorCode::Missing,
         "The signed I2P subscription version is unavailable");
     auto source = std::shared_ptr<SubscriptionSource>(new SubscriptionSource(impl_->lease, hash, std::move(*initial),
         std::move(resolver)));

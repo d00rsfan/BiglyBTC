@@ -1,4 +1,6 @@
   std::vector<engine::SubscriptionSeedHash> subscriptionSeedHashes;
+  std::vector<engine::SubscriptionSeedHash> subscriptionPublicationHashes;
+  bool subscriptionSeedListening=false;
   std::map<std::string,bool> subscriptionSeedPopularity;
   std::chrono::steady_clock::time_point nextSubscriptionSeedScan{};
   std::chrono::steady_clock::time_point nextI2pSubscriptionSeedScan{};
@@ -40,11 +42,13 @@
     constexpr auto network=search::SubscriptionSeedNetwork::I2P;
     const auto saved=search::savedSubscriptionSeedCandidates(lease,network);
     std::vector<core::TorrentHash> candidates;
+    auto serving=std::make_shared<std::set<std::string,std::less<>>>();
     if (saved) {
       for (const auto& candidate : *saved) {
-        if (!selectSubscriptionSeed(candidate)) { continue; }
         const auto hash=core::TorrentHash::parse({candidate.hash.data(),candidate.hash.size()});
-        if (hash) { candidates.push_back(*hash); }
+        if (!hash) { continue; }
+        candidates.push_back(*hash);
+        if (selectSubscriptionSeed(candidate)) { serving->emplace(candidate.hash.data(),candidate.hash.size()); }
       }
     }
     if (candidates.empty()) {
@@ -55,7 +59,8 @@
     auto alias=lease.retain();
     if (!alias) { return; }
     const engine::HeldSubscriptionSeedResolver resolve=
-        [profile=std::move(*alias),creation=subscriptionSeedCreationSeconds,nonce=subscriptionPresenceNonce](const storage::ProfileSourceAccess& access,
+        [profile=std::move(*alias),serving=std::move(serving),creation=subscriptionSeedCreationSeconds,
+            nonce=subscriptionPresenceNonce](const storage::ProfileSourceAccess& access,
             std::string_view key,engine::SubscriptionSeedRead read)->std::optional<engine::SubscriptionSeedSource> {
       const auto operation=read==engine::SubscriptionSeedRead::Prepare
           ?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
@@ -63,6 +68,7 @@
       if (!seed || !*seed) { return {}; }
       auto& checked=**seed;
       engine::SubscriptionSeedSource source;
+      source.servePayload=serving->contains(key);
       if (checked.metainfo.presence) {
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,nonce);
@@ -74,7 +80,7 @@
                 static_cast<std::int32_t>(presence.version),std::move(record.applicationKey)});
           }
         }
-        if (checked.ddbTransferAllowed) {
+        if (source.servePayload&&checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
           if (response) {
             source.ddbMetainfo=engine::SubscriptionSeedMetainfo{checked.metainfo.lookupKey,std::move(*response)};
@@ -124,13 +130,14 @@
 #endif
     }
     pollI2pSubscriptionSeeds(profileReady);
-    if(!engine) { return; }
-    if(!profileReady||!engine->publicSubscriptionSeedsAvailable()) {
+    if(!profileReady||!engine) {
       subscriptionSeedHashes.clear();
+      subscriptionPublicationHashes.clear();
+      subscriptionSeedListening=false;
       nextSubscriptionSeedScan={};
-      engine->refreshPublicSubscriptionSeeds({},{});
+      if(engine) { engine->refreshPublicSubscriptionSeeds({},{}); }
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-      if(chats) { chats->updateSubscriptionSeeds({}); }
+      if(chats) { chats->updateSubscriptionCatalog({},{}); }
 #endif
       return;
     }
@@ -139,9 +146,11 @@
     if(refreshed) {
       nextSubscriptionSeedScan=now+std::chrono::seconds(5);
       subscriptionSeedHashes.clear();
+      subscriptionPublicationHashes.clear();
       const auto saved=search::savedSubscriptionSeedCandidates(lease,search::SubscriptionSeedNetwork::Public);
       if(saved) {
         for(const auto& candidate:*saved) {
+          subscriptionPublicationHashes.push_back(candidate.hash);
           if (selectSubscriptionSeed(candidate)) { subscriptionSeedHashes.push_back(candidate.hash); }
         }
       }
@@ -158,13 +167,14 @@
           }
           return {};
         });
+    const bool listenerChanged=std::exchange(subscriptionSeedListening,observing)!=observing;
 #ifdef BIGLYBTC_HOST_GENERAL_CHATS
-    if(chats&&(!observing||refreshed)) {
+    if(chats&&(listenerChanged||refreshed)) {
       const auto active=observing?std::span<const engine::SubscriptionSeedHash>(subscriptionSeedHashes)
           :std::span<const engine::SubscriptionSeedHash>{};
-      chats->updateSubscriptionSeeds(active,subscriptionSeedCreationSeconds);
+      chats->updateSubscriptionCatalog(subscriptionPublicationHashes,active,subscriptionSeedCreationSeconds);
     }
 #else
-    static_cast<void>(observing);
+    static_cast<void>(listenerChanged);
 #endif
   }

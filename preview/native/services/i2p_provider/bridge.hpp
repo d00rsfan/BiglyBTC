@@ -50,7 +50,7 @@ private:
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
   bool discover(std::shared_ptr<PendingMagnetSource>,const core::TorrentHash&,const dht::Id&,
       std::uint64_t admission,bool seeding,std::function<bool(const Hash&,std::uint64_t)>);
-  bool discoverSubscription(std::shared_ptr<SubscriptionSource>,std::uint64_t admission,
+  bool discoverSubscription(std::shared_ptr<SubscriptionSource>,std::uint64_t admission,bool servePayload,
       std::function<bool(const Hash&,std::uint64_t)>);
   bool discoverSubscriptionUpgrade(std::shared_ptr<SubscriptionSource>,const core::TorrentHash&,
       std::uint64_t admission,std::function<bool(const Hash&,std::uint64_t)>);

@@ -268,16 +268,18 @@ class DhtChannelTests final:public QObject {
     if(!fast){QTRY_VERIFY(r.next());auto end=cp::decodeReceiveControl(r.take());QVERIFY(end&&!end->begin&&end->messageId==id);}
   }
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
-  static biglybtc::engine::HeldSubscriptionSeedResolver seedResolver(owned_i2p_test::Fixture& profile,bool publication=false) {
+  static biglybtc::engine::HeldSubscriptionSeedResolver seedResolver(owned_i2p_test::Fixture& profile,
+      bool publication=false,bool servePayload=true) {
     namespace search=biglybtc::search;
     namespace engine=biglybtc::engine;
-    return [&profile,publication](const auto& access,std::string_view id,engine::SubscriptionSeedRead read)
+    return [&profile,publication,servePayload](const auto& access,std::string_view id,engine::SubscriptionSeedRead read)
         ->std::optional<engine::SubscriptionSeedSource> {
       const auto mode=read==engine::SubscriptionSeedRead::Prepare?search::SubscriptionSeedFile::Prepare:search::SubscriptionSeedFile::Verify;
       auto staged=search::resolveVersionedSubscriptionSeed(*profile.lease,access,id,search::SubscriptionSeedNetwork::I2P,1000,mode);
       if (!staged || !*staged) { return {}; }
       auto& checked=**staged;
       engine::SubscriptionSeedSource result;
+      result.servePayload=servePayload;
       if (publication&&checked.metainfo.presence) {
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,-315);
@@ -289,7 +291,7 @@ class DhtChannelTests final:public QObject {
                 static_cast<std::int32_t>(presence.version),std::move(association.applicationKey)});
           }
         }
-        if (checked.ddbTransferAllowed) {
+        if (servePayload&&checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
           if (response) {
             result.ddbMetainfo=engine::SubscriptionSeedMetainfo{checked.metainfo.lookupKey,std::move(*response)};
@@ -832,12 +834,14 @@ private slots:
     QTest::newRow("withdraw-before-relay") << false << false << false << 4;
     QTest::newRow("relay-subscription-association") << false << false << false << 5;
     QTest::newRow("suppress-repeated-association") << false << false << false << 6;
+    QTest::newRow("publish-without-lightweight-seeding") << false << false << false << 7;
   }
   void actualSignedPrivateSeed() {
     QFETCH(bool,withdraw);
     QFETCH(bool,transfer);
     QFETCH(bool,idle);
     QFETCH(int,publication);
+    const bool publicationOnly=publication==7;
     if (idle && !qEnvironmentVariableIsSet("BIGLYBTC_I2P_IDLE_SOAK")) {
       QSKIP("The real-clock idle test needs BIGLYBTC_I2P_IDLE_SOAK=1 and QTEST_FUNCTION_TIMEOUT=480000");
     }
@@ -871,7 +875,8 @@ private slots:
     original::write(profile.path/"subscriptions.config",registry->serialize());
     const std::string inventory="d9:downloadslee";
     original::write(profile.path/"downloads.config",inventory);
-    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile,publication!=0));
+    auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,
+        seedResolver(profile,publication!=0,!publicationOnly));
     QVERIFY2(owner,owner?"":owner.error().message.c_str());
     Router publisher,router;
     if (publication) { router.publication=&publisher; }
@@ -884,23 +889,26 @@ private slots:
     QVERIFY(mixedContact);
     registerSeedOwner(router,**owner,*contact,publication>=3?&*mixedContact:nullptr);
     QVERIFY(router.registeredDestination&&router.registeredDestination->hash!=mixedContact->hash);
-    QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
-    const auto query=signedSeedQuery(router.take(),*contact);
-    QVERIFY(query);
-    QCOMPARE(std::string(reinterpret_cast<const char*>(query->target.data()),query->target.size()),key);
     QVERIFY(!(*owner)->subscriptionSeedLoaded(*hash));
-    if (withdraw) { QVERIFY(original::fs::remove(profile.path/"subscriptions.config")); }
+    std::optional<d::Message> query;
     d::Message response;
     response.kind=d::Kind::Reply;
     response.id=contact->id;
-    response.transaction=query->transaction;
     response.token={0,0xff,0x51};
     response.hasNodes=withdraw;
     if (!withdraw) {
       response.hasPeers=true;
       response.peers={{remote.destination()->hash,!transfer}};
     }
-    replyToSeed(router,21,response);
+    if (!publicationOnly) {
+      QTRY_VERIFY_WITH_TIMEOUT(router.next(),10000);
+      query=signedSeedQuery(router.take(),*contact);
+      QVERIFY(query);
+      QCOMPARE(std::string(reinterpret_cast<const char*>(query->target.data()),query->target.size()),key);
+      if (withdraw) { QVERIFY(original::fs::remove(profile.path/"subscriptions.config")); }
+      response.transaction=query->transaction;
+      replyToSeed(router,21,response);
+    }
     if (idle) {
       QElapsedTimer clock;
       for (int index=0; index<2; ++index) {
@@ -951,19 +959,23 @@ private slots:
       QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
       QVERIFY((*owner)->subscriptionSeedLoaded(*hash));
     } else {
-      QTRY_VERIFY(router.next());
-      const auto packet=cp::decodeDhtSendDatagram(router.take());
-      QVERIFY(packet);
-      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
-      QVERIFY(mux && mux->protocol==18);
-      const auto announced=d::decode(mux->datagram);
-      QVERIFY(announced && announced->method==d::Method::AnnouncePeer && announced->seed && announced->target==query->target);
+      d::Message ack;
+      ack.kind=d::Kind::Reply;
+      ack.id=contact->id;
+      if (!publicationOnly) {
+        QTRY_VERIFY(router.next());
+        const auto packet=cp::decodeDhtSendDatagram(router.take());
+        QVERIFY(packet);
+        const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+        QVERIFY(mux && mux->protocol==18);
+        const auto announced=d::decode(mux->datagram);
+        QVERIFY(announced && announced->method==d::Method::AnnouncePeer && announced->seed && announced->target==query->target);
+        if (publication) {
+          ack.transaction=announced->transaction;
+          replyToSeed(router,22,ack);
+        }
+      }
       if (publication) {
-        d::Message ack;
-        ack.kind=d::Kind::Reply;
-        ack.id=contact->id;
-        ack.transaction=announced->transaction;
-        replyToSeed(router,22,ack);
         QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
         QCOMPARE(publisher.take().type,cp::GetDateType);
         const auto now=static_cast<std::uint64_t>(QDateTime::currentMSecsSinceEpoch());

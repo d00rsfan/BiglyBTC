@@ -242,7 +242,8 @@ private slots:
   QVERIFY(targets[0].subscriptionSeed&&targets[0].seeding&&targets[0].tcpPort==client.port);
   QCOMPARE(targets[0].hash,*core::TorrentHash::parse(identity));
   const auto announce=[&]{
-   client.chats->updateSubscriptionSeeds(std::span{&hash,1},1000);
+   const auto hashes=std::span{&hash,1};
+   client.chats->updateSubscriptionCatalog(hashes,hashes,1000);
    client.pump();
    return peer.has(key,client.port);
   };
@@ -265,7 +266,7 @@ private slots:
    QVERIFY(std::ranges::none_of(values->values,[&](const auto& value){return value.originator.address.port==client.port;}));
   }
   client.engine->refreshPublicSubscriptionSeeds({},{});
-  client.chats->updateSubscriptionSeeds({});
+  client.chats->updateSubscriptionCatalog({},{});
   QTRY_VERIFY_WITH_TIMEOUT((client.pump(),!peer.has(key,client.port)),15000);
   QVERIFY(!targets[0].live->load());
   client.close();

@@ -1433,27 +1433,28 @@ bool GeneralChats::updateTorrents(std::vector<engine::AzureusTorrentTarget> valu
  std::lock_guard lock(shared.mutex);if(shared.stop){return false;}if(values==shared.lastTorrentTargets){return true;}shared.lastTorrentTargets=values;shared.torrentTargets=std::move(values);
  if(!shared.torrentTargetsPending){shared.torrentTargetsPending=true;if(shared.receiver){QCoreApplication::postEvent(shared.receiver,new QEvent(commandEvent()));}}return true;
 }
-void GeneralChats::updateSubscriptionSeeds(std::span<const engine::SubscriptionSeedHash> hashes,
-    std::int64_t creationSeconds) {
+void GeneralChats::updateSubscriptionCatalog(std::span<const engine::SubscriptionSeedHash> publications,
+    std::span<const engine::SubscriptionSeedHash> serving,std::int64_t creationSeconds) {
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
  if(!impl_||impl_->shared->stop) { return; }
  auto& published=impl_->shared->subscriptionSeeds;
- if(hashes.empty()||creationSeconds<0) { published.store({}); return; }
+ if((publications.empty()&&serving.empty())||creationSeconds<0) { published.store({}); return; }
  auto catalog=std::make_shared<SubscriptionSeedCatalog>();
  catalog->expires=Clock::now()+std::chrono::seconds(10);
  catalog->creationSeconds=creationSeconds;
- catalog->publicationHashes.assign(hashes.begin(),hashes.end());
+ catalog->publicationHashes.assign(publications.begin(),publications.end());
  std::ranges::sort(catalog->publicationHashes);
  catalog->publicationHashes.erase(std::unique(catalog->publicationHashes.begin(),catalog->publicationHashes.end()),
      catalog->publicationHashes.end());
 
- for(const auto& hash:hashes) {
+ for(const auto& hash:serving) {
   const auto key=QCryptographicHash::hash(QByteArrayView(hash.data(),hash.size()),QCryptographicHash::Sha1);
   catalog->lookupKeys.emplace(key.constData(),key.size());
  }
  published.store(std::move(catalog));
 #else
- static_cast<void>(hashes);
+ static_cast<void>(publications);
+ static_cast<void>(serving);
  static_cast<void>(creationSeconds);
 #endif
 }
