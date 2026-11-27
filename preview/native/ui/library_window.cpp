@@ -413,6 +413,14 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       emit backupSavedProfileRequested(session, std::move(directory));
     }
   });
+  auto* automaticBackup = tools->addAction(tr("Run Automatic Backup Now"));
+  automaticBackup->setObjectName(QStringLiteral("classic-run-automatic-profile-backup"));
+  connect(tools, &QMenu::aboutToShow, automaticBackup, [this, automaticBackup] {
+    automaticBackup->setEnabled(canImport());
+  });
+  connect(automaticBackup, &QAction::triggered, this, [this] {
+    if (canImport()) { emit automaticProfileBackupRequested(columnSession_); }
+  });
   auto* restoreBackup = tools->addAction(tr("Restore Backup to New Profile…"));
   restoreBackup->setObjectName(QStringLiteral("classic-restore-profile-backup"));
   connect(tools, &QMenu::aboutToShow, restoreBackup, [this, restoreBackup] { restoreBackup->setEnabled(canImport()); });

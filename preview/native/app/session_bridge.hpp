@@ -150,6 +150,7 @@ public:
   bool restoreArchivedDownloads(quint64 session, QStringList hashes, bool start);
   bool removeArchivedDownloads(quint64 session, QStringList hashes);
   bool backupSavedProfile(quint64 session, QString destination);
+  bool runAutomaticProfileBackup(quint64 session);
   bool restoreProfileBackup(quint64 session, QString backup, QString destination);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
@@ -291,7 +292,7 @@ private:
   void publishDonationReminder() noexcept;
   void reportIdlePollFailure(quint64 session,QString detail);
   void publishDownloadHistoryCompletionNotice(QString);
-  void stepAutomaticProfileBackup(std::stop_token);
+  void stepAutomaticProfileBackup(std::stop_token, bool force = false);
   NetworkIdentityController* networkIdentityController_=nullptr;
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;

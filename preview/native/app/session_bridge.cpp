@@ -3873,24 +3873,42 @@ bool SessionBridge::restoreProfileBackup(quint64 session, QString backup, QStrin
   }, false);
 }
 
-void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop) {
+bool SessionBridge::runAutomaticProfileBackup(quint64 session) {
+  if (!session || session != publishedColumnLayoutSession_ || busy_ || closingSession_) { return false; }
+  return dispatch([this, session](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session || !host_->normalNetwork
+        || host_->fileRecoveryRequired || guardedLibraryRecovery(host_->lease)) {
+      throw Failure{{storage::ErrorCode::Conflict, "The saved profile is unavailable for automatic backup"}};
+    }
+    stepAutomaticProfileBackup(stop, true);
+  }, false);
+}
+
+void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force) {
   auto& owner = *host_;
-  if (!owner.normalNetwork || owner.fileRecoveryRequired || stop.stop_requested()) { return; }
+  if (stop.stop_requested()) {
+    if (force) { checkpoint(stop); }
+    return;
+  }
+  if (!owner.normalNetwork || owner.fileRecoveryRequired) { return; }
   const auto now = std::chrono::steady_clock::now();
-  if (now < owner.nextAutomaticBackup) { return; }
+  if (!force && now < owner.nextAutomaticBackup) { return; }
   owner.nextAutomaticBackup = now + std::chrono::minutes(1);
 
   const auto local = QDateTime::currentDateTime();
   core::ProfileBackupClock clock{.nowUtcMillis = local.toMSecsSinceEpoch(),
       .localOffsetMillis = static_cast<std::int32_t>(local.offsetFromUtc() * 1000),
-      .firstCheck = owner.firstAutomaticBackupCheck};
+      .firstCheck = owner.firstAutomaticBackupCheck, .force = force};
   const auto date = local.date().toString(Qt::ISODate).toStdString();
   const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop);
   QString message;
   if (!turn) {
-    if (turn.error().code == storage::ErrorCode::Cancelled) { return; }
+    if (turn.error().code == storage::ErrorCode::Cancelled) {
+      if (force) { throw Failure{turn.error()}; }
+      return;
+    }
     const auto failure = text(turn.error().message);
-    if (owner.automaticBackupFailure != failure) {
+    if (force || owner.automaticBackupFailure != failure) {
       owner.automaticBackupFailure = failure;
       message = tr("Automatic profile backup failed. %1").arg(failure);
     }
@@ -3903,9 +3921,15 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop) {
     if (turn->retentionError) {
       message = tr("Automatic profile backup saved. Removing old copies failed. %1")
           .arg(text(turn->retentionError->message));
-    } else if (turn->completed && turn->notify) {
+    } else if (turn->completed && (turn->notify || force)) {
       message = tr("Automatic profile backup created in %1").arg(text(platform::pathToUtf8(turn->completed->directory)));
+    } else if (force && turn->schedule.action == core::ProfileBackupAction::Disabled) {
+      message = tr("Enable automatic backups in Options to run the saved schedule.");
     }
+  }
+  if (force) {
+    ready(owner.lastSnapshot, std::move(message));
+    return;
   }
   if (message.isEmpty()) { return; }
   const auto session = owner.columnLayoutSession;
