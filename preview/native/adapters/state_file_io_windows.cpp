@@ -123,6 +123,27 @@ std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, cons
   return directoryAt(parent, leaf.native(), win::CreateExclusive);
 }
 
+std::expected<std::uint64_t, Error> stateMountId(StateHandle directory) {
+  const auto info = stateStamp(directory);
+  if (!info) { return std::unexpected(info.error()); }
+  if (!info->directory) { return error(ErrorCode::UnsafePath, "Expected an ordinary saved directory"); }
+  return info->device;
+}
+
+std::expected<void, Error> moveStateDirectoryNoReplace(StateHandle parent, const std::filesystem::path& source,
+    const std::filesystem::path& destination, const StateStamp& expected) {
+  const auto directory = open(parent, source.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,
+      InspectSharing, win::OpenExisting, win::DirectoryFile);
+  if (!directory) { return std::unexpected(directory.error()); }
+  const auto before = stateStamp(directory->get());
+  if (!before || !before->owned || !sameStateSnapshot(*before, expected) || !sameStateDirectory(*before, expected)) {
+    return error(ErrorCode::Conflict, "Saved directory changed before retirement");
+  }
+  const auto moved = win::renameRelativeFile(directory->get(), parent, destination.native(), false);
+  if (!moved) { return error(openError(moved.error()), "Cannot move the saved directory"); }
+  return {};
+}
+
 std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& name,
     const StateStamp& expected) {
   auto directory = open(parent, name.native(), FILE_READ_ATTRIBUTES | READ_CONTROL | DELETE,

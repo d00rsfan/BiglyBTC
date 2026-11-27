@@ -29,7 +29,7 @@ enum class SettingId {
   DefaultSavePath, RenameIncomplete, IncompleteSuffix,
   LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, CheckBindOnStart, LanUploadLimit, LanDownloadLimit, MergeEnabled, MergeExtended, MergeTolerance, MergeMinimum,
   AutomaticBackupEnabled, AutomaticBackupDirectory, BackupPlugins, AutomaticBackupDays,
-  AutomaticBackupHours, AutomaticBackupStartupDelay, AutomaticBackupNotify, Count
+  AutomaticBackupHours, AutomaticBackupStartupDelay, AutomaticBackupNotify, AutomaticBackupRetain, Count
 };
 using SettingValue = std::variant<bool, std::int64_t, std::string>;
 using SettingDefault = std::variant<bool, std::int64_t, std::string_view>;
@@ -183,7 +183,9 @@ inline constexpr std::array Catalog{
   integer(AutomaticBackupHours,Backup,"br.backup.auto.everyhours","Hours between backups",0,0,std::numeric_limits<int>::max(),A::Live,
       "Used when the day interval is zero. A value of zero gives a one-hour interval."),
   integer(AutomaticBackupStartupDelay,Backup,"br.backup.auto.init.delay.mins","Startup delay (minutes)",5,1,std::numeric_limits<int>::max(),A::Live),
-  boolean(AutomaticBackupNotify,Backup,"br.backup.notify","Notify when an automatic backup completes",false,A::Live)
+  boolean(AutomaticBackupNotify,Backup,"br.backup.notify","Notify when an automatic backup completes",false,A::Live),
+  integer(AutomaticBackupRetain,Backup,"br.backup.auto.retain","Backups to keep",5,1,std::numeric_limits<int>::max(),A::Live,
+      "Applies to completed copies of this profile after an automatic backup.")
 };
 static_assert(Catalog.size() == static_cast<std::size_t>(SettingId::Count));
 } // namespace settings_detail

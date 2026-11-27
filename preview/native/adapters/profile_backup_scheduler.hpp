@@ -10,6 +10,7 @@ struct AutomaticProfileBackup {
   core::ProfileBackupScheduleResult schedule;
   std::optional<ProfileBackup> completed;
   bool notify = false;
+  std::optional<Error> retentionError;
 };
 
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease&,

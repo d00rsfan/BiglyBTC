@@ -79,6 +79,8 @@ struct FilesystemPathLess {
 };
 std::expected<StateDescriptor, Error> openDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
 std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, const std::filesystem::path& leaf);
+std::expected<void, Error> moveStateDirectoryNoReplace(StateHandle parent, const std::filesystem::path& source,
+    const std::filesystem::path& destination, const StateStamp& expected);
 std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& leaf,
     const StateStamp& expected);
 std::expected<StateDescriptor, Error> openStateFile(StateHandle parent, const std::filesystem::path& leaf);
@@ -95,6 +97,7 @@ std::expected<StateDescriptor, Error> openStateAppendFile(StateHandle parent,
 std::ptrdiff_t appendStateFile(StateHandle, std::string_view bytes);
 bool closeStateFile(StateHandle) noexcept;
 std::expected<StateStamp, Error> stateStamp(StateHandle);
+std::expected<std::uint64_t, Error> stateMountId(StateHandle directory);
 std::expected<std::optional<StateStamp>, Error> stateStampAt(StateHandle parent, const std::filesystem::path& leaf);
 std::ptrdiff_t readStateSequential(StateHandle, char* data, std::size_t bytes);
 std::ptrdiff_t readStateAt(StateHandle, char* data, std::size_t bytes, std::uint64_t offset);

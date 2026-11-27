@@ -5,6 +5,9 @@
 
 #include <cerrno>
 #include <fcntl.h>
+#ifdef __APPLE__
+#include <sys/mount.h>
+#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -59,6 +62,39 @@ std::expected<StateDescriptor, Error> createDirectoryAt(StateHandle parent, cons
     return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot exclusively create directory");
   }
   return openDirectoryAt(parent, name);
+}
+
+std::expected<std::uint64_t, Error> stateMountId(StateHandle directory) {
+#if defined(__linux__) && defined(STATX_MNT_ID)
+  struct statx info{};
+  if (::statx(directory, "", AT_EMPTY_PATH, STATX_MNT_ID, &info) != 0 || !(info.stx_mask & STATX_MNT_ID)) {
+    return error(ErrorCode::Unsupported, "Cannot verify the saved directory mount");
+  }
+  return info.stx_mnt_id;
+#elif defined(__APPLE__)
+  struct statfs info{};
+  if (::fstatfs(directory, &info) != 0) {
+    return error(ErrorCode::Io, "Cannot verify the saved directory mount");
+  }
+  return (std::uint64_t{static_cast<std::uint32_t>(info.f_fsid.val[0])} << 32)
+      | static_cast<std::uint32_t>(info.f_fsid.val[1]);
+#else
+  static_cast<void>(directory);
+  return error(ErrorCode::Unsupported, "Saved directory mount identity is unavailable");
+#endif
+}
+
+std::expected<void, Error> moveStateDirectoryNoReplace(StateHandle parent, const std::filesystem::path& source,
+    const std::filesystem::path& destination, const StateStamp& expected) {
+  const auto before = stateStampAt(parent, source);
+  if (!before || !*before || !(*before)->owned || !sameStateSnapshot(**before, expected)
+      || !sameStateDirectory(**before, expected) || !ordinaryLeaf(destination)) {
+    return error(ErrorCode::Conflict, "Saved directory changed before retirement");
+  }
+  if (platform::renameNoReplaceAt(parent, source.c_str(), destination.c_str()) != 0) {
+    return error(errno == EEXIST ? ErrorCode::Conflict : ErrorCode::Io, "Cannot move the saved directory");
+  }
+  return {};
 }
 
 std::expected<void, Error> retireEmptyDirectoryAt(StateHandle parent, const std::filesystem::path& name,

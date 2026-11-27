@@ -224,6 +224,68 @@ void verifyRestore() {
       "Reuse the target after a failed restoration");
 }
 
+void verifyRetention() {
+  Fixture files;
+  using storage::backupSavedProfile;
+  const auto make = [&](std::string_view date) {
+    return take(backupSavedProfile(*files.lease, files.destination, date)).directory;
+  };
+  auto config = core::Document::parse("de").value();
+  check(config.replaceValue("br.backup.auto.enable", "i1e").has_value()
+      && config.replaceValue("br.backup.auto.dir", encode(platform::pathToUtf8(files.destination))).has_value()
+      && config.replaceValue("br.backup.auto.retain", "i2e").has_value(), "Set original automatic retention");
+  write(files.profile / "biglybt.config", config.serialize());
+  write(files.profile / "state" / "nested" / "data.bin", "original backup data");
+  const auto old = make("2026-11-21");
+  const auto kept = make("2026-11-24");
+  const auto newerSameDay = make("2026-11-24");
+  const auto held = make("2026-11-22");
+  write(held / ".azlock", "");
+  const auto partial = files.destination / "2026-11-18";
+  write(partial / "some-state", "unpublished subset");
+  const auto foreign = files.destination / "2026-11-19";
+  const auto foreignName = platform::pathToUtf8(files.root / "different-profile");
+  write(foreign / "biglybt.config", "d22:azureus.user.directory" + encode(foreignName) + "e");
+  const auto retired = files.destination / ".BiglyBTC.retired-backup-2026-11-20";
+  const auto interrupted = make("2026-11-20");
+  fs::rename(interrupted, retired);
+  fs::rename(retired / "biglybt.config", retired / "BiglyBTC.retired-backup.config");
+
+  constexpr std::int64_t Clock = 20000LL * 24 * 60 * 60 * 1000;
+  const auto turn = take(storage::pollAutomaticProfileBackup(*files.lease,
+      core::ProfileBackupClock{.nowUtcMillis = Clock, .force = true}, "2026-11-27"));
+  check(turn.completed && !turn.retentionError && fs::exists(turn.completed->directory),
+      "Write a new backup before considering retention");
+  check(!fs::exists(old) && !fs::exists(kept) && fs::exists(newerSameDay) && !fs::exists(retired),
+      "Keep the newest date and suffix and finish the interrupted retirement");
+  check(fs::exists(held) && fs::exists(partial) && fs::exists(foreign),
+      "Keep active, incomplete and other profiles out of retention");
+  check(read(files.profile / "state" / "nested" / "data.bin") == "original backup data",
+      "Keep the active profile untouched during retention");
+}
+
+void verifyRetentionRefusesSharedFile() {
+  Fixture files;
+  auto config = core::Document::parse("de").value();
+  check(config.replaceValue("br.backup.auto.enable", "i1e").has_value()
+      && config.replaceValue("br.backup.auto.dir", encode(platform::pathToUtf8(files.destination))).has_value()
+      && config.replaceValue("br.backup.auto.retain", "i1e").has_value(), "Limit owned backups to one");
+  write(files.profile / "biglybt.config", config.serialize());
+  write(files.profile / "data.bin", "current saved payload");
+  const auto older = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-26")).directory;
+  const auto external = files.root / "outside-backup.bin";
+  write(external, "unrelated payload");
+  fs::create_hard_link(external, older / "shared.bin");
+
+  constexpr std::int64_t Clock = 20000LL * 24 * 60 * 60 * 1000;
+  const auto turn = take(storage::pollAutomaticProfileBackup(*files.lease,
+      core::ProfileBackupClock{.nowUtcMillis = Clock, .force = true}, "2026-11-27"));
+  check(turn.completed && turn.retentionError && turn.retentionError->code == storage::ErrorCode::UnsafePath,
+      "A refused retirement must preserve the successful backup result");
+  check(read(older / "data.bin") == "current saved payload" && read(older / "shared.bin") == "unrelated payload"
+      && read(external) == "unrelated payload", "Preflight preserves the entire older copy and the shared file");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -283,7 +345,9 @@ int main() try {
   verifyRefusalsAndCleanup();
   verifyRestore();
   verifyAutomaticBackup();
-  std::cout << "Profile backup, plugin archive selection, relocation, scheduling and failure recovery passed\n";
+  verifyRetention();
+  verifyRetentionRefusesSharedFile();
+  std::cout << "Profile backup, plugin archive selection, relocation, scheduling, retention and failure recovery passed\n";
   return 0;
 } catch (const std::exception& error) {
   std::cerr << error.what() << '\n';

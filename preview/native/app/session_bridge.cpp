@@ -3900,7 +3900,10 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop) {
     if (turn->schedule.action == core::ProfileBackupAction::Wait) {
       owner.nextAutomaticBackup = now + std::chrono::milliseconds(std::min<std::int64_t>(turn->schedule.delayMillis, 60 * 60 * 1000));
     }
-    if (turn->completed && turn->notify) {
+    if (turn->retentionError) {
+      message = tr("Automatic profile backup saved. Removing old copies failed. %1")
+          .arg(text(turn->retentionError->message));
+    } else if (turn->completed && turn->notify) {
       message = tr("Automatic profile backup created in %1").arg(text(platform::pathToUtf8(turn->completed->directory)));
     }
   }

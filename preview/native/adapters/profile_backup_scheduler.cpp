@@ -84,7 +84,7 @@ std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const Pr
     }
   }
   const auto plan = core::profileBackupSchedule(preferences, clock);
-  AutomaticProfileBackup result{plan, {}, integer(document, "br.backup.notify") != 0};
+  AutomaticProfileBackup result{plan, {}, integer(document, "br.backup.notify") != 0, {}};
   if (plan.action != core::ProfileBackupAction::Run) { return result; }
   if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Automatic profile backup cancelled"}); }
   recordAttempt(lease, std::move(previous), plan, clock.nowUtcMillis);
@@ -93,6 +93,9 @@ std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const Pr
     return std::unexpected(Error{ErrorCode::InvalidFormat, "Set an existing folder for automatic profile backups"});
   }
   result.completed = take(backupSavedProfile(lease, platform::pathFromUtf8(path->bytes), localDate, stop));
+  const auto retain = std::max(1, interval(document, "br.backup.auto.retain", 5));
+  const auto rotated = rotateSavedProfileBackups(lease, *result.completed, static_cast<std::uint32_t>(retain), stop);
+  if (!rotated && rotated.error().code != ErrorCode::Cancelled) { result.retentionError = rotated.error(); }
   return result;
 } catch (const Error& error) {
   return std::unexpected(error);

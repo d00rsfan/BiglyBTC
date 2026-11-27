@@ -168,6 +168,132 @@ PluginArchiveNames supersededPluginArchives(StateHandle source, std::span<const 
   return superseded;
 }
 
+using BackupSlot = std::pair<std::string, unsigned>;
+constexpr std::string_view RetiredBackupPrefix = ".BiglyBTC.retired-backup-";
+constexpr char RetiredConfiguration[] = "BiglyBTC.retired-backup.config";
+
+std::optional<BackupSlot> backupSlot(std::string_view name) {
+  constexpr std::size_t dateSize = 10;
+  if (name.size() < dateSize || !validDate(name.substr(0, dateSize))) { return {}; }
+  const auto date = std::string(name.substr(0, dateSize));
+  if (name.size() == dateSize) { return BackupSlot{date, 0}; }
+  if (name[dateSize] != '.') { return {}; }
+  const auto suffix = unsignedValue(name.substr(dateSize + 1));
+  if (!suffix || *suffix == 0 || *suffix > MaximumSuffix) { return {}; }
+  if (name.substr(dateSize + 1) != std::to_string(*suffix)) { return {}; }
+  return BackupSlot{date, *suffix};
+}
+
+struct BackupCandidate {
+  fs::path name;
+  BackupSlot slot;
+  StateStamp directory;
+  StateStamp configuration;
+  bool retired = false;
+  bool unpublished = false;
+};
+
+std::optional<BackupCandidate> inspectBackup(StateHandle parent, const fs::path& name,
+    const fs::path& profile, std::stop_token stop) {
+  checkCancellation(stop);
+  const auto text = platform::pathToUtf8(name);
+  const bool retired = text.starts_with(RetiredBackupPrefix);
+  const auto slot = backupSlot(std::string_view(text).substr(retired ? RetiredBackupPrefix.size() : 0));
+  if (!slot) { return {}; }
+
+  const auto revision = take(stateStampAt(parent, name));
+  if (!revision || !revision->directory || !revision->owned) { return {}; }
+  const auto folder = openDirectoryAt(parent, name);
+  if (!folder || !sameStateSnapshot(take(stateStamp(folder->get())), *revision)) { return {}; }
+  if (take(stateStampAt(folder->get(), ".azlock")) || take(stateStampAt(folder->get(), ConfigurationStage))) {
+    return {};
+  }
+  const auto unpublished = take(stateStampAt(folder->get(), RetiredConfiguration));
+  if (unpublished && (!retired || take(stateStampAt(folder->get(), Configuration)))) { return {}; }
+
+  const auto entry = captureProfileFile(folder->get(), unpublished ? RetiredConfiguration : Configuration,
+      compatibleConfigLimits().inputBytes);
+  if (!entry || !entry->bytes || !entry->stamp) { return {}; }
+  const auto document = core::Document::parse(*entry->bytes, compatibleConfigLimits());
+  const auto* origin = document ? document->find("azureus.user.directory") : nullptr;
+  if (!origin || origin->type != core::Node::Type::Bytes || !absoluteSavedPath(origin->bytes)) { return {}; }
+  const auto original = platform::pathFromUtf8(origin->bytes).lexically_normal();
+  if (!original.is_absolute() || !sameFilesystemComponent(profile, original)) { return {}; }
+  return BackupCandidate{name, *slot, *revision, *entry->stamp, retired, unpublished.has_value()};
+}
+
+void visitBackupFiles(StateHandle folder, std::uint64_t device, std::uint64_t mount, const fs::path& preserve,
+    std::size_t& visited, unsigned depth, bool remove, std::stop_token stop) {
+  require(depth <= MaximumDepth, ErrorCode::Unsupported, "Profile backup tree exceeds the retention depth limit");
+  for (const auto& leaf : take(listStateDirectoryNames(folder, MaximumEntries, stop))) {
+    checkCancellation(stop);
+    if (leaf == "." || leaf == ".." || leaf == preserve) { continue; }
+    require(depth != 0 || (leaf != ".azlock" && leaf != ConfigurationStage), ErrorCode::Conflict,
+        "The profile backup became active during retirement");
+    require(++visited <= MaximumEntries, ErrorCode::Unsupported, "Profile backup contains too many files for retention");
+    const auto stamp = take(stateStampAt(folder, leaf));
+    require(stamp && stamp->owned && stamp->device == device && (stamp->directory || (stamp->regular && stamp->links == 1)),
+        ErrorCode::UnsafePath, "A saved backup contains an unsafe entry");
+    if (stamp->directory) {
+      {
+        const auto child = take(openDirectoryAt(folder, leaf));
+        require(sameStateSnapshot(take(stateStamp(child.get())), *stamp),
+            ErrorCode::Conflict, "A saved backup folder changed before retirement");
+        require(take(stateMountId(child.get())) == mount, ErrorCode::UnsafePath, "A saved backup crosses a mount point");
+        visitBackupFiles(child.get(), device, mount, {}, visited, depth + 1, remove, stop);
+      }
+      if (remove) { take(retireEmptyDirectoryAt(folder, leaf, *stamp)); }
+    } else if (remove) { take(retireStateFile(folder, leaf, *stamp)); }
+  }
+  if (remove) { take(syncStateDirectory(folder)); }
+}
+
+void retireSavedBackup(StateHandle parent, BackupCandidate backup, std::stop_token stop) {
+  checkCancellation(stop);
+  const auto mount = take(stateMountId(parent));
+  auto configuration = fs::path(backup.unpublished ? RetiredConfiguration : Configuration);
+  const auto validate = [&](StateHandle folder, bool renamed) {
+    require(take(stateMountId(folder)) == mount, ErrorCode::UnsafePath, "A saved backup is a mount point");
+    const auto stamp = take(stateStamp(folder));
+    require(renamed ? sameStateDirectory(stamp, backup.directory) : sameStateSnapshot(stamp, backup.directory),
+        ErrorCode::Conflict, "Profile backup directory changed before retirement");
+    const auto configured = take(stateStampAt(folder, configuration));
+    require(configured && sameStateSnapshot(*configured, backup.configuration)
+        && !take(stateStampAt(folder, ".azlock")) && !take(stateStampAt(folder, ConfigurationStage)),
+        ErrorCode::Conflict, "The profile backup is in use or has changed");
+  };
+  {
+    const auto folder = take(openDirectoryAt(parent, backup.name));
+    validate(folder.get(), backup.retired);
+    std::size_t visited = 0;
+    visitBackupFiles(folder.get(), backup.directory.device, mount, configuration, visited, 0, false, stop);
+  }
+  if (!backup.retired) {
+    const auto quarantine = fs::path(std::string(RetiredBackupPrefix) + platform::pathToUtf8(backup.name));
+    take(moveStateDirectoryNoReplace(parent, backup.name, quarantine, backup.directory));
+    take(syncStateDirectory(parent));
+    backup.name = quarantine;
+  }
+  {
+    const auto folder = take(openDirectoryAt(parent, backup.name));
+    validate(folder.get(), true);
+    if (!backup.unpublished) {
+      take(moveStateFileNoReplace(folder.get(), configuration, folder.get(), RetiredConfiguration, backup.configuration));
+      take(syncStateDirectory(folder.get()));
+      configuration = RetiredConfiguration;
+    }
+    std::size_t retired = 0;
+    visitBackupFiles(folder.get(), backup.directory.device, mount, configuration, retired, 0, true, stop);
+    const auto marker = take(stateStampAt(folder.get(), configuration));
+    require(marker && marker->owned && marker->regular && marker->links == 1
+        && sameStateIdentity(*marker, backup.configuration), ErrorCode::Conflict, "Backup retirement marker changed");
+    take(retireStateFile(folder.get(), configuration, *marker));
+    take(syncStateDirectory(folder.get()));
+  }
+  take(retireEmptyDirectoryAt(parent, backup.name, backup.directory));
+  take(syncStateDirectory(parent));
+}
+
 struct DirectoryRelocation { std::string previous, destination; };
 
 class BackupWriter {
@@ -429,6 +555,48 @@ std::expected<fs::path, Error> restoreProfileBackup(const ProfileLease& current,
   return std::unexpected(Error{ErrorCode::UnsafePath, "Cannot resolve the backup or restore destination"});
 } catch (const std::exception&) {
   return std::unexpected(Error{ErrorCode::Io, "Profile restoration did not finish"});
+}
+
+std::expected<std::size_t, Error> rotateSavedProfileBackups(const ProfileLease& lease,
+    const ProfileBackup& completed, std::uint32_t retain, std::stop_token stop) try {
+  checkCancellation(stop);
+  auto access = take(lease.sourceAccess());
+  const auto profile = take(stateDirectoryPath(lease.directoryHandle()));
+  const auto parent = take(openStatePathDirectory(completed.directory.parent_path()));
+  const auto parentPath = take(stateDirectoryPath(parent.get()));
+  require(!containsPath(profile, parentPath), ErrorCode::UnsafePath, "Backup retention requires a folder outside the profile");
+  const auto completedName = completed.directory.filename();
+  const auto justWritten = inspectBackup(parent.get(), completedName, profile, stop);
+  require(justWritten && !justWritten->retired, ErrorCode::Conflict, "The new profile backup is unavailable for retention");
+  const auto parentStamp = take(stateStamp(parent.get()));
+  require(parentStamp.device == justWritten->directory.device, ErrorCode::UnsafePath, "The profile backup is on a separate volume");
+
+  std::vector<BackupCandidate> backups;
+  std::vector<BackupCandidate> interrupted;
+  for (const auto& name : take(listStateDirectoryNames(parent.get(), MaximumEntries, stop))) {
+    if (sameFilesystemComponent(name, completedName)) { continue; }
+    auto backup = inspectBackup(parent.get(), name, profile, stop);
+    if (!backup || backup->directory.device != parentStamp.device) { continue; }
+    auto& candidates = backup->retired ? interrupted : backups;
+    candidates.push_back(std::move(*backup));
+  }
+  std::ranges::sort(backups, std::greater<>{}, &BackupCandidate::slot);
+  auto othersToKeep = std::max(std::uint32_t{1}, retain) - 1;
+  std::size_t removed = 0;
+  for (auto& backup : interrupted) {
+    retireSavedBackup(parent.get(), std::move(backup), stop);
+    ++removed;
+  }
+  for (auto& backup : backups) {
+    if (othersToKeep) { --othersToKeep; continue; }
+    retireSavedBackup(parent.get(), std::move(backup), stop);
+    ++removed;
+  }
+  return removed;
+} catch (const Error& error) {
+  return std::unexpected(error);
+} catch (const std::exception&) {
+  return std::unexpected(Error{ErrorCode::Io, "Profile backup retention did not finish"});
 }
 
 } // namespace biglybtc::storage
