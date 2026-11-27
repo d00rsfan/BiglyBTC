@@ -46,6 +46,18 @@ void checkFixture(const core::Node& fixture,Network route) {
   require(std::ranges::equal(seed->publicationHash,field(fixture,"hash")),"Signed publication hash");
   require(std::ranges::equal(seed->lookupKey,field(fixture,"lookup")),"Original lookup key");
   require(encodedInfo(seed->metainfo)==encodedInfo(std::string(original)),"Exact Java info fields and payload pieces");
+  const auto split=seed->fileName.find('.');
+  const std::string expectedKey="subscription:publish:"+seed->fileName.substr(0,split)+":4";
+  require(seed->presence.has_value(),"The Java fixture permits public publication");
+  const auto publication=search::encodeSubscriptionPresence(*seed->presence,-315);
+  require(seed->presence->applicationKey==expectedKey&&publication&&publication->front()=='\0',
+      "Encoded signed presence under the original application key");
+  const auto data=core::Document::parse(publication->substr(1));
+  require(data&&data->find("!")&&data->find("!")->integer==-315
+      &&data->find("v")&&data->find("v")->integer==4
+      &&data->find("z")&&data->find("z")->integer==row.find("sig_data_size")->integer
+      &&field(data->root(),"h")==field(fixture,"hash")&&field(data->root(),"s")==field(row,"sig"),
+      "Keep exactly the hash, version, size, and signature supplied by Java");
 
   seed->metainfo=original;
   const auto encrypted=search::subscriptionSeedDdbResponse(*seed);
@@ -59,6 +71,10 @@ void checkFixture(const core::Node& fixture,Network route) {
 
   const auto rawRow=core::encodeValue(row);
   require(rawRow.has_value(),"Original source row");
+  auto privateSource=core::Document::parse(*rawRow);
+  require(privateSource&&privateSource->replaceValue("is_public","i0e"),"Mark the profile subscription private");
+  const auto privateSeed=search::makeSubscriptionSeed(privateSource->root(),std::string(field(fixture,"payload")),1000);
+  require(privateSeed&&!privateSeed->presence,"A locally private subscription cannot supply a presence record");
   auto unsubscribed=core::Document::parse(*rawRow);
   require(unsubscribed&&unsubscribed->replaceValue("subscribed","i0e"),"Test unsubscribe");
   const auto declined=search::makeSubscriptionSeed(unsubscribed->root(),std::string(field(fixture,"payload")),1000);

@@ -111,6 +111,7 @@ struct PeekCommand {core::TorrentHash hash;bool cancel=false,open=false,automati
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
 struct SubscriptionSeedCatalog {
  std::set<std::string,std::less<>> lookupKeys;
+ std::vector<engine::SubscriptionSeedHash> publicationHashes;
  Clock::time_point expires;
  std::int64_t creationSeconds;
 };
@@ -486,6 +487,21 @@ class Owner final:public QObject {
  bool rcmSearchGate(std::size_t,Clock::time_point,biglybtc::core::MoveOnlyFunction<void()>,biglybtc::core::MoveOnlyFunction<void()> = {},Broker::Operation = {});
  void rcmRegisterSearch(std::size_t);void rcmReceiveSearch(std::size_t,std::shared_ptr<const udp::TransferRequest>);
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ struct LocalSubscriptionPresence {
+  std::string key;
+  Clock::time_point refreshAfter;
+ };
+ std::array<std::map<engine::SubscriptionSeedHash,LocalSubscriptionPresence>,3> localSubscriptionPresence_;
+ std::array<std::map<std::string,engine::SubscriptionSeedHash,std::less<>>,3> subscriptionPresenceKeys_;
+ std::array<std::size_t,3> subscriptionPresenceCursor_{};
+ std::size_t subscriptionPresenceLane_=0;
+ const std::int64_t subscriptionPresenceNonce_=static_cast<std::int64_t>(QRandomGenerator::system()->generate64()>>1);
+ Clock::time_point subscriptionPresenceNext_{};
+ bool subscriptionPresencePending_ = false;
+ void subscriptionPresenceTick();
+ void forgetLocalSubscriptionPresence(std::size_t,const engine::SubscriptionSeedHash&);
+ bool subscriptionPresenceReadPermit(std::size_t,std::string_view,biglybtc::core::MoveOnlyFunction<void(bool)>);
+ bool storeSubscriptionPresence(std::size_t,std::string,const services::azureus_values::Value&);
  void registerSubscriptionSeedRead(std::size_t);
  void receiveSubscriptionSeedRead(std::size_t,std::shared_ptr<const udp::TransferRequest>);
 #endif
@@ -1141,6 +1157,9 @@ void Owner::poll(){
  privateTick();refreshPreferences();flushReadMarkers();flushActivities();drainTorrentContactSaves();rcmDrainSave();
  for(auto& item:commands){command(std::move(item));}
  autoSpeedProbeTick();
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ if (!closing_ && !resettingNetwork_) { subscriptionPresenceTick(); }
+#endif
  if(!closing_&&!resettingNetwork_){localCheckpointTick();keyBlockTick();cacheTick();surveyTick();remoteTick();syncTorrents();torrentTick();rcmTick();ratingTick();ratingNoticeTick();peekTick();if(Clock::now()-lastContactSave_>=std::chrono::seconds(30)){lastContactSave_=Clock::now();saveTorrentContacts();}}
  if(closing_){
   saveTorrentContacts(true);
@@ -1360,6 +1379,11 @@ void GeneralChats::updateSubscriptionSeeds(std::span<const engine::SubscriptionS
  auto catalog=std::make_shared<SubscriptionSeedCatalog>();
  catalog->expires=Clock::now()+std::chrono::seconds(10);
  catalog->creationSeconds=creationSeconds;
+ catalog->publicationHashes.assign(hashes.begin(),hashes.end());
+ std::ranges::sort(catalog->publicationHashes);
+ catalog->publicationHashes.erase(std::unique(catalog->publicationHashes.begin(),catalog->publicationHashes.end()),
+     catalog->publicationHashes.end());
+
  for(const auto& hash:hashes) {
   const auto key=QCryptographicHash::hash(QByteArrayView(hash.data(),hash.size()),QCryptographicHash::Sha1);
   catalog->lookupKeys.emplace(key.constData(),key.size());

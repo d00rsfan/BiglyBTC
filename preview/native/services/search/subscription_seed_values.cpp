@@ -91,14 +91,14 @@ bool verify(const Hash& hash,std::string_view pub,std::string_view sig,std::uint
       reinterpret_cast<const unsigned char*>(signedValue.data()),signedValue.size())==1;
 }
 
-std::string seedFileName(const Hash& pubHash,std::int64_t version) {
+std::string shortSubscriptionId(const Hash& pubHash) {
   constexpr std::string_view hex="0123456789ABCDEF";
   std::string result;
   for(unsigned i=0;i<10;++i){
     const auto value=static_cast<unsigned char>(pubHash[i]);
     result.push_back(hex[value/16]);result.push_back(hex[value%16]);
   }
-  return result+".biglybt."+std::to_string(version);
+  return result;
 }
 } // namespace
 
@@ -147,7 +147,14 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
   if(!pubHash||!lookup) { return std::unexpected(Error::Crypto); }
   SubscriptionSeed seed;
   seed.publicationHash=*signedHash;seed.lookupKey=*lookup;seed.anonymous=anonymous==1;
-  seed.fileName=seedFileName(*pubHash,*version);
+  const auto id=shortSubscriptionId(*pubHash);
+  seed.fileName=id+".biglybt."+std::to_string(*version);
+  // Presence is advertised only for a public definition that also remains
+  // public in the held subscription catalog.
+  if (integer(*details,"is_public")==1 && (!row.find("is_public") || integer(row,"is_public")==1)) {
+    seed.presence=SignedSubscriptionPresence{"subscription:publish:"+id+':'+std::to_string(*version),
+        std::string(*sig),*signedHash,static_cast<std::uint32_t>(*version),static_cast<std::uint32_t>(*size)};
+  }
   const std::string_view payload=body->originalBytes();
   std::string pieces;
   for(std::size_t offset=0;offset<payload.size();offset+=PieceBytes){
@@ -162,6 +169,21 @@ std::expected<SubscriptionSeed,SubscriptionSeedError> makeSubscriptionSeed(
       +"12:piece length"+intValue(PieceBytes)+"6:pieces"+byteString(pieces)+"ee";
   return seed;
 } catch(const std::bad_alloc&) { return std::unexpected(Error::Limit); }
+
+std::expected<std::string,SubscriptionSeedError> encodeSubscriptionPresence(const SignedSubscriptionPresence& presence,
+    std::int64_t publicationNonce) try {
+  if (!presence.version || presence.version > MaxVersion || !presence.signedSize || presence.signedSize>MaxBytes
+      || presence.signature.empty() || presence.signature.size()>64) {
+    return std::unexpected(Error::Malformed);
+  }
+  auto body="d1:!"+intValue(publicationNonce)+"1:h"+byteString(hashBytes(presence.publicationHash))
+      +"1:s"+byteString(presence.signature)+"1:v"+intValue(presence.version)+"1:z"+intValue(presence.signedSize)+'e';
+  if (body.size()+1>=512) { return std::unexpected(Error::Limit); }
+  body.insert(body.begin(),'\0');
+  return body;
+} catch (const std::bad_alloc&) {
+  return std::unexpected(Error::Limit);
+}
 
 std::expected<std::string,SubscriptionSeedError> subscriptionSeedDdbResponse(const SubscriptionSeed& seed) try {
   if(seed.metainfo.empty()||seed.metainfo.size()>65536) { return std::unexpected(Error::Limit); }

@@ -128,6 +128,96 @@ class SwarmDiscoveryNetworkTests final:public QObject {
  Q_OBJECT
 private slots:
 #ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ void subscriptionsExposeSignedPresence_data() {
+  QTest::addColumn<int>("network");
+  QTest::newRow("IPv4")<<0;
+  QTest::newRow("IPv6")<<3;
+ }
+ void subscriptionsExposeSignedPresence() {
+  QFETCH(int,network);
+  const auto fixturePath=qEnvironmentVariable("BIGLYBTC_SUBSCRIPTION_SEED_FIXTURE");
+  if (fixturePath.isEmpty()) { QSKIP("Java subscription fixture was not supplied"); }
+  const auto fixture=core::Document::parse(read(fixturePath));
+  QVERIFY(fixture&&fixture->find("new"));
+  Seed peer(network);
+  Client client(1,peer);
+  const auto* publicSeed=fixture->find("new");
+  const auto save=[&](const core::Node& row) {
+   const auto file=row.find("file")->bytes;
+   const auto leaf=file.substr(0,file.rfind('.'));
+   write(client.root.path()+"/subscriptions.config",row.find("config")->bytes);
+   write(client.root.path()+"/subs/"+QString::fromUtf8(leaf.data(),static_cast<qsizetype>(leaf.size())),row.find("payload")->bytes);
+  };
+  save(*publicSeed);
+  QTRY_VERIFY_WITH_TIMEOUT(client.ready(),10000);
+  const auto publication=search::readSavedSubscriptionSeed(*client.lease,publicSeed->find("hash")->bytes,
+      search::SubscriptionSeedKey::Publication,search::SubscriptionSeedNetwork::Public,1000);
+  QVERIFY(publication&&*publication&&(**publication).metainfo.presence);
+  const auto& presence=*(**publication).metainfo.presence;
+  nodes::NodeId key{};
+  const auto sha1=QCryptographicHash::hash(QByteArray::fromStdString(presence.applicationKey),QCryptographicHash::Sha1);
+  std::copy_n(reinterpret_cast<const std::uint8_t*>(sha1.data()),key.size(),key.begin());
+  const auto hash=(**publication).metainfo.publicationHash;
+  const auto readPresence=[&] {
+   const auto reply=std::make_shared<std::optional<udp::FindValueOutcome>>();
+   const auto sent=peer.actor->findValue({client.ip,client.port},55,key,0,24,this,
+       [reply](auto value){reply->emplace(std::move(value));},2s);
+   if (!sent) { return std::optional<std::string>{}; }
+   QElapsedTimer timer;
+   timer.start();
+   while (!*reply&&timer.elapsed()<2500) { QTest::qWait(20); }
+   if (!*reply||!**reply) { return std::optional<std::string>{}; }
+   const auto* result=std::get_if<udp::lookup::ReplyBody>(&((***reply).body()));
+   if (!result) { return std::optional<std::string>{}; }
+   const auto* values=std::get_if<udp::lookup::FoundValues>(&result->result);
+   return std::optional(values&&!values->values.empty()?values->values.front().bytes:std::string{});
+  };
+  std::optional<std::string> actual;
+  const auto refresh=[&] {
+   client.service->updateSubscriptionSeeds(std::span{&hash,1},1000);
+   actual=readPresence();
+   return actual&&!actual->empty();
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(refresh(),10000);
+  QVERIFY(actual->front()=='\0');
+  const auto body=core::Document::parse(actual->substr(1));
+  QVERIFY(body&&body->find("v")&&body->find("z")&&body->find("h")&&body->find("s"));
+  QCOMPARE(body->find("v")->integer,static_cast<std::int64_t>(presence.version));
+  QCOMPARE(body->find("z")->integer,static_cast<std::int64_t>(presence.signedSize));
+  QCOMPARE(body->find("h")->bytes,std::string_view(presence.publicationHash.data(),presence.publicationHash.size()));
+  QCOMPARE(body->find("s")->bytes,std::string_view(presence.signature));
+  const auto replicated=[&] {
+   Wall clock;
+   const auto stored=peer.database->read(sha1.toStdString(),contact(peer.endpoint()),24,0,clock);
+   return stored&&*stored&&std::ranges::any_of((**stored).values,[&](const auto& value) {
+    return value.bytes==*actual;
+   });
+  };
+  QTRY_VERIFY_WITH_TIMEOUT(replicated(),9000);
+  const auto original=core::Document::parse(std::string(publicSeed->find("config")->bytes));
+  QVERIFY(original&&original->find("subs"));
+  auto privateSource=core::Document::parse(*core::encodeValue(original->find("subs")->children.front()));
+  QVERIFY(privateSource&&privateSource->replaceValue("is_public","i0e"));
+  write(client.root.path()+"/subscriptions.config","d4:subsl"+privateSource->serialize()+"ee");
+  const auto privateValue=readPresence();
+  QVERIFY(privateValue&&privateValue->empty());
+
+  const auto* anonymous=fixture->find("i2p");
+  QVERIFY(anonymous);
+  save(*anonymous);
+  const auto privatePublication=search::readSavedSubscriptionSeed(*client.lease,anonymous->find("hash")->bytes,
+      search::SubscriptionSeedKey::Publication,search::SubscriptionSeedNetwork::I2P,1000);
+  QVERIFY(privatePublication&&*privatePublication&&(**privatePublication).metainfo.presence);
+  const auto& anonymousSeed=(**privatePublication).metainfo;
+  const auto anonymousKey=QCryptographicHash::hash(QByteArray::fromStdString(anonymousSeed.presence->applicationKey),
+      QCryptographicHash::Sha1);
+  std::copy_n(reinterpret_cast<const std::uint8_t*>(anonymousKey.data()),key.size(),key.begin());
+  client.service->updateSubscriptionSeeds(std::span{&anonymousSeed.publicationHash,1},1000);
+  QTest::qWait(2200);
+  const auto notPublic=readPresence();
+  QVERIFY(notPublic&&notPublic->empty());
+  client.close();
+ }
  void subscriptionsServeAuthorizedDdbReads_data() {
   QTest::addColumn<int>("network");
   QTest::newRow("IPv4")<<0;

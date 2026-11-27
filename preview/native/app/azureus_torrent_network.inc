@@ -247,6 +247,11 @@ void Owner::forgetLocalTorrent(const std::shared_ptr<Torrent>& torrent,std::size
  if(lanes_[lane]&&lanes_[lane]->database){PublicationClock clock;static_cast<void>(lanes_[lane]->database->removeLocal(std::string(reinterpret_cast<const char*>(key.data()),20),0,clock));}localTorrentKeys_[lane].erase(std::string(reinterpret_cast<const char*>(key.data()),20));torrent->permitted=false;
 }
 bool Owner::torrentReadPermit(std::size_t lane,std::string key,biglybtc::core::MoveOnlyFunction<void(bool)> done){
+#ifdef BIGLYBTC_PUBLIC_SUBSCRIPTION_DDB
+ if (subscriptionPresenceKeys_[lane].contains(key)) {
+  return subscriptionPresenceReadPermit(lane,key,std::move(done));
+ }
+#endif
  if(lane<2&&localRatingKeys_[lane].contains(key)){return ratingReadPermit(lane,std::move(key),std::move(done));}
  std::shared_ptr<Torrent> local;const auto found=localTorrentKeys_[lane].find(key);if(found!=localTorrentKeys_[lane].end()){local=found->second;}
  if(!local&&localRcmKeys_[lane].contains(key)){return rcmReadPermit(lane,std::move(key),std::move(done));}
