@@ -2,6 +2,8 @@
 #pragma once
 
 #include "profile.hpp"
+#include "biglybtc/library.hpp"
+#include <span>
 #include <stop_token>
 
 namespace biglybtc::storage {
@@ -12,8 +14,17 @@ struct ProfileBackup {
   std::uint64_t bytes = 0;
 };
 
+struct ProfileBackupTransferStatistics {
+  core::SavedDownload admitted;
+  std::optional<std::int64_t> downloaded;
+  std::optional<std::int64_t> uploaded;
+};
+
+// Counts apply to the copied inventory when its saved row still matches the
+// admission baseline. The copy retains the last saved piece and file state.
 std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease&,
-    const std::filesystem::path& destination, std::string_view localDate, std::stop_token = {});
+    const std::filesystem::path& destination, std::string_view localDate, std::stop_token = {},
+    std::span<const ProfileBackupTransferStatistics> statistics = {});
 
 std::expected<std::filesystem::path, Error> restoreProfileBackup(const ProfileLease& current,
     const std::filesystem::path& backup, const std::filesystem::path& destination, std::stop_token = {});

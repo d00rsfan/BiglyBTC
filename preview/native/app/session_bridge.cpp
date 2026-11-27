@@ -3860,7 +3860,9 @@ bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
     }
     const auto parent = platform::pathFromUtf8(destination.toUtf8().toStdString());
     const auto date = QDate::currentDate().toString(Qt::ISODate).toStdString();
-    const auto backup = storage::backupSavedProfile(host_->lease, parent, date, stop);
+    const auto statistics = host_->engine ? host_->engine->backupTransferStatistics()
+        : std::vector<storage::ProfileBackupTransferStatistics>{};
+    const auto backup = storage::backupSavedProfile(host_->lease, parent, date, stop, statistics);
     if (!backup && backup.error().code == storage::ErrorCode::Cancelled) { throw Failure{backup.error()}; }
     const auto status = storage::recordProfileBackupStatus(host_->lease,
         {QDateTime::currentMSecsSinceEpoch(), backup ? std::string{} : backup.error().message});
@@ -3924,7 +3926,9 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
       .localOffsetMillis = static_cast<std::int32_t>(local.offsetFromUtc() * 1000),
       .firstCheck = owner.firstAutomaticBackupCheck, .force = force};
   const auto date = local.date().toString(Qt::ISODate).toStdString();
-  const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop);
+  const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop, [&owner] {
+    return owner.engine ? owner.engine->backupTransferStatistics() : std::vector<storage::ProfileBackupTransferStatistics>{};
+  });
   QString message;
   if (!turn) {
     if (turn.error().code == storage::ErrorCode::Cancelled) {

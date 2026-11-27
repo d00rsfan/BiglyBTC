@@ -110,6 +110,61 @@ void verifyCopy() {
       "Use the saved plugin option for the next backup");
 }
 
+void verifyLiveTransferStatisticsInBackup() {
+  Fixture files;
+  const auto root = files.profile;
+  write(root / "biglybt.config", "de");
+  const auto originalRow = [](char key) {
+    return "d6:opaque4:keep14:completedbytesi6e10:downloadedi10e8:uploadedi20e"
+        "8:save_dir4:data5:statei75e7:torrent4:stub12:torrent_hash20:" + std::string(20, key) + 'e';
+  };
+  const auto first = originalRow('a');
+  const auto untouched = originalRow('b');
+  const std::string inventory = "d9:downloadsl" + first + untouched + "e10:pause_datalee";
+  const std::string previous = "d9:downloadslee";
+  write(root / "downloads.config", inventory);
+  write(root / "downloads.config.bak", previous);
+  write(root / "active" / "verified.dat", "original verified state");
+
+  const auto original = core::Document::parse(inventory).value();
+  const auto before = core::readLibrary(original).value();
+  auto selected = before.downloads.at(0);
+  auto stale = before.downloads.at(1);
+  stale.uploaded = 19;
+  const std::array statistics{
+      storage::ProfileBackupTransferStatistics{selected, 41, 50},
+      storage::ProfileBackupTransferStatistics{stale, 100, 100}};
+  const auto copy = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27", {}, statistics));
+  const auto bytes = read(copy.directory / "downloads.config");
+  const auto result = core::Document::parse(bytes).value();
+  const auto saved = core::readLibrary(result).value();
+  check(saved.downloads.size() == 2 && saved.downloads[0].downloaded == 41 && saved.downloads[0].uploaded == 50
+      && saved.downloads[0].completedBytes == 6 && saved.downloads[1].downloaded == 10
+      && saved.downloads[1].uploaded == 20 && bytes.contains(untouched),
+      "Project only matching cumulative counters and leave newer saved rows, piece counts and opaque values alone");
+  check(read(root / "downloads.config") == inventory
+      && read(copy.directory / "downloads.config.bak") == previous
+      && read(copy.directory / "active" / "verified.dat") == "original verified state",
+      "Copy the original resume file and fallback inventory and leave the active source untouched");
+
+  std::array duplicate{statistics.front(), statistics.front()};
+  const auto ambiguous = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27", {}, duplicate));
+  check(read(ambiguous.directory / "downloads.config") == inventory, "Skip competing observations for the same row");
+  write(root / "downloads.config.saving", inventory);
+  const auto pending = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27", {}, statistics));
+  check(read(pending.directory / "downloads.config") == inventory, "Retain inventory bytes when a save is pending");
+  fs::remove(root / "downloads.config.saving");
+
+  const std::string legacy = "d1:a" + first + "1:b" + untouched + 'e';
+  write(root / "downloads.config", legacy);
+  const auto old = take(storage::backupSavedProfile(*files.lease, files.destination, "2026-11-27", {}, statistics));
+  const auto legacyBytes = read(old.directory / "downloads.config");
+  const auto legacySaved = core::readLibrary(core::Document::parse(legacyBytes).value()).value();
+  check(legacySaved.legacyMap && legacySaved.downloads[0].downloaded == 41 && legacySaved.downloads[0].uploaded == 50
+      && legacyBytes.contains(untouched) && read(root / "downloads.config") == legacy,
+      "Keep a legacy root map and its byte-exact unselected row");
+}
+
 void verifyPluginArchiveVersions() {
   Fixture files;
   const auto plugins = fs::path("plugins") / "example";
@@ -551,6 +606,7 @@ void verifyAutomaticBackup() {
 
 int main() try {
   verifyCopy();
+  verifyLiveTransferStatisticsInBackup();
   verifyPluginArchiveVersions();
   verifyRefusalsAndCleanup();
   verifyRestore();

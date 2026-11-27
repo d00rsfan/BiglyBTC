@@ -7,6 +7,7 @@
 #include "runtime_console.hpp"
 #include "file_channel_piece_window.hpp"
 #include "profile_tag_rates.hpp"
+#include "profile_backup.hpp"
 #include "managed_tracker_health.hpp"
 #include "persistent_session_support.hpp"
 #include "../platform/utf8_path.hpp"
@@ -3293,6 +3294,24 @@ std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   if (!impl_->onWorker()) { return result; }
   result.reserve(impl_->managed.size());
   for (const auto& [key, value] : impl_->managed) { static_cast<void>(key); result.push_back(value->status); }
+  return result;
+}
+std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupTransferStatistics() const {
+  std::vector<storage::ProfileBackupTransferStatistics> result;
+  if (!impl_->onWorker() || impl_->closed || impl_->poisoned || impl_->closingAdmission) { return result; }
+  for (const auto& [key, value] : impl_->managed) {
+    static_cast<void>(key);
+    const auto& current = value->status;
+    if (!current.retained || current.failure || value->stop || value->removing
+        || !value->token || current.admission != value->token->number || !value->handle.is_valid()) {
+      continue;
+    }
+    const auto& admitted = value->storage.capturedDownload();
+    if ((current.cumulativeReceived && *current.cumulativeReceived > admitted.downloaded.value_or(0))
+        || (current.cumulativeSent && *current.cumulativeSent > admitted.uploaded.value_or(0))) {
+      result.push_back({admitted, current.cumulativeReceived, current.cumulativeSent});
+    }
+  }
   return result;
 }
 std::optional<core::QueueOriginalScrapeResponse> PersistentSession::managedTrackerResponse(

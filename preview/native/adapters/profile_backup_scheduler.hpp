@@ -3,6 +3,7 @@
 
 #include "biglybtc/profile_backup_schedule.hpp"
 #include "profile_backup.hpp"
+#include <functional>
 
 namespace biglybtc::storage {
 
@@ -30,7 +31,10 @@ struct AutomaticProfileBackup {
   std::optional<Error> statusError;
 };
 
+// A due turn captures accepted transfer observations from the profile worker.
+using ProfileBackupStatisticsSource = std::function<std::vector<ProfileBackupTransferStatistics>()>;
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease&,
-    core::ProfileBackupClock, std::string_view localDate, std::stop_token = {});
+    core::ProfileBackupClock, std::string_view localDate, std::stop_token = {},
+    const ProfileBackupStatisticsSource& statistics = {});
 
 } // namespace biglybtc::storage

@@ -31,7 +31,7 @@
 #include <optional>
 #include <vector>
 
-namespace biglybtc::storage {struct IntakeHistoryOutcome;class TorrentIntakeMetadata;}
+namespace biglybtc::storage {struct IntakeHistoryOutcome;class TorrentIntakeMetadata;struct ProfileBackupTransferStatistics;}
 
 namespace biglybtc::engine {
 class ProfileTagRates;
@@ -357,6 +357,7 @@ public:
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {},storage::IntakeHistoryOutcome* history=nullptr);
   bool retainsDownload(const std::string& key)const;
   std::vector<ManagedDownloadStatus> managedDownloads() const;
+  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics() const;
   // Worker-only live owner check for genuine saved-share registration. Neither
   // a copied status nor caller-supplied completion can authorise publication.
   // Full read-only check of an actual retired library member; never a Native

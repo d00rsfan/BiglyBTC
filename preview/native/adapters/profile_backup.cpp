@@ -20,6 +20,7 @@
 #include <set>
 #include <span>
 #include <type_traits>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -331,12 +332,85 @@ PreparedProfileRestore prepareRestore(const ProfileLease& current, StateHandle s
   return {std::move(configuration),std::move(relocation),restoredConfig->serialize()};
 }
 
+std::string includeCurrentTransferStatistics(std::string bytes,
+    std::span<const ProfileBackupTransferStatistics> observations, std::stop_token stop) {
+  const auto document = core::Document::parse(std::move(bytes), compatibleConfigLimits());
+  if (!document) { return {}; }
+  const auto library = core::readLibrary(*document);
+  if (!library) { return {}; }
+  const auto* entries = document->find("downloads");
+  const auto& original = document->originalBytes();
+  const auto hashKey = [](const core::TorrentHash& hash) -> std::string_view {
+    const auto value = hash.bytes();
+    return {reinterpret_cast<const char*>(value.data()),value.size()};
+  };
+  std::map<std::string_view, const ProfileBackupTransferStatistics*> active;
+  for (const auto& observed : observations) {
+    checkCancellation(stop);
+    if (!observed.admitted.hash) { continue; }
+    const auto [entry, inserted] = active.emplace(hashKey(*observed.admitted.hash), &observed);
+    if (!inserted) { entry->second = nullptr; }
+  }
+  // Count even rows that the compatible library reader could not classify.
+  // A malformed duplicate cannot decide which saved item owns the counters.
+  const auto& nodes = entries ? entries->children : document->root().children;
+  std::set<std::string_view> seen;
+  for (std::size_t index = entries ? 0 : 1; index < nodes.size(); index += entries ? 1 : 2) {
+    checkCancellation(stop);
+    const auto* hash = nodes[index].find("torrent_hash");
+    if (!hash || hash->type != core::Node::Type::Bytes) { continue; }
+    if (const auto match = active.find(hash->bytes); match != active.end() && !seen.insert(hash->bytes).second) {
+      match->second = nullptr;
+    }
+  }
+
+  // Keep nonselected entries, pause data and unknown values byte-for-byte,
+  // including in old inventories that use a root dictionary instead of a list.
+  std::string output;
+  std::size_t cursor = 0;
+  for (const auto& row : library->downloads) {
+    checkCancellation(stop);
+    if (!row.hash || !row.persistent) { continue; }
+    const auto match = active.find(hashKey(*row.hash));
+    if (match == active.end() || !match->second) { continue; }
+    const auto& selection = *match->second;
+    const auto& admitted = selection.admitted;
+    if (!admitted.persistent || row.torrentFile != admitted.torrentFile || row.saveDirectory != admitted.saveDirectory
+        || row.saveFile != admitted.saveFile || row.legacySavePath != admitted.legacySavePath
+        || row.downloaded != admitted.downloaded || row.uploaded != admitted.uploaded) { continue; }
+    const auto& node = entries ? entries->children.at(row.sourceIndex)
+        : document->root().children.at(row.sourceIndex * 2 + 1);
+    auto updated = core::Document::parse(original.substr(node.begin, node.end - node.begin), compatibleConfigLimits());
+    bool changed = false;
+    for (const auto& [name, saved, live] : {
+        std::tuple{"downloaded", row.downloaded, selection.downloaded},
+        std::tuple{"uploaded", row.uploaded, selection.uploaded}}) {
+      if (!live || saved.value_or(0) < 0 || *live <= saved.value_or(0)) { continue; }
+      require(updated && updated->replaceValue(name, 'i' + std::to_string(*live) + 'e').has_value(),
+          ErrorCode::InvalidFormat, "Cannot include current transfer statistics in the backup");
+      changed = true;
+    }
+    if (!changed) { continue; }
+    output.append(original, cursor, node.begin - cursor);
+    output += updated->serialize();
+    cursor = node.end;
+  }
+  if (!cursor) { return {}; }
+  output.append(original, cursor);
+  require(output.size() <= compatibleConfigLimits().inputBytes, ErrorCode::InvalidFormat,
+      "Transfer statistics exceed the saved inventory limits");
+  auto verified = core::Document::parse(std::move(output), compatibleConfigLimits());
+  require(verified.has_value(), ErrorCode::InvalidFormat, "Cannot validate the saved transfer statistics");
+  return verified->originalBytes();
+}
+
 class BackupWriter {
 public:
   BackupWriter(StateHandle parent, fs::path name, StateDescriptor output, std::stop_token stop,
-      std::optional<DirectoryRelocation> relocation = std::nullopt)
+      std::optional<DirectoryRelocation> relocation = std::nullopt,
+      std::span<const ProfileBackupTransferStatistics> statistics = {})
       : parent_(parent), name_(std::move(name)), output_(std::move(output)), outputStamp_(take(stateStamp(output_.get()))),
-        stop_(stop), relocation_(std::move(relocation)) {}
+        stop_(stop), relocation_(std::move(relocation)), statistics_(statistics) {}
 
   ~BackupWriter() {
     if (published_) { return; }
@@ -403,21 +477,28 @@ private:
 
   bool rewriteConfiguration(StateHandle source, StateHandle destination, const fs::path& name,
       const fs::path& path, const StateStamp& expected) {
-    if (!relocation_ || path.has_parent_path()) { return false; }
+    if (path.has_parent_path()) { return false; }
     const auto leaf = platform::pathToUtf8(name);
-    if (!leaf.contains(".config")) { return false; }
+    const bool liveInventory = !relocation_ && leaf == "downloads.config" && !statistics_.empty()
+        && !take(stateStampAt(source, "downloads.config.saving"));
+    if (!liveInventory && (!relocation_ || !leaf.contains(".config"))) { return false; }
     const auto original = take(captureProfileFile(source, leaf, compatibleConfigLimits().inputBytes));
     require(original.bytes && original.stamp && sameStateSnapshot(*original.stamp, expected) && original.stillHeld(),
-        ErrorCode::Conflict, "Backup configuration changed while restoring");
-    auto relocated = relocateBackupConfiguration(*original.bytes, relocation_->previous, relocation_->destination);
-    if (!relocated && relocated.error().code == ErrorCode::InvalidFormat && (leaf.contains(".bad") || leaf.contains(".bak"))) {
-      return false;
+        ErrorCode::Conflict, "Profile configuration changed before copying");
+    std::string output;
+    if (liveInventory) {
+      output = includeCurrentTransferStatistics(*original.bytes, statistics_, stop_);
+    } else {
+      auto relocated = relocateBackupConfiguration(*original.bytes, relocation_->previous, relocation_->destination);
+      if (!relocated && relocated.error().code == ErrorCode::InvalidFormat && (leaf.contains(".bad") || leaf.contains(".bak"))) {
+        return false;
+      }
+      output = take(std::move(relocated));
+      if (relocation_->pauseDownloads && (leaf=="downloads.config" || leaf=="downloads.config.bak" || leaf=="downloads.config.saving")) {
+        output=take(pauseRestoredProfileDownloads(std::move(output),stop_));
+      }
     }
-    auto output = take(std::move(relocated));
-    if (relocation_->pauseDownloads && (leaf=="downloads.config" || leaf=="downloads.config.bak" || leaf=="downloads.config.saving")) {
-      output=take(pauseRestoredProfileDownloads(std::move(output),stop_));
-    }
-    if (output == *original.bytes) { return false; }
+    if (output.empty() || output == *original.bytes) { return false; }
     auto snapshot = take(stageStateFile(destination, name, output, 0600));
     created_.emplace_back(path, take(stateStamp(snapshot.get())));
     take(setStateMtime(snapshot.get(), expected.modified));
@@ -501,6 +582,7 @@ private:
   StateStamp outputStamp_;
   std::stop_token stop_;
   std::optional<DirectoryRelocation> relocation_;
+  std::span<const ProfileBackupTransferStatistics> statistics_;
   std::vector<std::pair<fs::path, StateStamp>> created_;
   std::map<fs::path, StateStamp, FilesystemPathLess> directories_;
   std::uint64_t files_ = 0;
@@ -510,7 +592,8 @@ private:
 } // namespace
 
 std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease& lease,
-    const fs::path& destination, std::string_view date, std::stop_token stop) try {
+    const fs::path& destination, std::string_view date, std::stop_token stop,
+    std::span<const ProfileBackupTransferStatistics> statistics) try {
   require(validDate(date), ErrorCode::InvalidFormat, "Invalid profile backup date");
   checkCancellation(stop);
   auto access = take(lease.sourceAccess());
@@ -544,7 +627,7 @@ std::expected<ProfileBackup, Error> backupSavedProfile(const ProfileLease& lease
     const fs::path leaf = suffix ? std::string(date) + '.' + std::to_string(suffix) : std::string(date);
     auto output = createDirectoryAt(parent.get(), leaf);
     if (!output && output.error().code == ErrorCode::Conflict) { continue; }
-    BackupWriter writer(parent.get(), leaf, take(std::move(output)), stop);
+    BackupWriter writer(parent.get(), leaf, take(std::move(output)), stop, {}, statistics);
     return writer.write(source, parentPath / leaf, configuration, document->serialize(), includePlugins);
   }
   return std::unexpected(Error{ErrorCode::Conflict, "No date slot is available for the profile backup"});
