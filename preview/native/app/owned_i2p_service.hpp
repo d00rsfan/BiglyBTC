@@ -132,6 +132,8 @@ public:
   std::expected<bool,storage::Error> rebaseCategory(const storage::ProfileLease&,const core::TorrentHash&);
   std::expected<void,storage::Error> publishPositions(const engine::SourceMutation&);
   std::expected<void,storage::Error> configureExternalQueue(bool);
+  std::expected<bool,storage::Error> pauseForProfileBackup();
+  void resumeAfterProfileBackup() noexcept;
   std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
   std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t,
       std::span<const engine::ExternalQueueDecision>,std::uint32_t,core::QueueAction);

@@ -169,9 +169,13 @@ std::expected<void, Error> synchronizeProfileBackupWithJava(const ProfileLease& 
   return std::unexpected(Error{ErrorCode::Io,"Cannot synchronize the original backup schedule and outcome"});
 }
 
+bool profileBackupPausesDownloads(const core::Document& configuration) {
+  return integer(configuration,"br.backup.pause.downloads")!=0;
+}
+
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease& lease,
     core::ProfileBackupClock clock, std::string_view localDate, std::stop_token stop,
-    const ProfileBackupStatisticsSource& statistics) try {
+    const ProfileBackupCopy& copy) try {
   if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Automatic profile backup cancelled"}); }
   auto access = take(lease.sourceAccess());
   const auto configuration = readConfiguration(lease, Configuration, "Recover the main configuration before automatic backup");
@@ -203,8 +207,9 @@ std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const Pr
   std::expected<ProfileBackup, Error> backup = std::unexpected(
       Error{ErrorCode::InvalidFormat, "Set an existing folder for automatic profile backups"});
   if (path && path->type == core::Node::Type::Bytes && !path->bytes.empty() && !path->bytes.contains('\0')) {
-    const auto observed = statistics ? statistics() : std::vector<ProfileBackupTransferStatistics>{};
-    backup = backupSavedProfile(lease, platform::pathFromUtf8(path->bytes), localDate, stop, observed);
+    const auto destination=platform::pathFromUtf8(path->bytes);
+    backup=copy?copy(destination,profileBackupPausesDownloads(document))
+        :backupSavedProfile(lease,destination,localDate,stop);
   }
   if (!backup && backup.error().code == ErrorCode::Cancelled) { return std::unexpected(backup.error()); }
   const auto status = recordProfileBackupStatus(lease, {clock.nowUtcMillis, backup ? std::string{} : backup.error().message});

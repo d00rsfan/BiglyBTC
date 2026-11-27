@@ -555,6 +555,36 @@ void verifyManualBackupWithDamagedOutcome() {
       "A manual backup remains possible and keeps original metadata when the sidecar needs recovery");
 }
 
+void verifyBackupPauseIsScopedToScheduledCopies() {
+  Fixture files;
+  auto configuration=core::Document::parse("de").value();
+  check(!storage::profileBackupPausesDownloads(configuration),"Original backup pause defaults to off");
+  check(configuration.replaceValue("br.backup.auto.enable","i1e").has_value()
+      &&configuration.replaceValue("br.backup.auto.dir",encode(platform::pathToUtf8(files.destination))).has_value()
+      &&configuration.replaceValue("br.backup.pause.downloads","i1e").has_value(),"Enable pause during backup");
+  write(files.profile/"biglybt.config",configuration.serialize());
+  const auto date="2026-11-27";
+  const std::int64_t today=20000LL*24*60*60*1000;
+  core::ProfileBackupClock clock{.nowUtcMillis=today,.firstCheck=true};
+  std::vector<bool> requestedPauses;
+  const auto copy=[&](const fs::path& destination,bool pause) {
+    check(destination==files.destination,"Scheduled copy received the saved destination");
+    requestedPauses.push_back(pause);
+    return storage::backupSavedProfile(*files.lease,destination,date);
+  };
+  auto waiting=take(storage::pollAutomaticProfileBackup(*files.lease,clock,date,{},copy));
+  check(!waiting.completed&&requestedPauses.empty(),"Waiting does not pause active transfers");
+  clock.force=true;
+  check(take(storage::pollAutomaticProfileBackup(*files.lease,clock,date,{},copy)).completed.has_value(),
+      "A due backup executes the live copy");
+  check(configuration.replaceValue("br.backup.pause.downloads","i0e").has_value(),"Turn pause off live");
+  write(files.profile/"biglybt.config",configuration.serialize());
+  ++clock.nowUtcMillis;
+  check(take(storage::pollAutomaticProfileBackup(*files.lease,clock,date,{},copy)).completed.has_value(),
+      "A second copy uses the current saved preference");
+  check(requestedPauses==std::vector<bool>{true,false},"Only the enabled copy requested a transfer pause");
+}
+
 void verifyAutomaticBackup() {
   Fixture files;
   constexpr std::int64_t Day = 24 * 60 * 60 * 1000;
@@ -641,6 +671,7 @@ int main() try {
   verifyRestoreRefusesChangedStagedData();
   verifyRestoreRefusesBackupWithItsOwnPendingOperation();
   verifyAutomaticBackup();
+  verifyBackupPauseIsScopedToScheduledCopies();
   verifyManualBackupWithDamagedOutcome();
   verifyBackupStatus();
   verifyBackupStateSynchronizesBackToFirstJavaProfile();

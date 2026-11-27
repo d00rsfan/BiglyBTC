@@ -358,6 +358,8 @@ public:
   bool retainsDownload(const std::string& key)const;
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics() const;
+  std::expected<bool,storage::Error> pauseForProfileBackup();
+  void resumeAfterProfileBackup() noexcept;
   // Worker-only live owner check for genuine saved-share registration. Neither
   // a copied status nor caller-supplied completion can authorise publication.
   // Full read-only check of an actual retired library member; never a Native

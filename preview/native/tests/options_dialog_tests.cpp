@@ -145,13 +145,18 @@ private slots:
     auto* enabled = h.dialog.findChild<QCheckBox*>(id(core::SettingId::AutomaticBackupEnabled));
     QVERIFY(enabled && !enabled->isChecked());
     enabled->setChecked(true);
+    auto* pause = h.dialog.findChild<QCheckBox*>(id(core::SettingId::PauseDownloadsDuringBackup));
+    QVERIFY(pause && pause->isVisible() && !pause->isChecked());
+    pause->setChecked(true);
     h.button("options-apply")->click();
     QCOMPARE(h.saves.size(), std::size_t{1});
-    QCOMPARE(h.saves.front().changes.size(), std::size_t{2});
+    QCOMPARE(h.saves.front().changes.size(), std::size_t{3});
     QCOMPARE(h.saves.front().changes[0].id, core::SettingId::AutomaticBackupEnabled);
     QVERIFY(std::get<bool>(h.saves.front().changes[0].value));
     QCOMPARE(h.saves.front().changes[1].id, core::SettingId::AutomaticBackupDirectory);
     QCOMPARE(std::get<std::string>(h.saves.front().changes[1].value), destination.toUtf8().toStdString());
+    QCOMPARE(h.saves.front().changes[2].id, core::SettingId::PauseDownloadsDuringBackup);
+    QVERIFY(std::get<bool>(h.saves.front().changes[2].value));
     QVERIFY(h.dialog.pending() && !browse->isEnabled());
   }
   void hiddenAndBusyInitialReadCoalescesUntilVisibleIdle() {

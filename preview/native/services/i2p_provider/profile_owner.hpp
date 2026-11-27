@@ -157,6 +157,8 @@ public:
   bool begin(const Options&,core::QueuePolicy,Rates);
   Retained retained()const;
   bool configureExternalQueue(bool);
+  std::expected<bool,storage::Error> pauseForProfileBackup();
+  void resumeAfterProfileBackup() noexcept;
   std::expected<engine::ExternalQueueSnapshot,storage::Error> externalQueueSnapshot();
   bool externalQueueCurrent(std::uint64_t,std::span<const engine::ExternalQueueDecision>)const;
   std::expected<bool,storage::Error> applyExternalQueue(std::uint64_t,

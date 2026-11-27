@@ -31,10 +31,13 @@ struct AutomaticProfileBackup {
   std::optional<Error> statusError;
 };
 
-// A due turn captures accepted transfer observations from the profile worker.
-using ProfileBackupStatisticsSource = std::function<std::vector<ProfileBackupTransferStatistics>()>;
+bool profileBackupPausesDownloads(const core::Document&);
+
+// The Host wraps the actual copy so its live pause is scoped to one due turn.
+using ProfileBackupCopy = std::function<std::expected<ProfileBackup,Error>(
+    const std::filesystem::path& destination, bool pauseDownloads)>;
 std::expected<AutomaticProfileBackup, Error> pollAutomaticProfileBackup(const ProfileLease&,
     core::ProfileBackupClock, std::string_view localDate, std::stop_token = {},
-    const ProfileBackupStatisticsSource& statistics = {});
+    const ProfileBackupCopy& copy = {});
 
 } // namespace biglybtc::storage

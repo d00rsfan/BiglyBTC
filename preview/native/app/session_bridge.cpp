@@ -715,6 +715,29 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         :OwnedI2pService::start(lease,hash,std::move(*options),external,&*tagManagerAtOpen);if(!started){return std::unexpected(started.error());}
     i2p=std::move(*started);coexistQueue.privateOwnerChanged();i2pJoined=false;pollI2p();return {};
   }
+  std::expected<storage::ProfileBackup,storage::Error> copyProfileBackup(const std::filesystem::path& destination,
+      std::string_view date,std::stop_token stop,bool pauseDownloads) {
+    if (stop.stop_requested()) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Profile backup cancelled"});
+    }
+    bool resumePublic=false;
+    bool resumeI2p=false;
+    const auto resume=qScopeGuard([&] {
+      if (resumeI2p) { i2p->resumeAfterProfileBackup(); }
+      if (resumePublic) { engine->resumeAfterProfileBackup(); }
+    });
+    if (pauseDownloads&&engine) {
+      const auto paused=engine->pauseForProfileBackup();
+      if (!paused) { return std::unexpected(paused.error()); }
+      resumePublic=*paused;
+    }
+    if (pauseDownloads&&i2p) {
+      const auto paused=i2p->pauseForProfileBackup();
+      if (!paused) { return std::unexpected(paused.error()); }
+      resumeI2p=*paused;
+    }
+    return storage::backupSavedProfile(lease,destination,date,stop,backupTransferStatistics());
+  }
   std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics() const {
     auto statistics = engine ? engine->backupTransferStatistics() : std::vector<storage::ProfileBackupTransferStatistics>{};
     if (i2p) {
@@ -3872,8 +3895,10 @@ bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
     }
     const auto parent = platform::pathFromUtf8(destination.toUtf8().toStdString());
     const auto date = QDate::currentDate().toString(Qt::ISODate).toStdString();
-    const auto statistics = host_->backupTransferStatistics();
-    const auto backup = storage::backupSavedProfile(host_->lease, parent, date, stop, statistics);
+    const auto configuration=storage::ConfigFile::load(host_->lease,"biglybt.config",storage::compatibleConfigLimits());
+    const auto backup=configuration
+        ?host_->copyProfileBackup(parent,date,stop,storage::profileBackupPausesDownloads(configuration->document()))
+        :std::unexpected(configuration.error());
     if (!backup && backup.error().code == storage::ErrorCode::Cancelled) { throw Failure{backup.error()}; }
     const auto status = storage::recordProfileBackupStatus(host_->lease,
         {QDateTime::currentMSecsSinceEpoch(), backup ? std::string{} : backup.error().message});
@@ -3937,9 +3962,10 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
       .localOffsetMillis = static_cast<std::int32_t>(local.offsetFromUtc() * 1000),
       .firstCheck = owner.firstAutomaticBackupCheck, .force = force};
   const auto date = local.date().toString(Qt::ISODate).toStdString();
-  const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop, [&owner] {
-    return owner.backupTransferStatistics();
-  });
+  const auto turn=storage::pollAutomaticProfileBackup(owner.lease,clock,date,stop,
+      [&](const std::filesystem::path& destination,bool pauseDownloads) {
+        return owner.copyProfileBackup(destination,date,stop,pauseDownloads);
+      });
   QString message;
   if (!turn) {
     if (turn.error().code == storage::ErrorCode::Cancelled) {

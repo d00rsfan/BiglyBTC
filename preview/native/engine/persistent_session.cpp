@@ -3296,6 +3296,25 @@ std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   for (const auto& [key, value] : impl_->managed) { static_cast<void>(key); result.push_back(value->status); }
   return result;
 }
+std::expected<bool,storage::Error> PersistentSession::pauseForProfileBackup() {
+  if (!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"The Public engine is closing"});
+  }
+  bool requested=false;
+  try {
+    if (!impl_->session||impl_->session->is_paused()) { return false; }
+    requested=true;
+    impl_->session->pause();
+    if (impl_->session->is_paused()) { return true; }
+  } catch (...) {}
+  if (requested) { resumeAfterProfileBackup(); }
+  return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot pause the Public engine for backup"});
+}
+void PersistentSession::resumeAfterProfileBackup() noexcept {
+  try {
+    if (impl_->onWorker()&&impl_->session) { impl_->session->resume(); }
+  } catch (...) {}
+}
 std::vector<storage::ProfileBackupTransferStatistics> PersistentSession::backupTransferStatistics() const {
   std::vector<storage::ProfileBackupTransferStatistics> result;
   if (!impl_->onWorker() || impl_->closed || impl_->poisoned || impl_->closingAdmission) { return result; }

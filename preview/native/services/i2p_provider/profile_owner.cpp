@@ -1137,6 +1137,26 @@ bool OwnedProfile::begin(const Options& options,core::QueuePolicy policy,Rates r
 OwnedProfile::Retained OwnedProfile::retained()const{
   Retained v;for(const auto& [key,m]:impl_->members){(void)key;const auto claims=m->data().storage.claims();v.claims.insert(v.claims.end(),claims.begin(),claims.end());v.identities.push_back(m->data().storage.identity());}return v;
 }
+std::expected<bool,Error> OwnedProfile::pauseForProfileBackup() {
+  auto& state=*impl_;
+  if (!state.onThread()) {
+    return std::unexpected(Error{Code::Conflict,"Only the private I2P owner may pause its engine"});
+  }
+  bool requested=false;
+  try {
+    if (!state.session||state.session->is_paused()) { return false; }
+    requested=true;
+    state.session->pause();
+    if (state.session->is_paused()) { return true; }
+  } catch (...) {}
+  if (requested) { resumeAfterProfileBackup(); }
+  return std::unexpected(Error{Code::Io,"Cannot pause the private I2P engine for backup"});
+}
+void OwnedProfile::resumeAfterProfileBackup() noexcept {
+  try {
+    if (impl_->onThread()&&impl_->session) { impl_->session->resume(); }
+  } catch (...) {}
+}
 bool OwnedProfile::configureExternalQueue(bool enabled){
   auto& s=*impl_;if(!s.onThread()||(s.phase!=Phase::Prepared&&s.externalQueue!=enabled)){return false;}s.externalQueue=enabled;return true;
 }
