@@ -14,6 +14,7 @@ struct DownloadArchivePacket {
   bool writable = false;
   QString error;
   bool openContainingFolder = false;
+  bool showFullFilePaths = false;
 };
 using DownloadArchivePresentation = std::shared_ptr<const DownloadArchivePacket>;
 }

@@ -2,6 +2,7 @@
 #include "download_archive_dialog.hpp"
 
 #include <QAbstractTableModel>
+#include <QAction>
 #include <QDateTime>
 #include <QDialogButtonBox>
 #include <QDir>
@@ -19,6 +20,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 #include <array>
+#include <limits>
 
 namespace biglybtc::ui {
 namespace {
@@ -28,11 +30,23 @@ QString display(const std::optional<std::string>& value) {
   return value ? QString::fromStdString(*value) : QString{};
 }
 
-QString localPath(const QModelIndex& row) {
-  const auto path = QDir::fromNativeSeparators(row.data(ArchivePathRole).toString());
+QString localPath(QString value) {
+  const auto path = QDir::fromNativeSeparators(std::move(value));
   if (path.isEmpty() || path.contains(QChar(u'\0'))) { return {}; }
   const QFileInfo location(path);
   return location.isAbsolute() && location.isNativePath() ? QDir::cleanPath(path) : QString{};
+}
+
+QString filePath(const core::ArchivedDownloadMetadata& download, const core::ArchivedFile& file) {
+  auto value=QDir::fromNativeSeparators(display(file.path));
+  if (file.relative) {
+    const auto root=localPath(display(download.savePath));
+    if (root.isEmpty()||value.isEmpty()||QDir::isAbsolutePath(value)) { return {}; }
+    value=QDir::cleanPath(value);
+    if (value==QStringLiteral(".")||value==QStringLiteral("..")||value.startsWith(QStringLiteral("../"))) { return {}; }
+    value=QDir(root).filePath(value);
+  }
+  return localPath(std::move(value));
 }
 
 QString existingLocation(QString path) {
@@ -93,6 +107,54 @@ public:
 private:
   DownloadArchivePresentation packet_;
 };
+
+class FileModel final : public QAbstractTableModel {
+public:
+  FileModel(DownloadArchivePresentation packet,QObject* parent)
+      :QAbstractTableModel(parent),packet_(std::move(packet)) {}
+
+  void setDownload(const QModelIndex& row) {
+    beginResetModel();
+    download_=row.isValid()?&packet_->rows[static_cast<std::size_t>(row.row())].metadata:nullptr;
+    endResetModel();
+  }
+
+  int rowCount(const QModelIndex& parent={}) const override {
+    return parent.isValid()||!download_?0:static_cast<int>(download_->fileEntries.size());
+  }
+  int columnCount(const QModelIndex& parent) const override { return parent.isValid()?0:2; }
+
+  QVariant headerData(int section,Qt::Orientation direction,int role) const override {
+    if (role!=Qt::DisplayRole||direction!=Qt::Horizontal) { return {}; }
+    return section==0?DownloadArchiveDialog::tr("File"):DownloadArchiveDialog::tr("Size");
+  }
+
+  QVariant data(const QModelIndex& index,int role) const override {
+    if (!index.isValid()||!download_) { return {}; }
+    const auto& file=download_->fileEntries[static_cast<std::size_t>(index.row())];
+    if (index.column()==1&&file.length) {
+      const auto length=*file.length;
+      if (role==Qt::UserRole) { return QVariant::fromValue<qint64>(length); }
+      if (role==Qt::DisplayRole&&length!=std::numeric_limits<qint64>::min()) {
+        const auto size=QLocale().formattedDataSize(length<0?-length:length);
+        return length<0?QStringLiteral("(%1)").arg(size):size;
+      }
+      return {};
+    }
+    if (index.column()!=0) { return {}; }
+    const auto path=filePath(*download_,file);
+    if (role==ArchivePathRole||role==Qt::ToolTipRole) { return path; }
+    if (role==Qt::DisplayRole||role==Qt::UserRole) {
+      if (path.isEmpty()) { return display(file.path); }
+      return packet_->showFullFilePaths?QDir::toNativeSeparators(path):QFileInfo(path).fileName();
+    }
+    return {};
+  }
+
+private:
+  DownloadArchivePresentation packet_;
+  const core::ArchivedDownloadMetadata* download_ = nullptr;
+};
 } // namespace
 
 DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet, QWidget* parent) : QDialog(parent) {
@@ -116,7 +178,7 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
   } else if (!packet->rows.empty()) {
     auto* table = new QTableView(this);
     auto* sorted = new QSortFilterProxyModel(table);
-    sorted->setSourceModel(new Model(packet, sorted));
+    sorted->setSourceModel(new Model(packet,sorted));
     sorted->setSortRole(Qt::UserRole);
     table->setModel(sorted);
     table->setObjectName(QStringLiteral("archived-downloads-table"));
@@ -127,25 +189,44 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
     table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     table->horizontalHeader()->setStretchLastSection(true);
     layout->addWidget(table);
+    auto* files=new QTableView(this);
+    files->setObjectName(QStringLiteral("archived-files-table"));
+    files->setSelectionBehavior(QAbstractItemView::SelectRows);
+    files->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    auto* sortedFiles=new QSortFilterProxyModel(files);
+    auto* fileModel=new FileModel(packet,sortedFiles);
+    sortedFiles->setSourceModel(fileModel);
+    sortedFiles->setSortRole(Qt::UserRole);
+    files->setModel(sortedFiles);
+    files->setSortingEnabled(true);
+    files->sortByColumn(0,Qt::AscendingOrder);
+    files->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+    files->hide();
+    layout->addWidget(files);
+    connect(table->selectionModel(),&QItemSelectionModel::selectionChanged,files,[=] {
+      const auto selected=table->selectionModel()->selectedRows();
+      fileModel->setDownload(selected.size()==1?sorted->mapToSource(selected.front()):QModelIndex{});
+      files->setVisible(fileModel->rowCount()>0);
+    });
     const auto containing = packet->openContainingFolder;
     auto* open = buttons->addButton(containing ? tr("Open Containing Folder") : tr("Show in File Manager"),
         QDialogButtonBox::ActionRole);
     open->setObjectName(QStringLiteral("open-archived-folders"));
-    const auto selectedLocations = [table] {
+    const auto selectedLocations = [](const QTableView* source) {
       QStringList locations;
-      for (const auto& index : table->selectionModel()->selectedRows()) {
-        auto location = localPath(index);
+      for (const auto& index : source->selectionModel()->selectedRows()) {
+        auto location = localPath(index.data(ArchivePathRole).toString());
         if (!location.isEmpty()) { locations.push_back(std::move(location)); }
       }
       return locations;
     };
     open->setEnabled(false);
     connect(table->selectionModel(), &QItemSelectionModel::selectionChanged, open,
-        [open, selectedLocations] { open->setEnabled(!selectedLocations().isEmpty()); });
-    connect(open, &QPushButton::clicked, this, [this, selectedLocations, containing] {
+        [open, table, selectedLocations] { open->setEnabled(!selectedLocations(table).isEmpty()); });
+    const auto showLocations=[this,containing](const QStringList& paths) {
       QStringList locations;
       QSet<QString> seen;
-      for (const auto& location : selectedLocations()) {
+      for (const auto& location : paths) {
         auto selected = containing ? QFileInfo(location).absolutePath() : existingLocation(location);
         if (containing && (selected == location || !QFileInfo(selected).isDir())) { continue; }
         if (selected.isEmpty() || seen.contains(selected)) { continue; }
@@ -154,7 +235,15 @@ DownloadArchiveDialog::DownloadArchiveDialog(DownloadArchivePresentation packet,
       }
       if (!locations.isEmpty()) { emit openLocationsRequested(std::move(locations),!containing); }
       else { QMessageBox::information(this, tr("Show in File Manager"), tr("The selected save locations are unavailable.")); }
-    });
+    };
+    connect(open,&QPushButton::clicked,this,[=]{showLocations(selectedLocations(table));});
+    auto* revealFile=new QAction(open->text(),files);
+    files->addAction(revealFile);
+    files->setContextMenuPolicy(Qt::ActionsContextMenu);
+    revealFile->setEnabled(false);
+    connect(files->selectionModel(),&QItemSelectionModel::selectionChanged,revealFile,
+        [=]{revealFile->setEnabled(!selectedLocations(files).isEmpty());});
+    connect(revealFile,&QAction::triggered,this,[=]{showLocations(selectedLocations(files));});
     if (packet->writable) {
       auto* restore = buttons->addButton(tr("Restore"), QDialogButtonBox::ActionRole);
       restore->setObjectName(QStringLiteral("restore-archived-download"));

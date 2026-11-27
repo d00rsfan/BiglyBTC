@@ -8,6 +8,7 @@
 #include "utf8_path.hpp"
 
 #include <QApplication>
+#include <QAction>
 #include <QCheckBox>
 #include <QDir>
 #include <QItemSelectionModel>
@@ -283,6 +284,10 @@ int main(int argc, char** argv) try {
       && first.metadata.fileLengths == std::vector<std::int64_t>{-1024, 4096}
       && first.metadata.shareRatio == 1245 && first.metadata.tags == std::vector<std::string>{"Kept", "Saved"},
       "Retain Original archive fields and incomplete-file sign");
+  require(first.metadata.fileEntries.size()==2&&first.metadata.fileEntries[0].relative
+      &&first.metadata.fileEntries[0].path=="part.iso"&&first.metadata.fileEntries[0].length==-1024
+      &&!first.metadata.fileEntries[1].relative&&first.metadata.fileEntries[1].path=="/nonexistent/linked file",
+      "Distinguish relative and linked archived files in their original order");
   require(first.metadata.size == 5120 && first.metadata.completedMillis == 1699999000000
       && second.metadata.completedMillis == 0, "Match Original display values");
 
@@ -308,7 +313,9 @@ int main(int argc, char** argv) try {
   packet->rows.push_back(std::move(earlier));
   auto parentPacket = std::make_shared<ui::DownloadArchivePacket>(*packet);
   parentPacket->openContainingFolder = true;
+  parentPacket->showFullFilePaths = true;
   parentPacket->rows[0].metadata.savePath = platform::pathToUtf8(savedFolder);
+  parentPacket->rows[0].metadata.fileEntries[0].path = "payload.bin";
   ui::DownloadArchiveDialog dialog(std::move(packet));
   auto* table = dialog.findChild<QTableView*>("archived-downloads-table");
   require(table && table->model()->rowCount() == 3, "Show all archive rows");
@@ -366,6 +373,21 @@ int main(int argc, char** argv) try {
   openParent->click();
   require(!revealParent && openedParents == QStringList{nativeFolder(savedFolder.parent_path())},
       "Containing folder for a saved directory opens its parent");
+  auto* parentFiles=parentDialog.findChild<QTableView*>("archived-files-table");
+  require(parentFiles&&parentFiles->model()->rowCount()==2,"Show files for the selected archive row");
+  auto* fileModel=parentFiles->model();
+  const auto fullName=QDir::toNativeSeparators(nativeFolder(savedFolder/"payload.bin"));
+  int fileIndex=-1;
+  for (int row=0;row<fileModel->rowCount();++row) {
+    if (fileModel->index(row,0).data().toString()==fullName) { fileIndex=row; }
+  }
+  require(fileIndex>=0&&fileModel->index(fileIndex,1).data().toString().startsWith('(')
+      &&fileModel->index(fileIndex,1).data(Qt::UserRole).toLongLong()==-1024,
+      "Show the absolute path and the original incomplete size sign");
+  parentFiles->selectRow(fileIndex);
+  require(parentFiles->actions().size()==1&&parentFiles->actions().front()->isEnabled(),"Reveal a selected archived file");
+  parentFiles->actions().front()->trigger();
+  require(!revealParent&&openedParents==QStringList{nativeFolder(savedFolder)},"Open the selected archived file's containing folder");
   restoreAndStart->click();
   require(requestedSession == 17 && requestedHashes.size() == 2 && requestedHashes.contains(firstHash)
       && requestedHashes.contains(earlierHash) && requestedStart, "Restore and Start routes both selected original identities");

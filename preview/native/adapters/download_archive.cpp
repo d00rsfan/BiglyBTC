@@ -42,13 +42,22 @@ core::ArchivedDownloadMetadata readMetadata(const Node& row) {
     }
     out.files = files->children.size();
     out.fileLengths->reserve(out.files);
+    out.fileEntries.reserve(out.files);
     for (const auto& file : files->children) {
-      const auto* length = file.find("len");
-      if (!length || length->type != Node::Type::Integer) {
-        out.fileLengths.reset();
-        break;
+      core::ArchivedFile entry;
+      entry.path = text(file, "file");
+      if (!entry.path) {
+        entry.path = text(file, "rel");
+        entry.relative = entry.path.has_value();
       }
-      out.fileLengths->push_back(length->integer);
+      const auto* length = file.find("len");
+      if (length && length->type == Node::Type::Integer) {
+        entry.length = length->integer;
+        if (out.fileLengths) { out.fileLengths->push_back(*entry.length); }
+      } else {
+        out.fileLengths.reset();
+      }
+      out.fileEntries.push_back(std::move(entry));
     }
   }
   return out;
