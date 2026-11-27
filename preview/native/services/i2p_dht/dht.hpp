@@ -80,7 +80,7 @@ enum class PeerReplyMode {Azureus,Ordinary};
 // Local _v stays AZ4 for every caller, exactly as original sendResponse.
 // Ordinary get_peers omits flags; filtering is the responder's separate policy.
 Result<Bytes> encodeReply(const Message&,PeerReplyMode);
-struct AzureusLookup {std::uint8_t maximum=0;std::int16_t flags=0;};
+struct AzureusLookup {std::uint8_t maximum=0;std::int16_t flags=0;bool distinctOrigins=false;};
 struct LookupOptions {
   Id target{};bool seed=false,announce=false;unsigned timeoutMilliseconds=120000,parallelism=3;
   std::optional<AzureusLookup> azureus{};
@@ -109,6 +109,7 @@ struct Snapshot {
   // needs its application signature and a separate signed DATA exchange.
   std::vector<AzureusValueReporter> azureusReporters{};
   std::vector<AzureusContact> azureusStoreResponders{};
+  bool azureusDiversified=false;
 };
 // Owns only observations/intents. The Qt actor supplies actual dispatch/reply
 // facts; a candidate contact or raw reply is never a source/effect grant.
@@ -135,6 +136,6 @@ private:
   bool offer(const Contact&);
   LookupOptions options_;std::vector<Node> nodes_;std::vector<Peer> peers_;std::vector<AzureusValue> azureusValues_;
   std::uint64_t operation_=0,rejected_=0;Phase phase_=Phase::Idle;
-  std::int64_t end_=0,last_=0;bool publishing_=false;
+  std::int64_t end_=0,last_=0;bool publishing_=false,azureusDiversified_=false;
 };
 } // namespace biglybtc::services::i2p::dht

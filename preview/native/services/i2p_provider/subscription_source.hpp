@@ -34,7 +34,7 @@ private:
       engine::SubscriptionSeedSource initial, engine::HeldSubscriptionSeedResolver resolver)
       : lease_(std::move(lease)), hash_(std::move(hash)), initial_(std::move(initial)), resolver_(std::move(resolver)) {}
 
-  std::shared_ptr<const engine::SubscriptionSeedPresence> presence(std::uint64_t revision) const noexcept {
+  std::shared_ptr<const engine::SubscriptionSeedPublication> presence(std::uint64_t revision) const noexcept {
     const auto records=current(revision)?records_.load():nullptr;
     if (!records||!records->presence) { return {}; }
     return {records,&*records->presence};
@@ -44,6 +44,11 @@ private:
     if (!records||!records->metainfo) { return {}; }
     return {records,&*records->metainfo};
   }
+  std::shared_ptr<const std::vector<engine::SubscriptionSeedPublication>> associations(std::uint64_t revision) const noexcept {
+    const auto records=current(revision)?records_.load():nullptr;
+    if (!records||records->associations.empty()) { return {}; }
+    return {records,&records->associations};
+  }
   std::shared_ptr<const engine::SubscriptionSeedUpgradeProbe> upgrade(std::uint64_t revision) const noexcept {
     const auto records=current(revision)?records_.load():nullptr;
     if (!records||!records->upgrade) { return {}; }
@@ -51,9 +56,10 @@ private:
   }
 
   struct NetworkRecords {
-    std::optional<engine::SubscriptionSeedPresence> presence;
+    std::optional<engine::SubscriptionSeedPublication> presence;
     std::optional<engine::SubscriptionSeedMetainfo> metainfo;
     std::optional<engine::SubscriptionSeedUpgradeProbe> upgrade;
+    std::vector<engine::SubscriptionSeedPublication> associations;
     bool operator==(const NetworkRecords&) const=default;
   };
 
@@ -77,6 +83,9 @@ private:
               if (previous) { records_.store(nullptr); }
             } else {
               projected.presence=std::move(current->presence);
+              if (current->associations.size()<=4096) {
+                projected.associations=std::move(current->associations);
+              }
               if (current->ddbMetainfo&&!current->ddbMetainfo->encoded.empty()&&current->ddbMetainfo->encoded.size()<=4096) {
                 projected.metainfo=std::move(current->ddbMetainfo);
               }

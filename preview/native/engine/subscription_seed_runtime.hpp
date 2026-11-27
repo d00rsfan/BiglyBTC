@@ -33,12 +33,12 @@ inline std::size_t nextSubscriptionSeedCandidate(std::span<const core::TorrentHa
 
 enum class SubscriptionSeedRead { Prepare, Revalidate };
 
-struct SubscriptionSeedPresence {
+struct SubscriptionSeedPublication {
   SubscriptionSeedHash dhtKey{};
   std::string wire;
   std::int32_t version=0;
   std::string applicationKey{};
-  bool operator==(const SubscriptionSeedPresence&) const=default;
+  bool operator==(const SubscriptionSeedPublication&) const=default;
 };
 
 struct SubscriptionSeedMetainfo {
@@ -58,9 +58,10 @@ struct SubscriptionSeedSource {
   std::string metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle{};
-  std::optional<SubscriptionSeedPresence> presence{};
+  std::optional<SubscriptionSeedPublication> presence{};
   std::optional<SubscriptionSeedMetainfo> ddbMetainfo{};
   std::optional<SubscriptionSeedUpgradeProbe> upgrade{};
+  std::vector<SubscriptionSeedPublication> associations{};
 
   bool sameVersion(const SubscriptionSeedSource& other) const {
     return metainfo == other.metainfo && directory == other.directory;

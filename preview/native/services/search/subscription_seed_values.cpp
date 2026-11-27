@@ -203,14 +203,20 @@ std::expected<std::string,Error> cryptMetainfo(const Hash& hash,std::string_view
 }
 } // namespace
 
-std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(
+std::expected<SubscriptionAssociationKey,SubscriptionSeedError> subscriptionAssociationKey(
     const core::TorrentHash& torrent) try {
   if (torrent.bytes().empty()) { return std::unexpected(Error::Malformed); }
-  const auto key=sha1("subscription:assoc:"+torrent.hex());
-  if (!key) { return std::unexpected(Error::Crypto); }
-  return *key;
+  auto application="subscription:assoc:"+torrent.hex();
+  const auto dht=sha1(application);
+  if (!dht) { return std::unexpected(Error::Crypto); }
+  return SubscriptionAssociationKey{std::move(application),*dht};
 } catch (const std::bad_alloc&) {
   return std::unexpected(Error::Limit);
+}
+
+std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(
+    const core::TorrentHash& torrent) {
+  return subscriptionAssociationKey(torrent).transform([](const auto& key) { return key.dht; });
 }
 
 std::expected<std::array<char,14>,SubscriptionSeedError> encodeSubscriptionAssociationHint(

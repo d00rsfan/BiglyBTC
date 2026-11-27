@@ -416,6 +416,7 @@ bool Lookup::start(std::uint64_t operation,const LookupOptions& options,std::spa
   if (options.azureus&&(!options.azureus->maximum||options.azureus->maximum>MaximumPeers)) { return false; }
   for(const auto& s:seeds){if(!validContact(s)){return false;}}
   options_=options;operation_=operation;phase_=Phase::Running;end_=now+options.timeoutMilliseconds;last_=now;nodes_.clear();peers_.clear();azureusValues_.clear();rejected_=0;publishing_=false;
+  azureusDiversified_=false;
   nodes_.reserve(MaximumContacts);peers_.reserve(MaximumPeers);for(const auto& s:seeds){offer(s);}return true;
 }
 void Lookup::cancel()noexcept{if(running()){phase_=Phase::Cancelled;azureusValues_.clear();}}
@@ -490,8 +491,14 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
         if (candidate.protocol>=MinimumAzureusProtocol) { offer(candidate.contact); }
       }
     } else if (const auto* hit=std::get_if<AzureusValueHit>(&payload)) {
+      azureusDiversified_|=hit->diversification!=1; // Original DHT.DT_NONE
       for (const auto& entry:hit->values) {
-        const auto previous=std::ranges::find(azureusValues_,entry.bytes,&AzureusValue::bytes);
+        const auto previous=std::ranges::find_if(azureusValues_,[&](const auto& seen) {
+          if (seen.bytes!=entry.bytes) { return false; }
+          if (!options_.azureus->distinctOrigins) { return true; }
+          if (!seen.origin||!entry.origin) { return !seen.origin&&!entry.origin; }
+          return seen.origin->contact.id==entry.origin->contact.id;
+        });
         const auto index=static_cast<std::size_t>(previous-azureusValues_.begin());
         if (previous==azureusValues_.end()) {
           if (azureusValues_.size()>=options_.azureus->maximum) { continue; }
@@ -517,6 +524,7 @@ bool Lookup::reply(const Message& message,std::uint16_t port,std::int64_t now){
 Snapshot Lookup::snapshot()const{
   Snapshot s;s.operation=operation_;s.phase=phase_;s.target=options_.target;s.peers=peers_;s.contacts=nodes_.size();s.rejected=rejected_;
   s.azureusValues=azureusValues_;
+  s.azureusDiversified=azureusDiversified_;
   for (const auto& node:nodes_) {
     if (node.phase==NodePhase::Replied) { ++s.replied; }
     if (node.announced) { ++s.announced; }

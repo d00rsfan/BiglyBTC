@@ -39,6 +39,11 @@ struct SubscriptionAssociationHint {
   bool operator==(const SubscriptionAssociationHint&) const = default;
 };
 
+struct SubscriptionAssociationKey {
+  std::string application;
+  std::array<char,20> dht;
+};
+std::expected<SubscriptionAssociationKey,SubscriptionSeedError> subscriptionAssociationKey(const core::TorrentHash&);
 std::expected<std::array<char,20>,SubscriptionSeedError> subscriptionAssociationDhtKey(const core::TorrentHash&);
 std::expected<std::array<char,14>,SubscriptionSeedError> encodeSubscriptionAssociationHint(const SubscriptionAssociationHint&) noexcept;
 std::expected<SubscriptionAssociationHint,SubscriptionSeedError> decodeSubscriptionAssociationHint(std::string_view) noexcept;

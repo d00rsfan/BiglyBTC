@@ -23,12 +23,20 @@ struct SavedSubscriptionUpgradeProbe {
   std::uint32_t minimumVersion=0;
 };
 
+struct SavedSubscriptionAssociationPublication {
+  std::array<char,20> dhtKey;
+  std::array<char,14> value;
+  std::string applicationKey{};
+  bool operator==(const SavedSubscriptionAssociationPublication&) const = default;
+};
+
 struct PreparedSubscriptionSeed {
   SubscriptionSeed metainfo;
   std::filesystem::path directory;
   std::shared_ptr<const storage::detail::StateDescriptor> directoryHandle;
   bool ddbTransferAllowed=false;
   std::optional<SavedSubscriptionUpgradeProbe> upgrade{};
+  std::vector<SavedSubscriptionAssociationPublication> associations{};
 };
 
 struct SavedSubscriptionSeedCandidate {
@@ -37,16 +45,10 @@ struct SavedSubscriptionSeedCandidate {
   std::int64_t popularity;
 };
 
-struct SavedSubscriptionAssociationPublication {
-  std::array<char,20> dhtKey;
-  std::array<char,14> value;
-  bool operator==(const SavedSubscriptionAssociationPublication&) const = default;
-};
-
 // Lightweight catalog observation. The signed body is checked on demand.
 std::expected<std::vector<SavedSubscriptionSeedCandidate>,SavedRssSourceError> savedSubscriptionSeedCandidates(
     const storage::ProfileLease&,SubscriptionSeedNetwork);
-// Observes one public, subscribed, signed row and its current saved
+// Observes a signed, subscribed row with is_public set and its current saved
 // associations under the same profile lease and read hold as the seed.
 std::expected<std::vector<SavedSubscriptionAssociationPublication>,SavedRssSourceError> savedSubscriptionAssociationPublications(
     const storage::ProfileLease&,const storage::ProfileSourceAccess&,std::string_view publicationHash,

@@ -249,6 +249,8 @@ void checkSavedSource(const core::Node& fixture,Network route) {
     const auto oldestKey=search::subscriptionAssociationDhtKey(*oldest);
     require(newestKey&&oldestKey&&records->at(0).dhtKey==*newestKey&&records->at(1).dhtKey==*oldestKey,
         "Prefer the most recent eligible association");
+    require(records->at(0).applicationKey=="subscription:assoc:"+newest->hex()&&
+        records->at(1).applicationKey=="subscription:assoc:"+oldest->hex(),"Keep both original unhashed keys for the relay");
     const auto& wire=records->front().value;
     const auto hint=search::decodeSubscriptionAssociationHint({wire.data(),wire.size()});
     require(hint&&(**seed).metainfo.presence&&hint->version==(**seed).metainfo.presence->version&&hint->fixedRandom==0xe7,
@@ -335,16 +337,26 @@ void checkSavedSource(const core::Node& fixture,Network route) {
     save();
     const auto state=resolve(FileOperation::Verify);
     require(state&&*state&&bool((**state).upgrade)==(route==Network::I2P),"Use the prepared upgrade only on the selected I2P source");
+    require((**state).associations.size()==(route==Network::I2P?1:0),"Only I2P owners need held association relay records");
     if (route==Network::I2P) {
-      const auto key=search::subscriptionAssociationDhtKey(*core::TorrentHash::parse(associationHash));
+      const auto key=search::subscriptionAssociationKey(*core::TorrentHash::parse(associationHash));
       const auto& probe=*(**state).upgrade;
-      require(key&&probe.associations==std::vector{*key}&&probe.publicKey==field(row,"public_key")&&probe.minimumVersion==6,
+      const auto& publication=(**state).associations.front();
+      require(key&&probe.associations==std::vector{key->dht}&&probe.publicKey==field(row,"public_key")&&probe.minimumVersion==6,
           "Upgrade request retains the pinned key, association, and prompted version boundary");
+      require(publication.applicationKey==key->application&&publication.dhtKey==key->dht,
+          "The read and write routes use the same association identity");
     }
     require(associated->replaceValue("private_key","4:mine").has_value(),"Capture the original owned-subscription marker");
     save();
     const auto self=resolve(FileOperation::Verify);
     require(self&&*self&&!(**self).upgrade&&readVersioned()==body,"Own source continues seeding without an upgrade request");
+    require((**self).associations==(**state).associations,"Owning the signing key leaves association publication enabled");
+    require(associated->replaceValue("assoc","li0ee").has_value(),"Generate malformed association data");
+    save();
+    const auto malformed=resolve(FileOperation::Verify);
+    require(malformed&&*malformed&&(**malformed).associations.empty()&&readVersioned()==body,
+        "Malformed associations leave the independent signed version available");
     write(root/"subscriptions.config",field(fixture,"config"));
   }
   write(versioned,"sentinel");

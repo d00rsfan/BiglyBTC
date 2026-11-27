@@ -282,8 +282,12 @@ class DhtChannelTests final:public QObject {
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,-315);
         if (wire) {
-          result.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),
+          result.presence=engine::SubscriptionSeedPublication{presence.dhtKey,std::move(*wire),
               static_cast<std::int32_t>(presence.version),presence.applicationKey};
+          for (auto& association:checked.associations) {
+            result.associations.push_back({association.dhtKey,{association.value.begin(),association.value.end()},
+                static_cast<std::int32_t>(presence.version),std::move(association.applicationKey)});
+          }
         }
         if (checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);
@@ -826,6 +830,8 @@ private slots:
     QTest::newRow("withdraw-before-store") << false << false << false << 2;
     QTest::newRow("relay-signed-version") << false << false << false << 3;
     QTest::newRow("withdraw-before-relay") << false << false << false << 4;
+    QTest::newRow("relay-subscription-association") << false << false << false << 5;
+    QTest::newRow("suppress-repeated-association") << false << false << false << 6;
   }
   void actualSignedPrivateSeed() {
     QFETCH(bool,withdraw);
@@ -850,7 +856,19 @@ private slots:
     const auto body=source->find("payload")->bytes;
     original::fs::create_directory(profile.path/"subs");
     original::write(profile.path/"subs"/file.substr(0,file.rfind('.')),body);
-    original::write(profile.path/"subscriptions.config",source->find("config")->bytes);
+    auto registry=original::core::Document::parse(std::string(source->find("config")->bytes));
+    QVERIFY(registry);
+    if (publication>=5) {
+      const auto* rows=registry->find("subs");
+      QVERIFY(rows&&rows->children.size()==1);
+      auto associated=original::core::Document::parse(original::core::encodeValue(rows->children.front()).value());
+      QVERIFY(associated&&associated->replaceValue("is_public","i1e")&&associated->replaceValue("rand","i-27e"));
+      const auto bytes=profile.hash.bytes();
+      const std::string raw(reinterpret_cast<const char*>(bytes.data()),bytes.size());
+      QVERIFY(associated->replaceValue("assoc","ld1:h20:"+raw+"1:wi1eee"));
+      QVERIFY(registry->replaceValue("subs","l"+associated->serialize()+"e"));
+    }
+    original::write(profile.path/"subscriptions.config",registry->serialize());
     const std::string inventory="d9:downloadslee";
     original::write(profile.path/"downloads.config",inventory);
     auto owner=provider::OwnedProfile::prepareSubscription(*profile.lease,*hash,seedResolver(profile,publication!=0));
@@ -974,6 +992,19 @@ private slots:
           const auto decoded=d::decode(signedData->payload);
           return decoded?std::optional(*decoded):std::nullopt;
         };
+        if (publication>=5) {
+          // Leave the primary session's association upgrade lookup pending
+          // while the transient session publishes both of its own records.
+          QTRY_VERIFY_WITH_TIMEOUT(router.next(),5000);
+          const auto packet=cp::decodeDhtSendDatagram(router.take());
+          QVERIFY(packet&&packet->recipient.wire==contact->destination->wire);
+          const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+          QVERIFY(mux&&mux->protocol==17&&mux->fromPort==10000);
+          const auto signedQuery=i2p::decode1(mux->datagram);
+          QVERIFY(signedQuery);
+          const auto probe=d::decode(signedQuery->payload);
+          QVERIFY(probe&&probe->method==d::Method::AzureusFindValue);
+        }
         QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
         const auto find=takeSigned(*contact);
         QVERIFY(find&&find->azureus&&find->method==d::Method::AzureusFindValue);
@@ -1012,37 +1043,38 @@ private slots:
           ack.token.clear();
           ack.azureus=d::AzureusMessage{71,0,d::AzureusStoreAck{{1}}};
           replyToSeed(publisher,24,ack,publisherPort);
-          if (publication>=3) {
+          const auto relayToMixed=[&](const d::Id& dhtKey,const i2p::Bytes& wire,
+              std::string_view applicationKey,bool withdrawMapping,std::uint32_t replyId) {
             publisherPort=0;
             QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
             const auto mixedFind=takeSigned(*mixedContact);
             QVERIFY(mixedFind&&mixedFind->method==d::Method::AzureusFindValue&&mixedFind->azureus);
             const auto* requestedMixed=std::get_if<d::AzureusFindValue>(&mixedFind->azureus->payload);
-            QVERIFY(requestedMixed&&requestedMixed->key==entry.key);
+            QVERIFY(requestedMixed&&requestedMixed->key==dhtKey);
             ack.id=mixedContact->id;
             ack.method=d::Method::AzureusFindValue;
             ack.transaction=mixedFind->transaction;
             ack.token={3,8,7,5,2,0xff,9,1};
             ack.azureus=d::AzureusMessage{72,0,std::vector<d::AzureusContact>{}};
-            replyToSeed(publisher,25,ack,publisherPort);
+            replyToSeed(publisher,replyId,ack,publisherPort);
             QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
             const auto mixedStore=takeSigned(*mixedContact);
             QVERIFY(mixedStore&&mixedStore->method==d::Method::AzureusStore&&mixedStore->azureus&&mixedStore->token==ack.token);
             const auto* mixedRecords=std::get_if<d::AzureusStore>(&mixedStore->azureus->payload);
             QVERIFY(mixedRecords&&mixedRecords->entries.size()==1);
             const auto& mixedEntry=mixedRecords->entries.front();
-            QVERIFY(mixedEntry.key==entry.key&&mixedEntry.values.size()==1);
+            QVERIFY(mixedEntry.key==dhtKey&&mixedEntry.values.size()==1);
             const auto& published=mixedEntry.values.front();
-            QVERIFY(!published.origin&&published.flags==16&&published.bytes==value.bytes);
+            QVERIFY(!published.origin&&published.flags==16&&published.bytes==wire);
             QTest::qWait(100);
             QVERIFY(!publisher.next());
-            if (publication==4) { replaceSubscriptionRows(*profile.lease,"le"); }
+            if (withdrawMapping) { replaceSubscriptionRows(*profile.lease,"le"); }
             ack.method=d::Method::AzureusStore;
             ack.transaction=mixedStore->transaction;
             ack.token.clear();
             ack.azureus=d::AzureusMessage{72,0,d::AzureusStoreAck{{1}}};
-            replyToSeed(publisher,26,ack,publisherPort);
-            if (publication==4) {
+            replyToSeed(publisher,replyId+1,ack,publisherPort);
+            if (withdrawMapping) {
               QTest::qWait(1200);
               QVERIFY(!publisher.next());
             } else {
@@ -1052,8 +1084,8 @@ private slots:
               auto* data=std::get_if<d::AzureusReadPacket>(&request->azureus->payload);
               QVERIFY(data&&data->type==d::AzureusReadPacketType::Request&&data->handler==d::AzureusBridgeTransferHandler);
               const auto mapping=d::decodeAzureusBridgeRequest(data->bridgeRequest);
-              QVERIFY(mapping&&mapping->value==value.bytes);
-              QCOMPARE(std::string(mapping->key.begin(),mapping->key.end()),signedVersion->applicationKey);
+              QVERIFY(mapping&&mapping->value==wire);
+              QCOMPARE(std::string(mapping->key.begin(),mapping->key.end()),std::string(applicationKey));
               data->type=d::AzureusReadPacketType::Reply;
               data->fragment={'d','1',':','a','i','1','e','e'};
               data->length=data->total=static_cast<std::int32_t>(data->fragment.size());
@@ -1065,7 +1097,74 @@ private slots:
               QVERIFY(signedData);
               const auto datagram=cp::encodeDhtMuxDatagram({17,mixedContact->port,publisherPort,*signedData},cp::GzipMode::Deflate);
               QVERIFY(datagram);
-              inbound(publisher,27,*datagram,true);
+              inbound(publisher,replyId+2,*datagram,true);
+            }
+          };
+          if (publication>=3) {
+            relayToMixed(entry.key,value.bytes,signedVersion->applicationKey,publication==4,25);
+            if (QTest::currentTestFailed()) { return; }
+          }
+          if (publication>=5) {
+            const auto expectedKey=biglybtc::search::subscriptionAssociationKey(profile.hash);
+            QVERIFY(expectedKey);
+            d::Id associationKey;
+            std::ranges::copy(expectedKey->dht,associationKey.begin());
+            const auto sid=QCryptographicHash::hash(
+                QByteArrayView(publicKey->bytes.data(),static_cast<qsizetype>(publicKey->bytes.size())),
+                QCryptographicHash::Sha1).first(10);
+            biglybtc::search::SubscriptionAssociationHint hint{{},signedVersion->version,0xe5};
+            std::ranges::copy(sid,hint.shortId.begin());
+            const auto encoded=biglybtc::search::encodeSubscriptionAssociationHint(hint);
+            QVERIFY(encoded);
+            const i2p::Bytes expected(encoded->begin(),encoded->end());
+
+            publisherPort=0;
+            QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+            const auto check=takeSigned(*contact);
+            QVERIFY(check&&check->method==d::Method::AzureusFindValue&&check->azureus);
+            const auto* request=std::get_if<d::AzureusFindValue>(&check->azureus->payload);
+            QVERIFY(request&&request->key==associationKey&&request->maximum==30);
+            d::AzureusValueHit existing;
+            if (publication==6) {
+              for (unsigned index=1;index<=10;++index) {
+                auto earlier=expected;
+                earlier[2]=static_cast<i2p::Byte>(index);
+                existing.values.push_back({1,static_cast<std::int64_t>(now),std::move(earlier),{},16,0});
+              }
+            }
+            ack.id=contact->id;
+            ack.method=d::Method::AzureusFindValue;
+            ack.transaction=check->transaction;
+            ack.token={8,7,6,5,4,3,2,1};
+            ack.azureus=d::AzureusMessage{71,0,std::move(existing)};
+            replyToSeed(publisher,31,ack,publisherPort);
+            if (publication==6) {
+              QTest::qWait(1000);
+              QVERIFY(!publisher.next());
+            } else {
+              QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+              const auto writeLookup=takeSigned(*contact);
+              QVERIFY(writeLookup&&writeLookup->method==d::Method::AzureusFindValue&&writeLookup->azureus);
+              const auto* writeKey=std::get_if<d::AzureusFindValue>(&writeLookup->azureus->payload);
+              QVERIFY(writeKey&&writeKey->key==associationKey&&writeKey->maximum==12);
+              ack.transaction=writeLookup->transaction;
+              ack.azureus=d::AzureusMessage{71,0,std::vector<d::AzureusContact>{}};
+              replyToSeed(publisher,32,ack,publisherPort);
+              QTRY_VERIFY_WITH_TIMEOUT(publisher.next(),5000);
+              const auto write=takeSigned(*contact);
+              QVERIFY(write&&write->method==d::Method::AzureusStore&&write->azureus&&write->token==ack.token);
+              const auto* association=std::get_if<d::AzureusStore>(&write->azureus->payload);
+              QVERIFY(association&&association->entries.size()==1);
+              const auto& records=association->entries.front();
+              QVERIFY(records.key==associationKey&&records.values.size()==1&&records.values.front().bytes==expected&&
+                  !records.values.front().origin&&records.values.front().flags==16);
+              ack.method=d::Method::AzureusStore;
+              ack.transaction=write->transaction;
+              ack.token.clear();
+              ack.azureus=d::AzureusMessage{71,0,d::AzureusStoreAck{{1}}};
+              replyToSeed(publisher,33,ack,publisherPort);
+              relayToMixed(associationKey,expected,expectedKey->application,false,40);
+              if (QTest::currentTestFailed()) { return; }
             }
           }
         }

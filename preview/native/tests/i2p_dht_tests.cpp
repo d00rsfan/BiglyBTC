@@ -172,6 +172,34 @@ void bridgeCandidatesRequireAStoreReply() {
       published.azureusStoreResponders.front().contact.destination->wire==recent.destination->wire,
       "The bridge receives the Destination that answered STORE");
 }
+void azureusAssociationReadsDeduplicateOriginAndValue() {
+  const auto seed=contact(0x45,10007),other=contact(0x51,10009);
+  d::Id key{};
+  key.fill(0x73);
+  const d::AzureusValue anonymous{13,100,i::Bytes(14,0x51),{},16,0};
+  auto first=anonymous,second=anonymous;
+  first.origin=d::AzureusContact{seed,4};
+  second.origin=d::AzureusContact{other,4};
+  for (const bool distinct:{false,true}) {
+    d::Lookup lookup;
+    require(lookup.start(1,{key,false,false,1000,1,d::AzureusLookup{30,0,distinct}},
+        std::span(&seed,1),0),"Start an Azureus association read");
+    const auto node=lookup.next(10);
+    const i::Bytes transaction(8,0x15);
+    require(node&&lookup.queued(*node,transaction,1,10)&&lookup.dispatched(1,true,11),"Dispatch association lookup");
+    d::Message reply;
+    reply.kind=d::Kind::Reply;
+    reply.method=d::Method::AzureusFindValue;
+    reply.id=seed.id;
+    reply.version=4;
+    reply.transaction=transaction;
+    reply.azureus=d::AzureusMessage{31,0,d::AzureusValueHit{{first,first,second,anonymous,anonymous},2}};
+    require(lookup.reply(reply,seed.port,12),"Accept a diversified response from the selected route");
+    const auto snapshot=lookup.snapshot();
+    require(snapshot.azureusDiversified&&snapshot.azureusValues.size()==(distinct?3U:1U),
+        "Association probes count each original origin and value once");
+  }
+}
 void interop(const std::filesystem::path& root){
   for(const std::string family:{"dsa","ed25519"}){
     auto sender=take(i::decodeDestination(read(root/(family+".sender"))));auto key=read(root/(family+".key"));
@@ -191,4 +219,4 @@ void interop(const std::filesystem::path& root){
     }
   }
 }
-int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();bridgeTransferUsesTheOriginalMappingBytes();bridgeCandidatesRequireAStoreReply();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();bridgeTransferUsesTheOriginalMappingBytes();bridgeCandidatesRequireAStoreReply();azureusAssociationReadsDeduplicateOriginAndValue();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}

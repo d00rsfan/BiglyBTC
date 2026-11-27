@@ -67,8 +67,12 @@
         const auto& presence=*checked.metainfo.presence;
         auto wire=search::encodeSubscriptionPresence(presence,nonce);
         if (wire) {
-          source.presence=engine::SubscriptionSeedPresence{presence.dhtKey,std::move(*wire),
+          source.presence=engine::SubscriptionSeedPublication{presence.dhtKey,std::move(*wire),
               static_cast<std::int32_t>(presence.version),presence.applicationKey};
+          for (auto& record:checked.associations) {
+            source.associations.push_back({record.dhtKey,{record.value.begin(),record.value.end()},
+                static_cast<std::int32_t>(presence.version),std::move(record.applicationKey)});
+          }
         }
         if (checked.ddbTransferAllowed) {
           auto response=search::subscriptionSeedDdbResponse(checked.metainfo);

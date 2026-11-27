@@ -104,6 +104,7 @@ struct VersionedSeedAccess {
   std::shared_ptr<const StateDescriptor>& directoryHandle;
   bool& ddbTransferAllowed;
   std::optional<SavedSubscriptionUpgradeProbe>& upgrade;
+  std::vector<SavedSubscriptionAssociationPublication>& associations;
   SubscriptionSeedFile operation;
 };
 
@@ -136,9 +137,9 @@ std::expected<std::vector<SavedSubscriptionAssociationPublication>,E> associatio
     }
     const auto hash=core::TorrentHash::parse(rawHash->bytes);
     if (!hash) { return std::unexpected(E::Malformed); }
-    const auto key=subscriptionAssociationDhtKey(*hash);
+    auto key=subscriptionAssociationKey(*hash);
     if (!key) { return std::unexpected(E::Unsupported); }
-    result.push_back({*key,*wire});
+    result.push_back({key->dht,*wire,std::move(key->application)});
   }
   return result;
 }
@@ -225,17 +226,19 @@ std::expected<std::optional<SavedSubscriptionSeed>,E> subscriptionSeedFromProfil
     }
     versioned->directory=std::move(*path);
     versioned->ddbTransferAllowed=transferEnabled;
-    if (network==SubscriptionSeedNetwork::I2P&&seed->presence&&!selected->find("private_key")) {
-      const auto* prompted=selected->find("hupv");
-      const auto records=associationPublications(*selected,*seed->presence,shortId);
-      if (integer(*selected,"hupv",0,0x00ffffff,0)&&records&&!records->empty()) {
+    if (network==SubscriptionSeedNetwork::I2P&&seed->presence) {
+      auto records=associationPublications(*selected,*seed->presence,shortId);
+      if (records) { versioned->associations=std::move(*records); }
+      const auto& held=versioned->associations;
+      if (!held.empty()&&!selected->find("private_key")&&integer(*selected,"hupv",0,0x00ffffff,0)) {
+        const auto* prompted=selected->find("hupv");
         SavedSubscriptionUpgradeProbe probe;
         probe.publicKey=publicKey->bytes;
         probe.minimumVersion=std::max(seed->presence->version,prompted?static_cast<std::uint32_t>(prompted->integer):0U);
-        const auto count=std::min<std::size_t>(records->size(),16);
+        const auto count=std::min<std::size_t>(held.size(),16);
         probe.associations.reserve(count);
         for (std::size_t index=0;index<count;++index) {
-          probe.associations.push_back(records->at(index).dhtKey);
+          probe.associations.push_back(held[index].dhtKey);
         }
         versioned->upgrade=std::move(probe);
       }
@@ -416,12 +419,14 @@ std::expected<std::optional<PreparedSubscriptionSeed>,SavedRssSourceError> resol
   std::shared_ptr<const StateDescriptor> directoryHandle;
   bool ddbTransferAllowed=false;
   std::optional<SavedSubscriptionUpgradeProbe> upgrade;
+  std::vector<SavedSubscriptionAssociationPublication> associations;
   auto checked=subscriptionSeedFromProfile(lease,access,publicationHash,SubscriptionSeedKey::Publication,network,
-      creationSeconds,VersionedSeedAccess{directory,directoryHandle,ddbTransferAllowed,upgrade,operation});
+      creationSeconds,VersionedSeedAccess{directory,directoryHandle,ddbTransferAllowed,upgrade,associations,operation});
   if(!checked) { return std::unexpected(checked.error()); }
   if(!*checked) { return std::optional<PreparedSubscriptionSeed>{}; }
   return std::optional{PreparedSubscriptionSeed{
-      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle),ddbTransferAllowed,std::move(upgrade)}};
+      std::move((**checked).metainfo),std::move(directory),std::move(directoryHandle),ddbTransferAllowed,
+      std::move(upgrade),std::move(associations)}};
 }
 
 struct SavedSubscriptionSourceSnapshot::Impl {

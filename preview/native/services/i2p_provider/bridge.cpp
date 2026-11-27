@@ -101,6 +101,8 @@ struct Bridge::Impl {
   bool queued=false,notifyQueued=false,wanted=false,executing=false;
   std::function<bool(void*)> install;const char* failure=nullptr;
   using DiscoverySource = std::variant<std::shared_ptr<ProfileSource>, std::shared_ptr<SubscriptionSource>>;
+  using Publication = engine::SubscriptionSeedPublication;
+  using Associations = std::vector<Publication>;
   struct Discovery {
     DiscoverySource source;core::TorrentHash selected;dht::Id wire;
     std::uint64_t admission=0;bool seeding=false;Clock::time_point next{},end{};
@@ -110,6 +112,9 @@ struct Bridge::Impl {
     Clock::time_point nextPresence=Clock::time_point::max();
     Clock::time_point nextUpgrade{};
     std::size_t nextUpgradeAssociation=0;
+    std::shared_ptr<const Associations> associations{};
+    std::size_t nextAssociationIndex=0;
+    Clock::time_point nextAssociation=Clock::time_point::max();
   };
   std::shared_ptr<ContactExchange> contactExchange;
   std::unique_ptr<dht::Actor> discovery;std::vector<Discovery> discoveries;
@@ -129,10 +134,21 @@ struct Bridge::Impl {
     std::optional<ClientIdentity> identity;
     bool mixed=false;
   };
-  struct MixedRelay {
+  struct PublicationSource {
     std::uint64_t admission=0;
+    std::optional<std::size_t> association{};
+    std::shared_ptr<const Publication> record;
+  };
+  struct AssociationPublication {
+    PublicationSource source;
     dht::Id target{};
-    std::shared_ptr<const engine::SubscriptionSeedPresence> presence;
+    Clock::time_point deadline{};
+    std::uint64_t operation=0;
+    bool storing=false;
+  };
+  struct MixedRelay {
+    PublicationSource source;
+    dht::Id target{};
     dht::AzureusBridgeMapping mapping;
     Clock::time_point deadline{};
     std::uint64_t store=0,read=0;
@@ -143,16 +159,28 @@ struct Bridge::Impl {
   dht::Actor::Options publicationRoutes;
   std::optional<dht::Actor::Options> mixedPublicationRoutes;
   std::optional<MixedRelay> mixedRelay;
+  std::optional<AssociationPublication> associationPublication;
   PublicationTransport publisher;
   Clock::time_point publisherRetry{};
-  std::shared_ptr<const engine::SubscriptionSeedPresence> subscriptionPresence(const Discovery& job) const {
+  std::shared_ptr<const Publication> subscriptionPresence(const Discovery& job) const {
     const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
     return child&&job.seeding?(*child)->presence(activeRevision):nullptr;
+  }
+  std::shared_ptr<const Associations> subscriptionAssociations(const Discovery& job) const {
+    const auto* child=std::get_if<std::shared_ptr<SubscriptionSource>>(&job.source);
+    return child&&job.seeding?(*child)->associations(activeRevision):nullptr;
+  }
+  static dht::AzureusValue dhtValue(const Publication& record) {
+    dht::AzureusValue value;
+    value.version=record.version;
+    value.bytes.assign(record.wire.begin(),record.wire.end());
+    value.flags=0x0010; // DHT.FLAG_ANON from the transient pure I2P writer.
+    return value;
   }
   std::optional<dht::AzureusValue> readSubscriptionPresence(const dht::Id& key) const {
     if (!executing||!current()||source->mixedMode()) { return {}; }
     const std::string_view target(reinterpret_cast<const char*>(key.data()),key.size());
-    std::shared_ptr<const engine::SubscriptionSeedPresence> match;
+    std::shared_ptr<const Publication> match;
     for (const auto& job:discoveries) {
       const auto publication=subscriptionPresence(job);
       if (!publication||std::string_view(publication->dhtKey.data(),publication->dhtKey.size())!=target) { continue; }
@@ -160,11 +188,7 @@ struct Bridge::Impl {
       match=publication;
     }
     if (!match||!current()) { return {}; }
-    dht::AzureusValue value;
-    value.version=match->version;
-    value.bytes.assign(match->wire.begin(),match->wire.end());
-    value.flags=0x0010; // DHT.FLAG_ANON from the pure I2P single-value DDB write.
-    return value;
+    return dhtValue(*match);
   }
   std::optional<Bytes> readSubscriptionMetainfo(const dht::Id& handler,const dht::Id& key) const {
     if (!executing||!current()||source->mixedMode()) { return {}; }
@@ -261,7 +285,8 @@ struct Bridge::Impl {
   void cancelDiscovery(std::uint64_t route){
     if(discoveryAdmission&&*discoveryAdmission==route){cancelDiscoveryOperation();}
     if (upgradeSource&&upgradeSource->admission==route) { clearUpgrade(); }
-    if (mixedRelay&&mixedRelay->admission==route) { finishMixedRelay(false); }
+    if (mixedRelay&&mixedRelay->source.admission==route) { finishMixedRelay(false); }
+    if (associationPublication&&associationPublication->source.admission==route) { cancelAssociation(); }
     std::erase_if(discoveries,[&](const auto& value){return value.admission==route;});
   }
   void finishDiscovery() {
@@ -274,45 +299,50 @@ struct Bridge::Impl {
   }
   void closePublisher() {
     if (publishingVersion) { cancelDiscoveryOperation(); }
+    cancelAssociation();
     if (mixedRelay) { finishMixedRelay(false); }
     if (publisher.actor) { publisher.actor->close();publisher.actor.reset(); }
     if (publisher.channel) { publisher.channel->close();publisher.channel.reset(); }
     publisher.identity.reset();
     publisher.mixed=false;
   }
-  void beginMixedRelay(const Discovery& job,const dht::Id& target,Clock::time_point now) {
+  void beginMixedRelay(PublicationSource publication,const dht::Id& target,Clock::time_point now) {
     if (!mixedPublicationRoutes||mixedRelay||!current()) { return; }
-    const auto publication=subscriptionPresence(job);
-    if (!publication||publication->applicationKey.empty()) { return; }
-    const auto& key=publication->applicationKey;
+    if (!publication.record||publication.record->applicationKey.empty()) { return; }
+    const auto& key=publication.record->applicationKey;
     const auto digest=QCryptographicHash::hash(
         QByteArrayView(key.data(),static_cast<qsizetype>(key.size())),QCryptographicHash::Sha1);
     if (digest!=QByteArrayView(reinterpret_cast<const char*>(target.data()),target.size())) { return; }
-    dht::AzureusBridgeMapping mapping{{key.begin(),key.end()},{publication->wire.begin(),publication->wire.end()}};
+    const auto& value=publication.record->wire;
+    dht::AzureusBridgeMapping mapping{{key.begin(),key.end()},{value.begin(),value.end()}};
     if (!dht::encodeAzureusBridgeRequest(mapping)) { return; }
-    mixedRelay.emplace(MixedRelay{job.admission,target,publication,std::move(mapping),now+std::chrono::minutes(3)});
+    mixedRelay.emplace(MixedRelay{std::move(publication),target,std::move(mapping),now+std::chrono::minutes(3)});
   }
   void finishMixedRelay(bool accepted) {
     if (publisher.mixed&&publisher.actor) {
       publisher.actor->close();
       publisher.actor.reset();
     }
-    if (!accepted) {
-      const auto job=std::ranges::find(discoveries,mixedRelay->admission,&Discovery::admission);
+    if (!accepted&&!mixedRelay->source.association) {
+      const auto job=std::ranges::find(discoveries,mixedRelay->source.admission,&Discovery::admission);
       if (job!=discoveries.end()) {
         job->nextPresence=std::min(job->nextPresence,Clock::now()+std::chrono::minutes(1));
       }
     }
     mixedRelay.reset();
   }
-  bool mixedRelayCurrent() const {
-    if (!mixedRelay||!current()) { return false; }
-    const auto job=std::ranges::find(discoveries,mixedRelay->admission,&Discovery::admission);
-    return job!=discoveries.end()&&discoveryCurrent(*job)&&subscriptionPresence(*job)==mixedRelay->presence;
+  bool currentPublication(const PublicationSource& publication) const {
+    if (!current()) { return false; }
+    const auto job=std::ranges::find(discoveries,publication.admission,&Discovery::admission);
+    if (job==discoveries.end()||!discoveryCurrent(*job)) { return false; }
+    if (!publication.association) { return subscriptionPresence(*job)==publication.record; }
+    const auto values=subscriptionAssociations(*job);
+    const auto index=*publication.association;
+    return values&&index<values->size()&& &(*values)[index]==publication.record.get();
   }
   void advanceMixedRelay(Clock::time_point now) {
     auto& relay=*mixedRelay;
-    if (!mixedRelayCurrent()||now>=relay.deadline) { finishMixedRelay(false);return; }
+    if (!currentPublication(relay.source)||now>=relay.deadline) { finishMixedRelay(false);return; }
     auto* actor=publisher.actor.get();
     if (!actor||!publisher.mixed) { return; }
     if (!relay.store) {
@@ -340,7 +370,7 @@ struct Bridge::Impl {
       }
       relay.read=0;
     }
-    while (relay.next<relay.responders.size()&&mixedRelayCurrent()) {
+    while (relay.next<relay.responders.size()&&currentPublication(relay.source)) {
       const auto operation=actor->readAzureusBridge(relay.responders[relay.next++].contact,relay.mapping);
       if (operation) { relay.read=*operation;return; }
     }
@@ -349,6 +379,72 @@ struct Bridge::Impl {
   void retryPublisher() {
     publisherRetry=Clock::now()+std::chrono::seconds(30);
     closePublisher();
+  }
+  void cancelAssociation() {
+    if (!associationPublication) { return; }
+    if (publisher.actor) { publisher.actor->cancel(associationPublication->operation); }
+    associationPublication.reset();
+  }
+  void advanceAssociation(Clock::time_point now) {
+    if (publishingVersion||mixedRelay) { return; }
+    if (associationPublication) {
+      auto& job=*associationPublication;
+      auto* actor=publisher.actor.get();
+      if (!actor||!currentPublication(job.source)||now>=job.deadline) { cancelAssociation();return; }
+      const auto observation=actor->observation();
+      if (observation.operation!=job.operation||observation.target!=job.target) { cancelAssociation();return; }
+      if (observation.phase==dht::Phase::Running) { return; }
+      if (observation.phase!=dht::Phase::Complete&&observation.phase!=dht::Phase::TimedOut) {
+        cancelAssociation();
+        return;
+      }
+      if (job.storing) {
+        beginMixedRelay(std::move(job.source),job.target,now);
+        associationPublication.reset();
+        return;
+      }
+      const auto& hint=job.source.record->wire;
+      const auto hits=std::ranges::count_if(observation.azureusValues,[&](const auto& value) {
+        return value.bytes.size()==hint.size()&&
+            std::ranges::equal(View(value.bytes).subspan(4),std::string_view(hint).substr(4),
+                [](Byte left,char right){return left==static_cast<Byte>(right);});
+      });
+      if (observation.azureusDiversified||hits>=10) { cancelAssociation();return; }
+      job.storing=true;
+      const auto writing=actor->publishAzureusValue(job.target,{12,0},120000);
+      if (!writing) { cancelAssociation();return; }
+      job.operation=*writing;
+      job.deadline=now+std::chrono::seconds(150);
+      return;
+    }
+
+    auto selected=discoveries.end();
+    auto due=Clock::time_point::max();
+    for (auto job=discoveries.begin();job!=discoveries.end();++job) {
+      if (!discoveryCurrent(*job)) { continue; }
+      if (job->nextPresence<=now+std::chrono::seconds(1)) { return; }
+      if (job->associations&&job->nextAssociation<due) {
+        selected=job;
+        due=job->nextAssociation;
+      }
+    }
+    if (selected==discoveries.end()||due>now) { return; }
+    if (!publisher.actor||publisher.mixed) {
+      selected->nextAssociation=now+(startPublisher()?std::chrono::seconds(1):std::chrono::seconds(30));
+      return;
+    }
+    const auto index=selected->nextAssociationIndex;
+    const auto& record=(*selected->associations)[index];
+    selected->nextAssociationIndex=(index+1)%selected->associations->size();
+    selected->nextAssociation=now+(selected->nextAssociationIndex?std::chrono::seconds(15):std::chrono::minutes(10));
+    if (record.wire.size()!=14||record.applicationKey.empty()||record.version<=0) { return; }
+    dht::Id target;
+    std::ranges::copy(record.dhtKey,target.begin());
+    const auto reading=publisher.actor->lookupAzureusValues(target,{30,0,true},120000);
+    if (reading) {
+      PublicationSource source{selected->admission,index,{selected->associations,&record}};
+      associationPublication=AssociationPublication{std::move(source),target,now+std::chrono::seconds(150),*reading};
+    }
   }
   bool startPublisher() {
     if (!publicationRouter||source->mixedMode()||!current()||!executing||Clock::now()<publisherRetry) { return false; }
@@ -370,7 +466,8 @@ struct Bridge::Impl {
   void pumpPublisher() {
     if (!publisher.channel) { return; }
     if (publishingVersion&&!readSubscriptionPresence(*publishingVersion)) { cancelDiscoveryOperation(); }
-    if (mixedRelay&&!mixedRelayCurrent()) { finishMixedRelay(false); }
+    if (mixedRelay&&!currentPublication(mixedRelay->source)) { finishMixedRelay(false); }
+    if (associationPublication&&!currentPublication(associationPublication->source)) { cancelAssociation(); }
     auto& wire=*publisher.channel;
     if (!wire.resumeAuthorizedEffects()) { retryPublisher();return; }
     using State=i2cp::InitialChannel::State;
@@ -398,9 +495,19 @@ struct Bridge::Impl {
       if (!id) { retryPublisher();return; }
       options.localId=*id;
       auto actor=std::make_unique<dht::Actor>(wire,q);
-      if (!actor->begin(options,[this,mixed](const dht::Id& key) {
-        return !mixed||(mixedRelay&&mixedRelay->target==key&&mixedRelayCurrent())
-            ?readSubscriptionPresence(key):std::nullopt;
+      if (!actor->begin(options,[this,mixed](const dht::Id& key)->std::optional<dht::AzureusValue> {
+        if (!executing||!current()) { return {}; }
+        if (mixed) {
+          if (mixedRelay&&mixedRelay->target==key&&currentPublication(mixedRelay->source)) {
+            return dhtValue(*mixedRelay->source.record);
+          }
+          return {};
+        }
+        if (associationPublication&&associationPublication->storing&&associationPublication->target==key&&
+            currentPublication(associationPublication->source)) {
+          return dhtValue(*associationPublication->source.record);
+        }
+        return readSubscriptionPresence(key);
       })) {
         retryPublisher();return;
       }
@@ -421,6 +528,12 @@ struct Bridge::Impl {
       if (job.versionKey!=key) {
         job.versionKey=key;
         job.nextPresence=key?now:Clock::time_point::max();
+      }
+      const auto associations=publication?subscriptionAssociations(job):nullptr;
+      if (job.associations!=associations) {
+        job.associations=associations;
+        job.nextAssociationIndex=0;
+        job.nextAssociation=associations?now:Clock::time_point::max();
       }
     }
   }
@@ -484,7 +597,8 @@ struct Bridge::Impl {
     const auto now=Clock::now();
     refreshPresenceJobs(now);
     if (mixedRelay) { advanceMixedRelay(now); }
-    if (advanceUpgrade(now)) { return; }
+    advanceAssociation(now);
+    const bool upgrading=advanceUpgrade(now);
     if(discoveryAdmission){
       auto job=std::find_if(discoveries.begin(),discoveries.end(),[&](const auto& v){return v.admission==*discoveryAdmission;});
       if(job==discoveries.end()||!discoveryCurrent(*job)||(publishingVersion&&publishingVersion!=job->versionKey)) {
@@ -496,7 +610,7 @@ struct Bridge::Impl {
             ||value.phase!=dht::Phase::Running) {
           if (value.phase==dht::Phase::Running) { publisher.actor->cancel(discoveryOperation); }
           job->nextPresence=now+(value.announced?std::chrono::minutes(10):std::chrono::minutes(1));
-          beginMixedRelay(*job,*publishingVersion,now);
+          beginMixedRelay({job->admission,{},subscriptionPresence(*job)},*publishingVersion,now);
           finishDiscovery();
         }
       }
@@ -525,12 +639,15 @@ struct Bridge::Impl {
     if(!discoveryAdmission){
       auto job=discoveries.end();
       auto due=Clock::time_point::max();
+      const bool publisherBusy=mixedRelay||associationPublication;
       for (auto candidate=discoveries.begin();candidate!=discoveries.end();++candidate) {
-        const auto candidateDue=mixedRelay?candidate->next:std::min(candidate->next,candidate->nextPresence);
+        const auto peerDue=upgrading?Clock::time_point::max():candidate->next;
+        const auto presenceDue=publisherBusy?Clock::time_point::max():candidate->nextPresence;
+        const auto candidateDue=std::min(peerDue,presenceDue);
         if (discoveryCurrent(*candidate)&&candidateDue<due) { job=candidate;due=candidateDue; }
       }
       if(job!=discoveries.end()&&now>=due){
-        const bool publish=!mixedRelay&&job->versionKey&&job->nextPresence<job->next;
+        const bool publish=!publisherBusy&&job->versionKey&&(upgrading||job->nextPresence<job->next);
         if (publish&&!publisher.actor) {
           const bool starting=startPublisher();
           job->nextPresence=now+(starting?std::chrono::seconds(1):std::chrono::seconds(30));
@@ -544,7 +661,7 @@ struct Bridge::Impl {
         } else {
           (publish?job->nextPresence:job->next)=now+std::chrono::seconds(30);
         }
-      } else {
+      } else if (!upgrading) {
         startUpgrade(now);
       }
     }
@@ -641,12 +758,14 @@ struct Bridge::Impl {
         if(!item->lookup||now>=item->end){end=std::min(end,now+std::chrono::milliseconds(250));}
       }else{end=std::min(end,item->end);}
     }}
-    if(discoveryAdmission||upgradeReader||mixedRelay){end=std::min(end,Clock::now()+std::chrono::seconds(1));}
+    if(discoveryAdmission||upgradeReader||mixedRelay||associationPublication){
+      end=std::min(end,Clock::now()+std::chrono::seconds(1));
+    }
     else{for(const auto& job:discoveries){
       // A due job still needs the asynchronous source permit. Its completion
       // schedules us; avoid a one-millisecond timer loop while I/O is pending.
       const auto now=Clock::now();
-      auto due=std::min(job.next,job.nextPresence);
+      auto due=std::min({job.next,job.nextPresence,job.nextAssociation});
       if (!upgradeSource&&subscriptionUpgrade(job)) { due=std::min(due,job.nextUpgrade); }
       end=std::min(end,due<=now?now+std::chrono::milliseconds(250):due);
     }}
