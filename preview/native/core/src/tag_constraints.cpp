@@ -745,6 +745,37 @@ namespace biglybtc::core::tags::constraints {
           }
         };
       }
+      struct TagNames {
+        Strings names;
+        bool complete;
+      };
+      bool usesRuntimeTagNames(const Ptr& arg) const {
+        return facts.tagRegistry&&facts.downloadTagCensus&&facts.selectedManualTag&&
+            arg->kind==Node::Kind::Raw&&!quoted(arg->raw)&&canonical(ascii(arg->raw),false)=="tagnames";
+      }
+      std::optional<TagNames> tagNames(){
+        if (!facts.tagRegistry||!facts.downloadTagCensus||!facts.selectedManualTag) { return {}; }
+        const auto tags=facts.tagRegistry->downloadConstraintTags();
+        if (!tags) { reject(ProblemKind::Bounds,"Runtime tag list resources are unavailable"); }
+        if (tags->tags.size()>limits.listValues) { reject(ProblemKind::Bounds,"Runtime tag list exceeds its bound"); }
+        TagNames result{{},tags->complete};
+        result.names.reserve(tags->tags.size());
+        for (const auto& ref:tags->tags) {
+          if (ref.type==3&&ref.id==*facts.selectedManualTag) {
+            result.names.emplace_back(); // The selected tag contributes an empty item.
+            continue;
+          }
+          const auto* tag=facts.tagRegistry->at(ref);
+          if (!tag||!tag->name) {
+            result.complete=false;
+            continue;
+          }
+          if (tag->name->size()>limits.stringUnits) { reject(ProblemKind::Bounds,"Runtime tag name exceeds its bound"); }
+          charge(tag->name->size());
+          result.names.push_back(*tag->name);
+        }
+        return result;
+      }
       Value keyword(const Text& name){
         const auto key=canonical(ascii(name),false);
         need(!key.empty(),"Invalid original constraint keyword");
@@ -767,6 +798,12 @@ namespace biglybtc::core::tags::constraints {
           return std::int64_t{
             INT64_MIN
           };
+        }
+        if (key=="tagnames") {
+          if (auto tags=tagNames()) {
+            if (!tags->complete) { reject(ProblemKind::Unavailable,"Direct download tag names are incomplete"); }
+            return std::move(tags->names);
+          }
         }
         return fact(key);
       }
@@ -916,6 +953,9 @@ namespace biglybtc::core::tags::constraints {
         reject(ProblemKind::Invalid,"Original string/list value required");
       }
       Text string(const Ptr& arg){
+        if (usesRuntimeTagNames(arg)) {
+          reject(ProblemKind::Unavailable,"Original first-tag registration order is unavailable");
+        }
         auto values=strings(arg);
         need(!values.empty(),"Empty original string list has no first value");
         return std::move(values.front());
@@ -1102,7 +1142,11 @@ namespace biglybtc::core::tags::constraints {
           return asciiLower(string(a[0]));
         }
         if(f=="contains"){
-          auto hay=strings(a[0]);
+          std::optional<TagNames> tags;
+          if (usesRuntimeTagNames(a[0])) {
+            tags=tagNames();
+          }
+          auto hay=tags?std::move(tags->names):strings(a[0]);
           auto needle=string(a[1]);
           const bool flag=a.size()==3&&intValue(Parser::numericLiteral(a[2]))==1;
           const bool alternatives=needle.find(u'|')!=Text::npos;
@@ -1125,8 +1169,8 @@ namespace biglybtc::core::tags::constraints {
           else{
             needles.push_back(needle);
           }
-          if(alternatives&&needles.empty()){
-            return !hay.empty();
+          if(alternatives&&needles.empty()&&!hay.empty()){
+            return true;
           }
           if(fold){
             for(auto& n:needles){
@@ -1147,6 +1191,7 @@ namespace biglybtc::core::tags::constraints {
               }
             }
           }
+          if (tags&&!tags->complete) { reject(ProblemKind::Unavailable,"Direct download tag names are incomplete"); }
           return false;
         }
         if(f=="hasnet"){

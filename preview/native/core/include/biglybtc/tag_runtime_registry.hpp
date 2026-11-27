@@ -46,6 +46,9 @@ public:
  // This does not make the general runtime census or memberships complete.
  std::expected<Selection,Error> lookupConstraintName(std::u16string_view)const;
  std::expected<Selection,Error> tagged(std::int32_t taggableType)const;
+ // Direct download tags used by the original constraint keyword. Peer-set
+ // cache observations and non-taggable swarm records do not join this list.
+ std::expected<Selection,Error> downloadConstraintTags()const;
  Truth hasName(std::u16string_view,std::int32_t taggableType)const noexcept;
  // Original known family domain only; all actual direct-download name
  // sources1..5 must be present/complete. Peer names require an explicitly
@@ -59,6 +62,7 @@ public:
  std::size_t textUnits()const noexcept;
 private:
  struct Data;explicit Registry(std::shared_ptr<const Data>);
+ std::expected<Selection,Error> selectTagged(std::int32_t target,bool sourceComplete)const;
  std::shared_ptr<const Data> data_;
 };
 }

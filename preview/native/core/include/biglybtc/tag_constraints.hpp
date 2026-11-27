@@ -48,6 +48,7 @@ namespace biglybtc::core::tags::constraints {
     bool downloadTagCensus=false,peerSetObservationComplete=false;
     // Optional owning named metric values; partial registry names still refuse.
     std::shared_ptr<const NamedTagMetrics> namedTagMetrics={};
+    std::optional<std::int32_t> selectedManualTag={};
   };
   struct NamedTagRequest {Text name;bool age=false,count=false,position=false;};
   class Expression final {

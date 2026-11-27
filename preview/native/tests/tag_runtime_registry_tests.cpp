@@ -11,7 +11,8 @@ std::vector<std::int64_t> uids(const registry::Selection& selection){std::vector
 std::vector<std::int64_t> values(const core::Node& node){std::vector<std::int64_t> out;for(const auto& n:node.children){out.push_back(n.integer);}return out;}
 registry::Tag tag(int id,std::optional<registry::Text> name,registry::Membership membership){return {id,2,std::move(name),{},true,membership};}
 }
-class TagRuntimeRegistryTests final:public QObject{Q_OBJECT
+class TagRuntimeRegistryTests final:public QObject{
+ Q_OBJECT
 private slots:
  void actualOriginalLookupAndTaggableUnion(){QFile file(QString::fromUtf8(TAG_REGISTRY_ORIGINAL_FIXTURE));QVERIFY(file.open(QIODevice::ReadOnly));auto original=core::Document::parse(file.readAll().toStdString());QVERIFY(original);const auto* cases=original->find("cases");QVERIFY(cases);QCOMPARE(cases->children.size(),std::size_t{2});unsigned queries=0,memberships=0;
   for(const auto& row:cases->children){for(const auto target:{4,2,6}){std::vector<registry::Type> types;
@@ -27,6 +28,70 @@ private slots:
  void sourceCopiesAreImmutableAndInvalidIdentitiesAreRefused(){auto input=std::vector<registry::Type>{{3,{tag(1,u"Before",registry::Membership::Present)},true}};auto made=registry::Registry::create(input,true);QVERIFY(made);auto retained=*made;input[0].tags[0].name=u"After";QCOMPARE(retained.hasName(u"Before",2),registry::Truth::Yes);QCOMPARE(retained.hasName(u"After",2),registry::Truth::No);QVERIFY(!registry::Registry::create({input[0],input[0]},true));input[0].tags.push_back(input[0].tags[0]);QVERIFY(!registry::Registry::create(input,true));QVERIFY(!registry::Registry::create({{0,{},true}},true));registry::Registry empty;QCOMPARE(empty.hasName(u"Name",2),registry::Truth::Unknown);QVERIFY(!empty.at({}));}
  void evaluatorUsesPositiveUnionAndRetainsUnknownSources(){namespace c=core::tags::constraints;auto first=tag(1,u"Shared",registry::Membership::Absent);auto second=tag(2,u"Shared",registry::Membership::Present);second.group=u"Group";auto pending=tag(3,u"Pending",registry::Membership::Unknown);auto made=registry::Registry::create({{3,{first,second,pending},false}},false);QVERIFY(made);c::Facts facts;facts.tagRegistry=*made;auto positive=c::compile(u"hasTag(\"Shared\")&&hasTagGroup(\"Group\")");QVERIFY(positive);auto value=c::evaluate(*positive,facts);QVERIFY(value&&c::truth(*value).value());auto unknown=c::compile(u"!hasTag(\"Pending\")");QVERIFY(unknown);auto kept=c::evaluate(*unknown,facts);QVERIFY(!kept&&kept.error().kind==c::ProblemKind::Unavailable);QCOMPARE(c::project(kept,{},true,false,true).membership,c::Membership::Keep);auto selected=made->lookupName(u"Shared");QVERIFY(selected);QCOMPARE(selected->tags[0].id,1);QCOMPARE(made->hasName(u"Shared",2),registry::Truth::Yes);}
  void evaluatorCountsRegistryResourcesAndCanUseCompleteKnownAbsence(){namespace c=core::tags::constraints;auto made=registry::Registry::create({{3,{tag(1,u"Name",registry::Membership::Absent)},true}},true);QVERIFY(made);c::Facts facts;facts.tagRegistry=*made;auto expression=c::compile(u"hasTag(\"Name\")");QVERIFY(expression);auto value=c::evaluate(*expression,facts);QVERIFY(value&&!c::truth(*value).value());c::Limits limits;limits.totalFactUnits=3;auto bounded=c::compile(u"true",limits);QVERIFY(bounded);auto refused=c::evaluate(*bounded,facts);QVERIFY(!refused&&refused.error().kind==c::ProblemKind::Bounds);}
+ void tagNamesUsesDirectMembershipAndBlanksOnlyTheSelectedTag(){
+  namespace c=core::tags::constraints;
+  using registry::Membership;
+  auto peer=tag(1,u"Peer only",Membership::Present);peer.taggableTypes=4;
+  auto swarm=tag(1,u"Swarm only",Membership::Unknown);swarm.taggableTypes=0;
+  const std::vector<registry::Type> types{
+   {1,{tag(1,u"Uncategorized",Membership::Present)},true},
+   {2,{tag(1,u"Seeding",Membership::Present)},true},
+   {4,{peer},false},
+   {3,{tag(0,u"Own rule",Membership::Present),tag(1,u"Same",Membership::Present),
+       tag(2,u"Same",Membership::Present),tag(3,u"Absent",Membership::Absent)},true},
+   {5,{},true},
+   {7,{swarm},false},
+  };
+  auto made=registry::Registry::create(types,false);QVERIFY(made);
+  auto selected=made->downloadConstraintTags();QVERIFY(selected&&selected->complete);
+  const std::vector<std::int64_t> expected{0x100000001,0x200000001,0x300000000,0x300000001,0x300000002};
+  QCOMPARE(uids(*selected),expected);
+
+  c::Facts facts;
+  facts.tagRegistry=*made;
+  facts.downloadTagCensus=true;
+  facts.selectedManualTag=0;
+  facts.peerSetTagNames={u"Peer only"};
+  const auto names=c::compile(u"ifThenElse(1,tag_names,tagnames)");QVERIFY(names);
+  auto value=c::evaluate(*names,facts);QVERIFY(value);
+  const c::Strings first{u"Uncategorized",u"Seeding",u"",u"Same",u"Same"};
+  QCOMPARE(std::get<c::Strings>(*value),first);
+  facts.selectedManualTag=1;
+  value=c::evaluate(*names,facts);QVERIFY(value);
+  const c::Strings next{u"Uncategorized",u"Seeding",u"Own rule",u"",u"Same"};
+  QCOMPARE(std::get<c::Strings>(*value),next);
+  facts.selectedManualTag=3;
+  value=c::evaluate(*names,facts);QVERIFY(value);
+  const c::Strings absent{u"Uncategorized",u"Seeding",u"Own rule",u"Same",u"Same"};
+  QCOMPARE(std::get<c::Strings>(*value),absent);
+  const auto firstNameLength=c::compile(u"length(tag_names)");QVERIFY(firstNameLength);
+  value=c::evaluate(*firstNameLength,facts);
+  QVERIFY(!value&&value.error().kind==c::ProblemKind::Unavailable);
+
+  auto partial=types;
+  partial[3].tags[0].membership=Membership::Unknown;
+  made=registry::Registry::create(partial,false);QVERIFY(made);
+  facts.tagRegistry=*made;
+  const auto negative=c::compile(u"!contains(tagnames,\"Missing\")");QVERIFY(negative);
+  value=c::evaluate(*negative,facts);
+  QVERIFY(!value&&value.error().kind==c::ProblemKind::Unavailable);
+  QCOMPARE(c::project(value,{},true,false,true).membership,c::Membership::Keep);
+  const auto positive=c::compile(u"contains(tag_names,\"Same\")");QVERIFY(positive);
+  value=c::evaluate(*positive,facts);
+  QVERIFY(value&&c::truth(*value).value());
+  value=c::evaluate(*names,facts);
+  QVERIFY(!value&&value.error().kind==c::ProblemKind::Unavailable);
+
+  partial=types;
+  partial[3].tags[1].name.reset();
+  made=registry::Registry::create(partial,false);QVERIFY(made);
+  facts.tagRegistry=*made;
+  value=c::evaluate(*negative,facts);
+  QVERIFY(!value&&value.error().kind==c::ProblemKind::Unavailable);
+  facts.selectedManualTag=1;
+  value=c::evaluate(*negative,facts);
+  QVERIFY(value&&c::truth(*value).value());
+ }
  void resourceBoundsFailWithoutTruncatingSources(){registry::Limits limits;limits.tags=1;QVERIFY(!registry::Registry::create({{3,{tag(1,u"One",registry::Membership::Present),tag(2,u"Two",registry::Membership::Present)},true}},true,limits));limits={};limits.nameUnits=3;QVERIFY(!registry::Registry::create({{3,{tag(1,u"Four",registry::Membership::Present)},true}},true,limits));limits={};limits.totalUnits=5;QVERIFY(!registry::Registry::create({{3,{tag(1,u"One",registry::Membership::Present),tag(2,u"Two",registry::Membership::Present)},true}},true,limits));}
 };
 QTEST_GUILESS_MAIN(TagRuntimeRegistryTests)

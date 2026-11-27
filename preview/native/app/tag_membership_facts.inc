@@ -201,6 +201,7 @@ c::Result<ConstraintFactSnapshot> captureConstraintTagMembership(ConstraintFactS
     }
     if(result.facts_.values.size()>128){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact count bound"});}
     result.facts_.downloadTagCensus=!plan&&target->bytes().size()==20&&result.internalTagScope_.has_value()&&knownDownloadTagDomain(*tags.source);
+    result.facts_.selectedManualTag=selectedTag;
     result.tagSnapshot_=snapshot;if(plan){result.tagPlan_=*plan;}if(cohort){result.tagCohort_=*cohort;}return result;
   }catch(const std::bad_alloc&){return std::unexpected(c::Problem{c::ProblemKind::Bounds,"Tag fact resources unavailable"});}
 }

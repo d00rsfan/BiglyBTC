@@ -11,6 +11,30 @@ struct Registry::Data {
  std::map<Text,std::vector<Reference>,std::less<>> names,groups;
  std::vector<Reference> unknownNames,unknownGroups;
  const Tag& entry(const Reference& ref)const noexcept{return types[ref.typeIndex].tags[ref.tagIndex];}
+ bool completeDownloadDomain()const noexcept {
+  unsigned observed=0;
+  for (const auto& type:types) {
+   switch (type.id) {
+    case 1: case 2: case 3: case 5:
+     if (!type.complete) { return false; }
+     observed|=1U<<unsigned(type.id-1);
+     break;
+    case 4: case 7: {
+     const int taggable=type.id==4?4:0;
+     if (std::ranges::any_of(type.tags,[taggable](const Tag& tag){return tag.taggableTypes!=taggable;})) {
+      return false;
+     }
+     break;
+    }
+    case 6:
+     if (!type.complete||!type.tags.empty()) { return false; }
+     break;
+    default:
+     return false;
+   }
+  }
+  return observed==23;
+ }
  Truth witness(std::u16string_view name,std::int32_t target,bool group)const noexcept {
   if(target<0||name.size()>limits.nameUnits){return Truth::Unknown;}bool uncertain=!complete;
   const auto& index=group?groups:names;const auto found=index.find(name);
@@ -78,9 +102,15 @@ std::expected<Selection,Error> Registry::lookupConstraintName(std::u16string_vie
   return result;
  }catch(...){return std::unexpected(Error::Memory);}
 }
-std::expected<Selection,Error> Registry::tagged(std::int32_t target)const{
+std::expected<Selection,Error> Registry::tagged(std::int32_t target)const {
+ return selectTagged(target,data_&&data_->complete);
+}
+std::expected<Selection,Error> Registry::downloadConstraintTags()const {
+ return selectTagged(2,data_&&data_->completeDownloadDomain());
+}
+std::expected<Selection,Error> Registry::selectTagged(std::int32_t target,bool sourceComplete)const {
  try{
-  if(target<0){return std::unexpected(Error::Invalid);}Selection result;if(!data_){return result;}result.complete=data_->complete;
+  if(target<0){return std::unexpected(Error::Invalid);}Selection result;if(!data_){return result;}result.complete=sourceComplete;
   for(std::size_t i=0;i<data_->types.size();++i){const auto& type=data_->types[i];for(std::size_t j=0;j<type.tags.size();++j){const auto& tag=type.tags[j];
    if(tag.membership==Membership::Absent||(tag.taggableTypes&&*tag.taggableTypes!=target)){continue;}
    if(tag.taggableTypes&&tag.membership==Membership::Present){result.tags.push_back({i,j,type.id,tag.id});}else{result.complete=false;}
@@ -114,15 +144,7 @@ Truth Registry::downloadConstraintName(std::u16string_view name,bool peersComple
 }
 Truth Registry::downloadConstraintGroup(std::u16string_view name)const noexcept{
  if(!data_||name.size()>data_->limits.nameUnits){return Truth::Unknown;}
- bool uncertain=false;unsigned observed=0;
- for(const auto& type:data_->types){
-  if(type.id==1||type.id==2||type.id==3||type.id==5){observed|=1U<<unsigned(type.id-1);uncertain=uncertain||!type.complete;}
-  else if(type.id==4){for(const auto& tag:type.tags){if(!tag.taggableTypes||*tag.taggableTypes!=4){uncertain=true;}}}
-  else if(type.id==6){uncertain=uncertain||!type.complete||!type.tags.empty();}
-  else if(type.id==7){for(const auto& tag:type.tags){if(!tag.taggableTypes||*tag.taggableTypes!=0){uncertain=true;}}}
-  else{uncertain=true;}
- }
- uncertain=uncertain||observed!=23;
+ bool uncertain=!data_->completeDownloadDomain();
  const auto found=data_->groups.find(name);
  if(found!=data_->groups.end()){for(const auto& ref:found->second){const auto& tag=data_->entry(ref);
   if(ref.type!=1&&ref.type!=2&&ref.type!=3&&ref.type!=5){continue;}

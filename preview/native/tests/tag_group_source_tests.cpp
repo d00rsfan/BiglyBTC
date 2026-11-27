@@ -38,6 +38,92 @@ private slots:
    auto turn=app::runConstraintPeerTurn(**worker,**store,*snapshot,frame,*lease,nullptr);if(!turn||turn->changed!=(before!=after)||turn->peerRequest){throw std::runtime_error(std::string("Actual group result differs: ")+(turn?(turn->kept?turn->kept->detail:"no detail"):turn.error().message));}const auto current=turn->changed?turn->snapshot:*snapshot;const auto root=std::find_if(current.tags()->tags.begin(),current.tags()->tags.end(),[](const auto& tag){return tag.id==1;});test::require(root!=current.tags()->tags.end()&&root->uniqueHashes.size()==std::size_t(after),"Actual group membership differs");(*worker)->close();test::require(bool((*scope)->close())&&bool((*store)->close()),"Actual group owners close");return true;
   });QVERIFY(run.get());QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.stateFile),state);if(before==after){QCOMPARE(test::read(fixture.profile+"/tag.config"),raw);}for(const auto& file:fixture.files){QCOMPARE(test::read(fixture.payload+'/'+file.relative),QByteArray(file.expected.size(),'\0'));}
  }
+ void actualTagNames_data(){
+  QTest::addColumn<QString>("expression");
+  QTest::addColumn<bool>("before");
+  QTest::addColumn<bool>("hasOperationReceipt");
+  QTest::addColumn<bool>("after");
+  QTest::newRow("known-name-adds-with-incomplete-roster")<<QString("contains(tag_names,\"Generated source\")")<<false<<false<<true;
+  QTest::newRow("own-name-is-blank")<<QString("contains(tagnames,\"Generated rule\")")<<true<<true<<false;
+  QTest::newRow("incomplete-roster-keeps")<<QString("contains(tagnames,\"Generated rule\")")<<true<<false<<true;
+ }
+ void actualTagNames(){
+  QFETCH(QString,expression);
+  QFETCH(bool,before);
+  QFETCH(bool,hasOperationReceipt);
+  QFETCH(bool,after);
+  test::OwnedEngineFixture fixture(false);
+  lt::entry config(lt::entry::dictionary_type{});
+  config["locale"]="en_GB";
+  config["tagmanager.enable"]=1;
+  test::write(fixture.profile+"/biglybt.config",QByteArray::fromStdString(test::encoded(config)));
+  lt::entry tags(lt::entry::dictionary_type{});
+  auto& rule=tags["3"]["1"];
+  rule["n"]="Generated rule";
+  rule["o"]=lt::entry::list_type{};
+  if(before){rule["o"].list().emplace_back(base32(*fixture.hash));}
+  rule["c"]["pp.constraint"]=lt::entry::list_type{lt::entry(expression.toStdString()),lt::entry("am=0;")};
+  auto& source=tags["3"]["2"];
+  source["n"]="Generated source";
+  source["o"]=lt::entry::list_type{lt::entry(base32(*fixture.hash))};
+  test::write(fixture.profile+"/tag.config",QByteArray::fromStdString(test::encoded(tags)));
+
+  auto run=std::async(std::launch::async,[&]{
+   auto lease=storage::ProfileLease::acquire(fixture.native());
+   test::require(bool(lease),"Tag names own profile");
+   auto mode=storage::TagManagerStartupMode::capture(*lease);
+   test::require(bool(mode),"Tag names startup mode");
+   auto scope=app::InternalTagNamespace::activate(*lease,88,true,*mode);
+   test::require(bool(scope),"Tag names own namespace");
+   auto metadata=(*scope)->snapshot();
+   test::require(metadata&&*metadata,"Tag names current namespace");
+   auto store=storage::ManualTagStore::open(*lease);
+   test::require(bool(store),"Tag names own writer");
+   auto snapshot=(*store)->snapshot();
+   test::require(bool(snapshot),"Tag names current source");
+   auto worker=app::TagConstraintWorker::activate(*lease,88,*mode);
+   test::require(bool(worker),"Tag names normal worker");
+
+   auto library=std::make_shared<ui::LibraryPresentation>();
+   library->revision=7;
+   ui::LibraryItem item;
+   item.hash=QString::fromStdString(fixture.hash->hex());
+   item.bytes=test::OwnedEngineFixture::PayloadBytes;
+   item.providerAdmission=11;
+   item.providerGeneration=88;
+   library->items.push_back(item);
+   engine::ManagedDownloadStatus managed{*fixture.hash};
+   managed.admission=11;
+   managed.retained=managed.checked=managed.complete=managed.selectedComplete=true;
+   managed.phase=engine::ManagedPhase::Stopped;
+   managed.bytes=managed.completed=test::OwnedEngineFixture::PayloadBytes;
+   app::ConstraintWorkerFrame frame;
+   frame.session=88;
+   frame.sequence=1;
+   frame.library=library;
+   frame.sourceRevision=lease->sourceRevision();
+   frame.internalNamespace=**metadata;
+   frame.managed={managed};
+   frame.peerEngineIdentity=engine::AccountingIdentity{1,88,1};
+   frame.retiredRecheckTags.insert(item.hash);
+   frame.retiredMoveTagSubjects.insert(item.hash);
+   if(hasOperationReceipt){frame.retiredDeletingTagSubjects.insert(item.hash);}
+
+   auto result=app::runConstraintPeerTurn(**worker,**store,*snapshot,frame,*lease,nullptr);
+   if(!result||result->changed!=(before!=after)||result->peerRequest){
+    throw std::runtime_error(std::string("Tag names worker result differs: ")+
+      (result?(result->kept?result->kept->detail:"no detail"):result.error().message));
+   }
+   const auto current=result->changed?result->snapshot:*snapshot;
+   const auto found=std::ranges::find(current.tags()->tags,std::optional<std::int32_t>{1},&core::SavedDownloadTag::id);
+   test::require(found!=current.tags()->tags.end()&&found->uniqueHashes.size()==std::size_t(after),
+                "Tag names saved membership differs");
+   (*worker)->close();
+   test::require(bool((*scope)->close())&&bool((*store)->close()),"Tag names owners close");
+   return true;
+  });
+  QVERIFY(run.get());
+ }
 };
 QTEST_GUILESS_MAIN(TagGroupSourceTests)
 #include "tag_group_source_tests.moc"
