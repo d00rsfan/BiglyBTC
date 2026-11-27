@@ -10,6 +10,7 @@
 namespace biglybtc::services::i2p::provider {
 namespace {
 constexpr std::size_t MaximumReporters=8;
+constexpr std::size_t MaximumSignedVersions=4;
 
 dht::Id sha1(std::string_view input) {
   const auto digest=QCryptographicHash::hash(QByteArrayView(input.data(),static_cast<qsizetype>(input.size())),
@@ -73,46 +74,85 @@ bool SubscriptionVersionRead::selectVersion(const dht::Snapshot& snapshot) {
 }
 
 void SubscriptionVersionRead::selectReporters(const dht::Snapshot& snapshot) {
+  const auto now=Clock::now();
+  reporterDeadline_=deadline_-std::min((deadline_-now)/3,
+      std::chrono::duration_cast<Clock::duration>(std::chrono::seconds(30)));
   std::vector<std::optional<search::SignedSubscriptionPresence>> verified;
   verified.reserve(snapshot.azureusValues.size());
   for (const auto& value:snapshot.azureusValues) {
     const std::string_view bytes(reinterpret_cast<const char*>(value.bytes.data()),value.bytes.size());
     auto presence=search::verifySubscriptionPresence(bytes,publicKey_,version_);
+    if(presence&&signedVersions_.size()<MaximumSignedVersions&&std::ranges::none_of(signedVersions_,[&](const auto& found){
+      return found.publicationHash==presence->publicationHash;
+    })) { signedVersions_.push_back(*presence); }
     verified.push_back(presence?std::optional{std::move(*presence)}:std::nullopt);
   }
-  const auto remember=[&](const dht::Contact& contact,const search::SignedSubscriptionPresence& presence) {
-    const auto existing=std::ranges::find_if(reporters_,[&](const Candidate& candidate) {
-      return candidate.reporter.id==contact.id&&candidate.reporter.hash==contact.hash&&
-          candidate.reporter.port==contact.port&&candidate.presence.publicationHash==presence.publicationHash;
-    });
-    if (existing!=reporters_.end()) {
-      if (!existing->reporter.destination&&contact.destination) { existing->reporter=contact; }
-    } else if (reporters_.size()<MaximumReporters) { reporters_.push_back({contact,presence}); }
-  };
   // A replica may have the signed version record and no corresponding file.
   // The compact origin is a route hint. DATA still needs a signed reply from
   // the resolved Destination, and the final torrent payload needs its signature.
   for (std::size_t index=0;index<verified.size()&&reporters_.size()<MaximumReporters/2;++index) {
     const auto& origin=snapshot.azureusValues[index].origin;
     if (verified[index]&&origin&&origin->protocol>=dht::MinimumAzureusProtocol&&dht::validContact(origin->contact)) {
-      remember(origin->contact,*verified[index]);
+      rememberReporter(origin->contact,*verified[index]);
     }
   }
   for (const auto& match:snapshot.azureusReporters) {
     if (!match.contact.destination||!dht::validContact(match.contact)) { continue; }
     for (const auto index:match.valueIndexes) {
       if (index>=verified.size()||!verified[index]) { continue; }
-      remember(match.contact,*verified[index]);
+      rememberReporter(match.contact,*verified[index]);
     }
+  }
+}
+
+void SubscriptionVersionRead::rememberReporter(const dht::Contact& contact,
+    const search::SignedSubscriptionPresence& presence) {
+  if (!dht::validContact(contact)) { return; }
+  const auto same=[&](const Candidate& candidate) {
+    return candidate.reporter.id==contact.id&&candidate.reporter.hash==contact.hash&&
+        candidate.reporter.port==contact.port&&candidate.presence.publicationHash==presence.publicationHash;
+  };
+  if (std::ranges::any_of(attempted_,same)) { return; }
+  const auto existing=std::ranges::find_if(reporters_,same);
+  if (existing!=reporters_.end()) {
+    if (!existing->reporter.destination&&contact.destination) { existing->reporter=contact; }
+  } else if (reporters_.size()<MaximumReporters) { reporters_.push_back({contact,presence}); }
+}
+
+bool SubscriptionVersionRead::beginTorrentContactLookup() {
+  if (nextTorrentLookup_>=signedVersions_.size()) { return false; }
+  const auto& hash=signedVersions_[nextTorrentLookup_].publicationHash;
+  if (!beginLookup(sha1({hash.data(),hash.size()}),30,Phase::TorrentContacts)) { return false; }
+  ++nextTorrentLookup_;
+  reporters_.clear();
+  nextReporter_=0;
+  return true;
+}
+
+void SubscriptionVersionRead::selectTorrentReporters(const dht::Snapshot& snapshot) {
+  // MagnetPlugin reads the DDB using the torrent hash as the application key.
+  // These contacts only direct a signed transfer for the authenticated hash.
+  const auto& presence=signedVersions_[nextTorrentLookup_-1];
+  for (const auto& value:snapshot.azureusValues) {
+    if (reporters_.size()>=MaximumReporters/2) { break; }
+    if (value.origin&&value.origin->protocol>=dht::MinimumAzureusProtocol) {
+      rememberReporter(value.origin->contact,presence);
+    }
+  }
+  for (const auto& reporter:snapshot.azureusReporters) {
+    if (reporter.contact.destination&&std::ranges::any_of(reporter.valueIndexes,[&](auto index){
+      return index<snapshot.azureusValues.size();
+    })) { rememberReporter(reporter.contact,presence); }
   }
 }
 
 bool SubscriptionVersionRead::beginMetainfo() {
   static const auto handler=sha1(engine::SubscriptionSeedTransferType);
   while (nextReporter_<reporters_.size()) {
-    const auto time=remaining(deadline_,30000);
+    const auto time=remaining(nextTorrentLookup_?deadline_:reporterDeadline_,30000);
     if (!time) { break; }
     const auto& selected=reporters_[nextReporter_++];
+    attempted_.push_back(selected);
     const auto& hash=selected.presence.publicationHash;
     const auto key=sha1({hash.data(),hash.size()});
     const auto operation=actor_.readAzureusMetainfo(selected.reporter,handler,key,time);
@@ -151,9 +191,10 @@ void SubscriptionVersionRead::advance() try {
       if (!selectVersion(observed)) { cancel(); }
       return;
     }
-    selectReporters(observed);
+    if (phase_==Phase::Presence) { selectReporters(observed); }
+    else { selectTorrentReporters(observed); }
   }
-  if (!beginMetainfo()) { cancel(); }
+  if (!beginMetainfo()&&!beginTorrentContactLookup()) { cancel(); }
 } catch (...) {
   cancel();
 }
@@ -163,7 +204,10 @@ void SubscriptionVersionRead::cancel() noexcept {
   version_=0;
   publicKey_.clear();
   reporters_.clear();
+  attempted_.clear();
+  signedVersions_.clear();
   nextReporter_=0;
+  nextTorrentLookup_=0;
   phase_=Phase::Presence;
   outcome_.reset();
 }

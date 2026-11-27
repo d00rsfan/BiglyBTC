@@ -42,21 +42,28 @@ private:
     dht::Contact reporter;
     search::SignedSubscriptionPresence presence;
   };
-  enum class Phase { Association, Presence, Metainfo };
+  enum class Phase { Association, Presence, TorrentContacts, Metainfo };
 
   bool beginLookup(const dht::Id&,std::uint8_t maximum,Phase);
   bool beginMetainfo();
+  bool beginTorrentContactLookup();
+  void rememberReporter(const dht::Contact&,const search::SignedSubscriptionPresence&);
   void selectReporters(const dht::Snapshot&);
+  void selectTorrentReporters(const dht::Snapshot&);
   bool selectVersion(const dht::Snapshot&);
 
   dht::Actor& actor_;
   std::uint64_t operation_=0;
   std::uint32_t version_=0;
   Clock::time_point deadline_{};
+  Clock::time_point reporterDeadline_{};
   std::string publicKey_;
   dht::Id key_{};
   std::vector<Candidate> reporters_;
+  std::vector<Candidate> attempted_;
+  std::vector<search::SignedSubscriptionPresence> signedVersions_;
   std::size_t nextReporter_=0;
+  std::size_t nextTorrentLookup_=0;
   Phase phase_=Phase::Presence;
   std::optional<Outcome> outcome_;
 };

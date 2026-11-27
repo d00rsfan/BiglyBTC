@@ -579,6 +579,7 @@ private slots:
     QTest::newRow("torrent-verified-invalid-signature")<<true<<true<<true<<0;
     QTest::newRow("behind-replica")<<true<<false<<false<<1;
     QTest::newRow("mismatched-origin-falls-back-to-reporter")<<true<<false<<false<<2;
+    QTest::newRow("find-torrent-source-without-version-origin")<<true<<false<<false<<3;
     QTest::newRow("replayed-older-definition")<<false<<false<<false<<1;
   }
   void actualPrivateSubscriptionChecksUpgradeFromSavedAssociation() {
@@ -695,7 +696,7 @@ private slots:
     const auto replyValue=[&](const d::Message& request,std::string_view bytes,std::uint32_t packet) {
       d::AzureusValue value;
       value.bytes.assign(bytes.begin(),bytes.end());
-      if (origin&&packet==513) { value.origin=d::AzureusContact{*origin,4}; }
+      if (origin&&((packet==513&&originMode!=3)||packet==516)) { value.origin=d::AzureusContact{*origin,4}; }
       d::Message hit;
       hit.kind=d::Kind::Reply;hit.id=contact->id;hit.transaction=request.transaction;
       hit.method=d::Method::AzureusFindValue;
@@ -719,37 +720,30 @@ private slots:
     if (verified) {
       const auto* responder=&remote;
       const auto* endpoint=&*contact;
-      if (origin) {
-        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
-        const auto lookupDestination=cp::decodeHostLookup(router.take());
-        QVERIFY(lookupDestination&&lookupDestination->hash==origin->hash);
-        const auto resolved=cp::encodeHostReply({7,lookupDestination->request,0,
-            originMode==1?*originIdentity->destination():*remote.destination()});
-        QVERIFY(resolved&&router.send(*resolved));
-        if (originMode==1) { responder=&*originIdentity;endpoint=&*origin; }
-      }
-      QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
-      const auto packet=cp::decodeDhtSendDatagram(router.take());
-      QVERIFY(packet&&packet->recipient.wire==endpoint->destination->wire);
-      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
-      QVERIFY(mux&&mux->protocol==17);
-      const auto signedQuery=i2p::decode1(mux->datagram);
-      QVERIFY(signedQuery);
-      auto query=d::decode(signedQuery->payload);
-      QVERIFY(query&&query->azureus&&query->method==d::Method::AzureusData);
-      const auto body=search::subscriptionSeedDdbResponse(*newerSeed);
-      QVERIFY(body);
-      auto* data=std::get_if<d::AzureusReadPacket>(&query->azureus->payload);
-      QVERIFY(data&&std::equal(data->key.begin(),data->key.end(),newerSeed->lookupKey.begin(),[](auto a,char b) {
-        return a==static_cast<unsigned char>(b);
-      }));
-      data->type=d::AzureusReadPacketType::Reply;
-      data->length=data->total=static_cast<std::int32_t>(body->size());
-      data->fragment.assign(body->begin(),body->end());
-      const auto replyData=[&](const i2p::ClientIdentity& identity,const d::Contact& from,std::uint32_t id) {
-        query->id=from.id;
-        query->transaction={0xda,0xab,0x15};
-        const auto plain=d::encode(*query);
+      const auto takeData=[&](const d::Contact& from)->std::optional<d::Message> {
+        const auto packet=cp::decodeDhtSendDatagram(router.take());
+        if (!packet||packet->recipient.wire!=from.destination->wire) { return {}; }
+        const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+        if (!mux||mux->protocol!=17) { return {}; }
+        const auto signedQuery=i2p::decode1(mux->datagram);
+        if (!signedQuery) { return {}; }
+        auto query=d::decode(signedQuery->payload);
+        if (!query||!query->azureus||query->method!=d::Method::AzureusData) { return {}; }
+        const auto* data=std::get_if<d::AzureusReadPacket>(&query->azureus->payload);
+        if (!data||!std::ranges::equal(data->key,newerSeed->lookupKey,[](auto a,char b){
+          return a==static_cast<unsigned char>(b);
+        })) { return {}; }
+        return std::move(*query);
+      };
+      const auto replyData=[&](d::Message query,const i2p::ClientIdentity& identity,const d::Contact& from,
+          std::string_view body,std::uint32_t id) {
+        auto& data=std::get<d::AzureusReadPacket>(query.azureus->payload);
+        data.type=d::AzureusReadPacketType::Reply;
+        data.length=data.total=static_cast<std::int32_t>(body.size());
+        data.fragment.assign(body.begin(),body.end());
+        query.id=from.id;
+        query.transaction={0xda,0xab,0x15};
+        const auto plain=d::encode(query);
         QVERIFY(plain);
         const auto signedData=i2p::encode1(identity.destination()->wire,identity.signingPrivateKey(),*plain);
         QVERIFY(signedData);
@@ -757,12 +751,40 @@ private slots:
         QVERIFY(datagram);
         inbound(router,id,*datagram,true);
       };
+      if (originMode==3) {
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+        const auto replica=takeData(*contact);
+        QVERIFY(replica);
+        replyData(*replica,remote,*contact,"invalid",515);
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+        const auto lookupTorrent=takeFind();
+        QVERIFY(lookupTorrent);
+        const auto& finder=std::get<d::AzureusFindValue>(lookupTorrent->azureus->payload);
+        QVERIFY(std::ranges::equal(finder.key,newerSeed->lookupKey,[](auto a,char b){
+          return a==static_cast<unsigned char>(b);
+        }));
+        replyValue(*lookupTorrent,std::string_view("\x00\x01",2),516);
+      }
+      if (origin) {
+        QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+        const auto lookupDestination=cp::decodeHostLookup(router.take());
+        QVERIFY(lookupDestination&&lookupDestination->hash==origin->hash);
+        const auto resolved=cp::encodeHostReply({7,lookupDestination->request,0,
+            originMode==2?*remote.destination():*originIdentity->destination()});
+        QVERIFY(resolved&&router.send(*resolved));
+        if (originMode!=2) { responder=&*originIdentity;endpoint=&*origin; }
+      }
+      QTRY_VERIFY_WITH_TIMEOUT(router.next(),8000);
+      const auto query=takeData(*endpoint);
+      QVERIFY(query);
+      const auto body=search::subscriptionSeedDdbResponse(*newerSeed);
+      QVERIFY(body);
       if (originMode==1) {
-        replyData(remote,*contact,520);
+        replyData(*query,remote,*contact,*body,520);
         QTest::qWait(100);
         QVERIFY(!(*owner)->takeSubscriptionUpgrade());
       }
-      replyData(*responder,*endpoint,514);
+      replyData(*query,*responder,*endpoint,*body,514);
       const auto ready=[&]{if (!acquired) { acquired=(*owner)->takeSubscriptionUpgrade(); }return acquired.has_value();};
       QTRY_VERIFY_WITH_TIMEOUT(ready(),8000);
       QCOMPARE(acquired->previous,originalSeed->publicationHash);
