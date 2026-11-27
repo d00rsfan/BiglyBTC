@@ -288,6 +288,7 @@ private:
   void nativeSession(ui::NativeSessionPresentation);
   void ensureScheduler();
   void tickScheduler() noexcept;
+  bool applySchedulerEngine();
   void publishFileMerge();
   void initializePersistentOwner(std::stop_token);
   void publishMainlineFailure() noexcept;

@@ -4,6 +4,9 @@
 #include "../services/i2p_client/identity.hpp"
 #include "../services/i2cp_session/session.hpp"
 #include "profile.hpp"
+#include "library_commands.hpp"
+#include "scheduler_host_fixture.hpp"
+#include "ownership_file.hpp"
 #include "biglybtc/library.hpp"
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/entry.hpp>
@@ -268,7 +271,61 @@ QJsonArray seedJson(const std::vector<app::OwnedI2pService::TorrentObservation>&
       {"loopback_peer_classes",static_cast<qint64>(value.loopbackPeerClasses)}});
   }return result;
 }
-enum class Stage{Initial,Concurrent,SharedTagWindow,SharedTagReload,SharedTagClear,PausePublic,PublicPaused,ResumePublic,PublicResumed,StopPublic,PublicStopped,QueuePublic,PublicQueued,PauseI2p,I2pPaused,ResumeI2p,I2pResumed,StopI2p,I2pStopped,QueueI2p,I2pQueued,PauseForRestart,PausedForRestart,FirstClose,FirstClosed,WaitRetired,Reopen,ResumeAfterRestart,RestartStarted,WaitCache,SlotLimited,StopRunning,Handoff,RestartStopped,FinishTransfers,StopFinalPublic,PublicFinalStopped,StopFinalI2p,I2pFinalStopped,FinalClose,FinalClosed};
+void verifyPrivateScheduler(const Fixture& fixture,app::I2pServiceOptions options) {
+  namespace sh=biglybtc::test::scheduler_host;
+  namespace storage=biglybtc::storage;
+  const auto& target=fixture.torrents[1];
+  const auto& sibling=fixture.torrents[2];
+  const auto savedTarget=target.hash.bytes();
+  const auto encoded=storage::scheduler::originalOwnershipHash(
+      {reinterpret_cast<const std::uint8_t*>(savedTarget.data()),savedTarget.size()});
+  require(bool(encoded),"Cannot encode original Scheduler permission");
+  const auto ownership=sh::schedulerFile(fixture.profile,"PausedTorrents.conf");
+  const QByteArray original=QByteArray::fromStdString(*encoded+"\nopaque survivor\n");
+  {
+    auto held=storage::ProfileLease::acquire(fixture.profile.toStdString());
+    require(bool(held),"Generated Scheduler profile lock unavailable");
+    require(bool(storage::applyLibraryCommand(*held,target.hash,Action::Pause)),"Cannot recreate saved Scheduler pause");
+    sh::original(fixture.profile);
+    sh::write(ownership,original);
+  }
+  sh::ApprovedModule module;
+  options.publicCoexistence=false;
+  app::SessionBridge bridge(nullptr,{},{},module.factory(),options);
+  QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady);
+  QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+  const auto packet=[&] {return rows.empty()?ui::Presentation{}:qvariant_cast<ui::Presentation>(rows.last()[0]);};
+  const auto find=[&](const QString& hash)->std::optional<ui::LibraryItem> {
+    const auto current=packet();
+    if(!current){return {};}
+    const auto row=std::ranges::find(current->items,hash,&ui::LibraryItem::hash);
+    return row==current->items.end()?std::nullopt:std::optional{*row};
+  };
+  const auto wait=[&](const auto& ready,int milliseconds,const char* failure) {
+    QElapsedTimer elapsed;elapsed.start();
+    while(!ready()&&elapsed.elapsed()<milliseconds){QTest::qWait(25);}
+    require(ready(),failure);
+  };
+  require(bridge.openNormal(fixture.profile.toStdString()),"Private Scheduler profile open refused");
+  wait([&]{return !bridge.busy()&&find(target.text()).has_value()&&find(sibling.text()).has_value();},30000,
+      "Private Scheduler profile did not open");
+  require(find(target.text())->state.startsWith("Paused")&&sh::read(ownership)==original,
+      "Private Scheduler spent saved permission before establishing the I2P route");
+  require(bridge.downloadAction({{sibling.text(),packet()->revision}},Action::Resume),"Private I2P sibling could not resume");
+  wait([&]{const auto live=find(sibling.text());return live&&live->providerAdmission;},30000,
+      "Private I2P sibling never acquired an actual admission");
+  const auto siblingAdmission=find(sibling.text())->providerAdmission;
+  wait([&]{const auto live=find(target.text());return live&&live->providerAdmission&&live->state.startsWith("Seeding")
+      &&sh::read(ownership)=="opaque survivor\n";},45000,"Saved Scheduler pause did not resume on the live I2P route");
+  require(find(sibling.text())->providerAdmission==siblingAdmission,"Scheduler replaced the existing I2P admission");
+  const auto publicRow=find(fixture.torrents[0].text());
+  require(publicRow&&!publicRow->providerAdmission,"Private-only Scheduler created a Public admission");
+  require(!QFile::exists(sh::schedulerFile(fixture.profile,"BiglyBTC.scheduler-intent")),"Scheduler left a pending action");
+  require(bridge.closeSession(),"Private Scheduler profile close refused");
+  wait([&]{return !closed.empty();},25000,"Private Scheduler profile did not join");
+  require(closed.last()[1].toBool()&&closed.last()[2].toBool(),"Private Scheduler retained profile ownership");
+}
+enum class Stage{Initial,Concurrent,SharedTagWindow,SharedTagReload,SharedTagClear,PausePublic,PublicPaused,ResumePublic,PublicResumed,StopPublic,PublicStopped,QueuePublic,PublicQueued,PauseI2p,I2pPaused,ResumeI2p,I2pResumed,StopI2p,I2pStopped,QueueI2p,I2pQueued,PauseForRestart,PausedForRestart,FirstClose,FirstClosed,WaitRetired,Reopen,ResumeAfterRestart,RestartStarted,WaitCache,SlotLimited,StopRunning,Handoff,RestartStopped,FinishTransfers,StopActiveSeed,SeedSlotHandoff,StopPromotedSeed,PromotedSeedStopped,StopFinalPublic,PublicFinalStopped,StopFinalI2p,I2pFinalStopped,FinalClose,FinalClosed};
 }
 int main(int argc,char** argv){
   QApplication application(argc,argv);application.setQuitOnLastWindowClosed(false);
@@ -309,6 +366,8 @@ int main(int argc,char** argv){
     constexpr char alphabet[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     const auto base32=[&](const biglybtc::core::TorrentHash& hash){std::string text;unsigned value=0,bits=0;for(auto byte:hash.bytes()){value=(value<<8)|std::to_integer<unsigned char>(byte);bits+=8;while(bits>=5){bits-=5;text+=alphabet[(value>>bits)&31];}}return text;};
     const bool tagActivityLimit=QFile::exists(work+"/tag-activity-limit.request");
+    const bool seedActivityLimit=QFile::exists(work+"/tag-seed-limit.request");
+    const bool schedulerTest=QFile::exists(work+"/private-scheduler.request");
     lt::entry tags(lt::entry::dictionary_type{});auto& tag=tags["3"]["7"];tag["n"]="Generated shared Public private rate";tag["c"]["rl.down"]=8192;tag["o"]=lt::entry::list_type{lt::entry(base32(b.torrents[0].hash)),lt::entry(base32(b.torrents[1].hash))};write(b.profile+"/tag.config",encode(tags));
     publicSeed=std::make_unique<PublicSeed>(a);publicTracker.seedPort([&]{return publicSeed?publicSeed->port():0;});
     auto seedLease=biglybtc::storage::ProfileLease::acquire(a.profile.toStdString());require(seedLease.has_value(),"Cannot own I2P seed profile");
@@ -397,12 +456,13 @@ int main(int argc,char** argv){
         require(saved.paused.size()==2&&std::ranges::any_of(saved.paused,[&](const auto& p){return p.hash==b.torrents[1].hash;})&&std::ranges::any_of(saved.paused,[&](const auto& p){return p.hash==b.torrents[2].hash;}),"Original paused rows not preserved");
         for(std::size_t i=0;i<3;++i){const auto& v=savedRow(saved,i);require(v.downloaded&&v.uploaded&&*v.downloaded>=lastReceived[i]&&*v.uploaded>=lastSent[i],"Joined checkpoint lost current library counters");savedReceived[i]=*v.downloaded;}
         b.networksIntact();auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Joined Host retained profile lock");
-        b.writeSettings(false,tagActivityLimit?2:1);
-        if(tagActivityLimit){
+        b.writeSettings(false,(tagActivityLimit||seedActivityLimit)?2:1);
+        if(tagActivityLimit||seedActivityLimit){
           lt::entry cohort(lt::entry::dictionary_type{});
           auto& row=cohort["3"]["8"];
-          row["n"]="Generated shared download activity";
-          row["c"]["rl.maxadl"]=1;
+          row["n"]="Generated shared transfer activity";
+          if(tagActivityLimit){row["c"]["rl.maxadl"]=1;}
+          if(seedActivityLimit){row["c"]["rl.maxacd"]=1;}
           row["c"]["rl.als"]=1;
           row["o"]=lt::entry::list_type{lt::entry(base32(b.torrents[0].hash)),lt::entry(base32(b.torrents[1].hash))};
           write(b.profile+"/tag.config",encode(cohort));
@@ -412,7 +472,7 @@ int main(int argc,char** argv){
       case Stage::Reopen:if(!bridge->busy()&&session&&session!=initialSession&&x&&row(1)&&row(1)->state.startsWith("Paused")){require(incomplete(0)&&x->providerGeneration!=initialGenerations[0],"Restart lacks new Public owner/incomplete work");stage=Stage::ResumeAfterRestart;}break;
       case Stage::ResumeAfterRestart:static_cast<void>(trigger(1,"classic-resume",Action::Resume,Stage::RestartStarted));break;
       case Stage::RestartStarted:if(!bridge->busy()&&x&&y){require(y->providerGeneration!=initialGenerations[1],"I2P restart reused old generation");output(work+"/native-restarted.json",{{"status","ACTUAL_SAME_PROFILE_RESTARTED"},{"leech_destination_sha256",hex(b.identity)},{"session",QString::number(session)}});stage=Stage::WaitCache;}break;
-      case Stage::WaitCache:if(QFile::exists(work+"/cache-restart-precondition.json")){stage=Stage::SlotLimited;}break;
+      case Stage::WaitCache:if(QFile::exists(work+"/cache-restart-precondition.json")){stage=seedActivityLimit&&!tagActivityLimit?Stage::FinishTransfers:Stage::SlotLimited;}break;
       case Stage::SlotLimited:if(!bridge->busy()&&x&&y&&hasTraffic(0)&&hasTraffic(1)&&queued(0)!=queued(1)){
         require(incomplete(0)&&incomplete(1),"One-slot proof needs both incomplete networks");running=queued(0)?1:0;waiting=1-running;const auto* r=active(static_cast<std::size_t>(running));const auto* w=active(static_cast<std::size_t>(waiting));
         if(received(static_cast<std::size_t>(running))<savedReceived[static_cast<std::size_t>(running)]+16384){break;}
@@ -422,8 +482,57 @@ int main(int argc,char** argv){
       case Stage::StopRunning:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-stop",Action::Stop,Stage::Handoff));break;
       case Stage::Handoff:{const auto i=static_cast<std::size_t>(waiting);const auto* v=active(i);if(!bridge->busy()&&!active(static_cast<std::size_t>(running))&&v&&hasTraffic(i)&&!queued(i)&&row(static_cast<std::size_t>(running))->state=="Stopped"){
         require(v->providerAdmission==stableAdmission&&v->providerGeneration==stableGeneration,"Cross-owner handoff readmitted sibling");if(received(i)>=siblingBaseline+16384){result.insert("cross_owner_slot_handoff",uiJson());stage=Stage::RestartStopped;}}break;}
-      case Stage::RestartStopped:static_cast<void>(trigger(static_cast<std::size_t>(running),"classic-start",Action::Start,Stage::FinishTransfers));break;
-      case Stage::FinishTransfers:if(!bridge->busy()&&x&&y&&x->state.startsWith("Seeding")&&y->state.startsWith("Seeding")&&x->completed==PayloadBytes&&y->completed==PayloadBytes){require(publicTracker.discovered(),"No actual Public tracker discovery");result.insert("completed",uiJson());result.insert("Public_tracker",publicTracker.observation());require(window.grab().save(work+"/coexist-preview.png"),"Cannot retain actual coexistence screenshot");stage=Stage::StopFinalPublic;}break;
+      case Stage::RestartStopped:
+        if(trigger(static_cast<std::size_t>(running),"classic-start",Action::Start,Stage::FinishTransfers)){slotObserved=false;}
+        break;
+      case Stage::FinishTransfers:
+        if(bridge->busy()||!x||!y||x->completed!=PayloadBytes||y->completed!=PayloadBytes){break;}
+        if(seedActivityLimit){
+          if(queued(0)==queued(1)){slotObserved=false;break;}
+          const auto ready=static_cast<std::size_t>(queued(0)?1:0);
+          const auto queuedSeed=1-ready;
+          if(!active(ready)->state.startsWith("Seeding")){slotObserved=false;break;}
+          if(!slotObserved||running!=static_cast<int>(ready)||slotRunningAdmission!=active(ready)->providerAdmission
+              ||slotQueuedAdmission!=active(queuedSeed)->providerAdmission){
+            running=static_cast<int>(ready);waiting=static_cast<int>(queuedSeed);
+            slotRunningAdmission=active(ready)->providerAdmission;slotQueuedAdmission=active(queuedSeed)->providerAdmission;
+            stableGeneration=active(queuedSeed)->providerGeneration;slotObserved=true;slotAge.start();break;
+          }
+          if(slotAge.elapsed()<1000){break;}
+          result.insert("one_shared_seed_slot",uiJson());
+        }else if(!x->state.startsWith("Seeding")||!y->state.startsWith("Seeding")){break;}
+        require(publicTracker.discovered(),"No actual Public tracker discovery");
+        result.insert("completed",uiJson());result.insert("Public_tracker",publicTracker.observation());
+        require(window.grab().save(work+"/coexist-preview.png"),"Cannot retain actual coexistence screenshot");
+        stage=seedActivityLimit?Stage::StopActiveSeed:Stage::StopFinalPublic;
+        break;
+      case Stage::StopActiveSeed:
+        if(trigger(static_cast<std::size_t>(running),"classic-stop",Action::Stop,Stage::SeedSlotHandoff)){
+          latestHostMessage.clear();
+        }
+        break;
+      case Stage::SeedSlotHandoff:{
+        const auto ready=static_cast<std::size_t>(waiting);
+        const auto stopped=static_cast<std::size_t>(running);
+        if(!bridge->busy()&&active(stopped)&&latestHostMessage.contains("selection is stale")){
+          stage=Stage::StopActiveSeed;break;
+        }
+        if(!bridge->busy()&&!active(stopped)&&row(stopped)&&row(stopped)->state=="Stopped"&&active(ready)
+            &&active(ready)->state.startsWith("Seeding")){
+          const auto* promoted=active(ready);
+          require(promoted->providerAdmission==slotQueuedAdmission&&promoted->providerGeneration==stableGeneration,
+              "Cross-owner seed handoff readmitted sibling");
+          require(promoted->completed==PayloadBytes,"Promoted seed lost verified completion");
+          result.insert("shared_manual_tag_seed_handoff",uiJson());stage=Stage::StopPromotedSeed;
+        }
+        break;}
+      case Stage::StopPromotedSeed:
+        static_cast<void>(trigger(static_cast<std::size_t>(waiting),"classic-stop",Action::Stop,Stage::PromotedSeedStopped));
+        break;
+      case Stage::PromotedSeedStopped:{
+        const auto selected=static_cast<std::size_t>(waiting);
+        if(!bridge->busy()&&!active(selected)&&row(selected)&&row(selected)->state=="Stopped"){stage=Stage::FinalClose;}
+        break;}
       case Stage::StopFinalPublic:static_cast<void>(trigger(0,"classic-stop",Action::Stop,Stage::PublicFinalStopped));break;
       case Stage::PublicFinalStopped:if(!bridge->busy()&&!x&&row(0)&&row(0)->state=="Stopped"){stage=Stage::StopFinalI2p;}break;
       case Stage::StopFinalI2p:static_cast<void>(trigger(1,"classic-stop",Action::Stop,Stage::I2pFinalStopped));break;
@@ -435,9 +544,17 @@ int main(int argc,char** argv){
           for(const auto action:{Action::Pause,Action::Resume,Action::Stop,Action::Queue}){require(actions[i][static_cast<std::size_t>(action)]>0,"Missing real independent lifecycle action");}
           transfers.push_back(QJsonObject{{"network",i==0?"Public":"I2P"},{"info_hash",b.torrents[i].text()},{"verified_bytes",static_cast<qint64>(PayloadBytes)},{"saved_downloaded",static_cast<qint64>(*sr.downloaded)},{"initial_downloaded",Fixture::receivedPrefix(i)},{"payload_sha256",QString::fromLatin1(QCryptographicHash::hash(b.torrents[i].bytes,QCryptographicHash::Sha256).toHex())}});
         }
-        b.networksIntact();require(b.torrents[2].intact(false)&&a.torrents[2].intact(true)&&savedRow(saved,2).originalState==70&&savedRow(saved,2).downloaded==Fixture::receivedPrefix(2),"Paused sentinel activated or changed");auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Final Host retained profile lock");
+        b.networksIntact();require(b.torrents[2].intact(false)&&a.torrents[2].intact(true)&&savedRow(saved,2).originalState==70&&savedRow(saved,2).downloaded==Fixture::receivedPrefix(2),"Paused sentinel activated or changed");{auto free=biglybtc::storage::ProfileLease::acquire(b.profile.toStdString());require(free.has_value(),"Final Host retained profile lock");}
+        if(schedulerTest){
+          poll.stop();verifyPrivateScheduler(b,options);
+          result.insert("saved_scheduler_pause_resumed_on_owned_private_route",true);
+        }
         result.insert("transfers",transfers);result.insert("verified_bytes",static_cast<qint64>(2*PayloadBytes));result.insert("seed_destination_sha256",hex(a.identity));result.insert("leech_destination_sha256",hex(b.identity));
-        for(const auto key:{"simultaneous_Public_and_I2P","independent_controls","shared_download_slot_handoff","original_networks_preserved","cumulative_library_traffic_preserved","saved_75_70_pause_restored","both_payload_inodes_preserved","joined_before_disk_read","Host_profile_lock_released","paused_sentinel_untouched"}){result.insert(key,true);}result.insert("direct_peer_injection",false);finish(true,"Actual tracker-discovered Public and pure-I2P coexistence, shared queue and same-profile restart");}break;
+        if(!seedActivityLimit||tagActivityLimit){
+          require(result.contains("cross_owner_slot_handoff"),"Missing shared download handoff");
+          result.insert("shared_download_slot_handoff",true);
+        }
+        for(const auto key:{"simultaneous_Public_and_I2P","independent_controls","original_networks_preserved","cumulative_library_traffic_preserved","saved_75_70_pause_restored","both_payload_inodes_preserved","joined_before_disk_read","Host_profile_lock_released","paused_sentinel_untouched"}){result.insert(key,true);}result.insert("direct_peer_injection",false);finish(true,"Actual tracker-discovered Public and pure-I2P coexistence, shared queue and same-profile restart");}break;
       }
     }catch(const std::exception& error){finish(false,QString::fromUtf8(error.what()));}catch(...){finish(false,"Unexpected bounded coexistence resource failure");}});
     poll.start(25);application.exec();mark("application-loop-exited");shutdown();return code;

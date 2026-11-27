@@ -1296,6 +1296,14 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
     std::map<std::string,const engine::ManagedDownloadStatus*> live;
     for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    std::set<std::string> retainedPrivate;
+    bool privateRouteReady=false;
+    if(i2p&&i2p->sourceCurrent()){
+      for(const auto& row:i2p->observations()){
+        if(row.value.admission&&!row.value.joined){retainedPrivate.insert(row.hash.hex());}
+        privateRouteReady|=row.value.current&&row.value.phase==OwnedI2pService::Phase::Active;
+      }
+    }
     std::set<std::string> pauses,unique;
     for(const auto& pause:source.pauses){pauses.insert(pause.hash.hex());}
     const auto ownership=storage::scheduler::OwnershipFile::read(scheduler->snapshot().ownershipBytes);
@@ -1307,7 +1315,7 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
     for(const auto& row:source.items){
       if(!row.saved.hash||!row.saved.persistent){continue;}
       const auto& hash=*row.saved.hash;const auto key=hash.hex();
-      if(verifiedSeedBlocked(key,active)){continue;}
+      if(retainedPrivate.contains(key)||verifiedSeedBlocked(key,active)){continue;}
       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous imported Scheduler library target"}};}
       // A manual command may precede lazy module creation. Its current-Host
       // revocation remains authoritative even without a service to clean up.
@@ -1317,8 +1325,8 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
       if(!present){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid imported Scheduler hash"}};}
       if(!*present){continue;}
       const auto route=this->route(hash);
-      if(route==Route::Unsupported||(route==Route::I2p&&(!i2pOptions||!OwnedI2pService::available()))
-          ||(route==Route::Mixed&&!mixedCapable())){
+      if(route==Route::Unsupported||(route==Route::I2p&&!privateRouteReady)
+          ||(route!=Route::I2p&&(!engine||privateOnly()))||(route==Route::Mixed&&!mixedCapable())){
         schedulerFailure=SessionBridge::tr("A scheduled restart is waiting for the torrent's saved network provider.");
         continue;
       }
@@ -2300,7 +2308,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
         }
         stepAutomaticProfileBackup(stop);
         if(host_->i2pOptions){host_->pollI2p();host_->pollMixed();host_->pollPrivateMagnets();}
-        if(!host_->engine){host_->scheduleCoexistence();pollPublications();}
+        if(!host_->engine){host_->scheduleCoexistence();tickScheduler();pollPublications();}
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
           const bool startupChanged=std::exchange(host_->startupChangedPending,false);
@@ -6103,100 +6111,105 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
     },Qt::QueuedConnection);
   },false);
 }
+bool SessionBridge::applySchedulerEngine() {
+  auto torrents=host_->schedulerTorrents();
+  const auto actual=host_->engine->liveSettings();
+  if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
+      ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return false;}
+  const auto local=QDateTime::currentDateTime();
+  auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
+      torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
+  bool ratesApplied=true,configurationPublished=false;
+  if(plan.uploadKiB||plan.downloadKiB){
+    auto source=take(storage::readApplicationSettings(host_->lease));
+    bool seedingOnly=false;
+    if(host_->networkPolicy.seedingOnlyUpload){
+      const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
+      for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
+      seedingOnly=any&&onlySeeds&&host_->pendingMagnets().empty();
+    }
+    std::vector<core::SettingChange> edits;
+    if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
+    if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
+    auto prepared=take(storage::prepareApplicationSettings(source,edits));
+    auto requested=(host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared.document(),
+        host_->normalNetworkOptions(&prepared.document()));
+    if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
+    auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
+    static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
+    configurationPublished=true;
+    const auto applied=host_->engine->applyLiveSettings(*requested);
+    ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
+    if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+  }
+  static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
+  if(ratesApplied){host_->schedulerRestoreDefaults=false;}
+  if(configurationPublished){
+    // Our own confirmed config write invalidated the old action CAS baseline.
+    // A reload retains same-byte, acknowledged current-session ownership.
+    static_cast<void>(take(host_->scheduler->reload(host_->lease)));
+    host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
+    const auto currentLimits=host_->engine->liveSettings();
+    if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
+        ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
+      throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
+    }
+    torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
+    plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
+        torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
+        static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
+    // Only the first plan's rate effects were applied. New outstanding rate
+    // changes remain unacknowledged for the next tick; actions use this fresh
+    // plan and its exact new revision/current rows.
+    static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,false,false)));
+  }
+  for(const auto& action:plan.actions){
+    auto current=host_->schedulerTorrents();
+    const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
+    if(row==current.end()){continue;}
+    host_->engine->revokeMainlineScrape(action.hash);
+    auto began=host_->scheduler->beginAction(host_->lease,action,*row);
+    if(!began){host_->schedulerFailure=text(began.error().message);continue;}
+    bool intentConfirmed=false;
+    try{
+      if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
+        const bool pause=action.kind==storage::scheduler::ActionKind::Pause;
+        auto persisted=host_->libraryCommand(action.hash,pause?core::DownloadAction::Pause:core::DownloadAction::Resume);
+        // A failed publication can be indeterminate; retain the journal and
+        // revoke resume authority rather than claiming no filesystem effect.
+        if(!persisted){throw Failure{persisted.error()};}intentConfirmed=true;
+        auto controlled=host_->engine->pauseManaged(action.hash,pause);
+        if(!controlled){throw Failure{controlled.error()};}
+        if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
+      }
+      static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
+      static_cast<void>(host_->engine->rearmMainlineScrape(action.hash));
+    }catch(const Failure& error){
+      static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+      host_->schedulerFailure=text(error.error.message);
+      static_cast<void>(intentConfirmed);break;
+    }
+  }
+  return true;
+}
+
 void SessionBridge::tickScheduler() noexcept {
-  if(!host_||!host_->engine){return;}
+  if(!host_||(!host_->engine&&(!host_->normalNetwork||!host_->privateOnly()))){return;}
   try{
     if(host_->fileRecoveryRequired||guardedLibraryRecovery(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease)){return;}
     ensureScheduler();if(!host_->scheduler){return;}
-    if(host_->coexistence()&&host_->i2p&&host_->scheduler->snapshot().settings.enabled){
-      throw Failure{{storage::ErrorCode::Unsupported,"Speed Scheduler cannot change the shared profile while I2P torrents are running. Stop I2P torrents before applying scheduled profile changes."}};
-    }
     if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults
         &&host_->scheduler->snapshot().ownershipBytes.empty()){return;}
     const auto now=std::chrono::steady_clock::now();
     const auto interval=std::chrono::milliseconds(host_->scheduler->snapshot().settings.pollMilliseconds);
     if(host_->schedulerLastTick&&now-*host_->schedulerLastTick<interval){return;}host_->schedulerLastTick=now;
     host_->schedulerFailure.clear();
-    auto torrents=host_->schedulerTorrents();
-    const auto actual=host_->engine->liveSettings();
-    if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
-        ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return;}
-    const auto local=QDateTime::currentDateTime();
-    auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
-        torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
-    bool ratesApplied=true,configurationPublished=false;
-    if(plan.uploadKiB||plan.downloadKiB){
-      auto source=take(storage::readApplicationSettings(host_->lease));
-      bool seedingOnly=false;
-      if(host_->networkPolicy.seedingOnlyUpload){
-        const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
-        for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
-        seedingOnly=any&&onlySeeds&&host_->pendingMagnets().empty();
-      }
-      std::vector<core::SettingChange> edits;
-      if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
-      if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
-      auto prepared=take(storage::prepareApplicationSettings(source,edits));
-      auto requested=(host_->mixedCapable()?engine::readMixedNetworkPolicy:engine::readNetworkPolicy)(&prepared.document(),
-          host_->normalNetworkOptions(&prepared.document()));
-      if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
-      auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
-      static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
-      configurationPublished=true;
-      const auto applied=host_->engine->applyLiveSettings(*requested);
-      ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
-      if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+    const bool runningWithPrivateOwner=host_->coexistence()&&host_->i2p;
+    if(host_->engine&&!runningWithPrivateOwner&&!applySchedulerEngine()){return;}
+    if((runningWithPrivateOwner||!host_->engine)&&host_->scheduler->snapshot().settings.enabled){
+      host_->schedulerFailure=tr("Schedule changes to speeds and running torrents are unavailable while I2P is active.");
     }
-    static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
-    if(ratesApplied){host_->schedulerRestoreDefaults=false;}
-    if(configurationPublished){
-      // Our own confirmed config write invalidated the old action CAS baseline.
-      // A reload retains same-byte, acknowledged current-session ownership.
-      static_cast<void>(take(host_->scheduler->reload(host_->lease)));
-      host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
-      const auto currentLimits=host_->engine->liveSettings();
-      if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
-          ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
-        throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
-      }
-      torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
-      plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
-          torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
-          static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
-      // Only the first plan's rate effects were applied. New outstanding rate
-      // changes remain unacknowledged for the next tick; actions use this fresh
-      // plan and its exact new revision/current rows.
-      static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,false,false)));
-    }
-    for(const auto& action:plan.actions){
-      auto current=host_->schedulerTorrents();
-      const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
-      if(row==current.end()){continue;}
-      host_->engine->revokeMainlineScrape(action.hash);
-      auto began=host_->scheduler->beginAction(host_->lease,action,*row);
-      if(!began){host_->schedulerFailure=text(began.error().message);continue;}
-      bool intentConfirmed=false;
-      try{
-        if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
-          const bool pause=action.kind==storage::scheduler::ActionKind::Pause;
-          auto persisted=storage::applyLibraryCommand(host_->lease,action.hash,pause?core::DownloadAction::Pause:core::DownloadAction::Resume);
-          // A failed publication can be indeterminate; retain the journal and
-          // revoke resume authority rather than claiming no filesystem effect.
-          if(!persisted){throw Failure{persisted.error()};}intentConfirmed=true;
-          auto controlled=host_->engine->pauseManaged(action.hash,pause);
-          if(!controlled){throw Failure{controlled.error()};}
-          if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
-        }
-        static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
-        static_cast<void>(host_->engine->rearmMainlineScrape(action.hash));
-      }catch(const Failure& error){
-        static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
-        host_->schedulerFailure=text(error.error.message);
-        static_cast<void>(intentConfirmed);break;
-      }
-    }
-    // Saved Java permission is evaluated separately from acknowledged native
-    // pause ownership; saved-only targets do not acquire fake LT tokens.
+    // Imported restart permission can route an already saved target through the private owner.
     const auto importedTime=QDateTime::currentDateTime();
     auto importedTargets=host_->schedulerImportedTargets();
     const auto imported=take(host_->scheduler->evaluateImported(host_->lease,
@@ -6206,7 +6219,7 @@ void SessionBridge::tickScheduler() noexcept {
       auto current=host_->schedulerImportedTargets();
       const auto row=std::ranges::find(current,action.target.hash,&storage::ImportedSchedulerTarget::hash);
       if(row==current.end()){continue;}
-      host_->engine->revokeMainlineScrape(action.target.hash);
+      if(host_->engine){host_->engine->revokeMainlineScrape(action.target.hash);}
       const auto began=host_->scheduler->beginImportedAction(host_->lease,action,*row);
       if(!began){host_->schedulerFailure=text(began.error().message);continue;}
       try{
@@ -6216,7 +6229,7 @@ void SessionBridge::tickScheduler() noexcept {
           publication=take(host_->libraryCommand(action.target.hash,command));
           const auto& saved=*publication;
           if(!saved.pauseAfter&&saved.after.startup!=core::StartupState::Stopped){
-            const auto active=host_->engine->managedDownloads();
+            const auto active=host_->engine?host_->engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
             const auto live=std::ranges::find(active,action.target.hash,&engine::ManagedDownloadStatus::hash);
             const auto controlled=live!=active.end()&&live->retained
                 ?host_->engine->queueManaged(action.target.hash,saved.after.forceStart,saved.after.startup==core::StartupState::Queued)
@@ -6228,7 +6241,7 @@ void SessionBridge::tickScheduler() noexcept {
         if(action.kind==storage::scheduler::ActionKind::SetStopReason&&action.target.paused){host_->schedulerPaused.insert(action.target.hash.hex());}
         static_cast<void>(take(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Succeeded,
             publication?&*publication:nullptr)));
-        static_cast<void>(host_->engine->rearmMainlineScrape(action.target.hash));
+        if(host_->engine){static_cast<void>(host_->engine->rearmMainlineScrape(action.target.hash));}
       }catch(const Failure& error){
         static_cast<void>(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
         host_->schedulerFailure=text(error.error.message);break;
