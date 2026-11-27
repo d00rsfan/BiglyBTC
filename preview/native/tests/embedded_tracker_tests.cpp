@@ -8,6 +8,8 @@
 #include <QFile>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QUdpSocket>
+#include <QtEndian>
 #include <QTemporaryDir>
 #include <QtTest>
 #include <cerrno>
@@ -38,6 +40,27 @@ struct Profile {
 std::unique_ptr<t::EmbeddedTrackerService> service(Profile& p,t::TrackerServiceMode mode=t::TrackerServiceMode::Normal){auto result=t::EmbeddedTrackerService::open(*p.lease,p.path.toStdString(),501,mode);must(bool(result),"Cannot open actual tracker service");return std::move(*result);}
 t::OwnedTrackerEndpoint startEndpoint(Profile& p,t::EmbeddedTrackerService& s){must(bool(s.configure(*p.lease,501,{"127.0.0.1",0},{})),"Cannot configure actual HTTP tracker");auto endpoint=s.startListener(*p.lease,501,{});must(bool(endpoint),"Cannot start actual private listener");return std::move(*endpoint);}
 QByteArray exchange(Profile& p,t::EmbeddedTrackerService& s,quint16 port,const QByteArray& request){QTcpSocket socket;socket.connectToHost(QHostAddress::LocalHost,port);QElapsedTimer clock;clock.start();bool written=false;QByteArray response;while(clock.elapsed()<5000){QCoreApplication::processEvents();if(!written&&socket.state()==QAbstractSocket::ConnectedState){must(socket.write(request)==request.size(),"Private HTTP request failed");written=true;}must(bool(s.poll(*p.lease,501)),"Actual tracker poll failed");response+=socket.readAll();if(written&&socket.state()==QAbstractSocket::UnconnectedState){must(bool(s.poll(*p.lease,501)),"Actual tracker byte receipts failed");return response;}QTest::qWait(1);}throw std::runtime_error("Private tracker exchange timed out");}
+void udpInteger(QByteArray& bytes,quint64 value,int width) {
+  for(int index=width-1;index>=0;--index){bytes+=static_cast<char>((value>>(8*index))&0xff);}
+}
+QByteArray udpPrefix(quint64 token,quint32 action,quint32 transaction) {
+  QByteArray request;
+  udpInteger(request,token,8);udpInteger(request,action,4);udpInteger(request,transaction,4);
+  return request;
+}
+QByteArray exchangeUdp(Profile& profile,t::EmbeddedTrackerService& owner,QUdpSocket& socket,quint16 port,
+    const QByteArray& request,int timeout=2000) {
+  must(socket.writeDatagram(request,QHostAddress::LocalHost,port)==request.size(),"Cannot send loopback tracker datagram");
+  QElapsedTimer wait;wait.start();
+  while(wait.elapsed()<timeout&&!socket.hasPendingDatagrams()){
+    must(bool(owner.poll(*profile.lease,501)),"Owned tracker stopped during UDP exchange");
+    QTest::qWait(5);
+  }
+  if(!socket.hasPendingDatagrams()){return {};}
+  QByteArray response(static_cast<qsizetype>(socket.pendingDatagramSize()),Qt::Uninitialized);
+  must(socket.readDatagram(response.data(),response.size())==response.size(),"Cannot read loopback tracker datagram");
+  return response;
+}
 core::Document body(const QByteArray& response){const auto end=response.indexOf("\r\n\r\n");must(response.startsWith("HTTP/1.1 200 OK")&&end>=0,"Missing actual HTTP tracker reply");return document(response.mid(end+4));}
 }
 extern "C" int __real_fsync(int);
@@ -70,6 +93,116 @@ private slots:
   body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"completed",0,3,17)));body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"completed",0,3,17)));auto scrape=body(exchange(area,*owner,port,http("/scrape?info_hash="+encoded(area.hash)+"&info_hash="+encoded(std::string(20,'z')))));const auto* files=scrape.find("files");QVERIFY(files&&files->find(area.hash));QCOMPARE(files->find(area.hash)->find("downloaded")->integer,std::int64_t{1});QCOMPARE(files->find(std::string(20,'z'))->find("complete")->integer,std::int64_t{0});auto stopped=body(exchange(area,*owner,port,announce(area.hash,p,leecher.serverPort(),"stopped",0,3,17)));QVERIFY(stopped.find("peers")->bytes.empty());auto unknown=body(exchange(area,*owner,port,announce(std::string(20,'z'),a,seed.serverPort())));QVERIFY(unknown.find("failure reason"));
   auto final=owner->catalog(*area.lease,501);QVERIFY(final&&final->rows[0].runtime);QCOMPARE(final->rows[0].runtime->completed,std::int64_t{1});QVERIFY(final->rows[0].runtime->announces>=5&&final->rows[0].runtime->bytesIn>0&&final->rows[0].runtime->bytesOut>0);QVERIFY(owner->stop(*area.lease,501,final->rows[0].key,{}));auto denied=body(exchange(area,*owner,port,announce(area.hash,a,seed.serverPort())));QVERIFY(denied.find("failure reason"));QVERIFY(owner->stopListener(*area.lease,501,{}));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased&&!closed.checkpointFailure);
   auto saved=document(bytes(area.path+"/tracker.config"));QCOMPARE(raw(saved,*saved.find("per_key")),raw(original,*original.find("per_key")));QCOMPARE(raw(saved,*saved.find("future")),raw(original,*original.find("future")));const auto& row=saved.find("torrents")->children[0];QCOMPARE(row.find("row_future")->bytes,std::string_view("row-unknown"));QCOMPARE(row.find("stats")->find("future")->bytes,std::string_view("stats-unknown"));QCOMPARE(row.find("stats")->find("completed")->integer,std::int64_t{1});QCOMPARE(row.find("status")->integer,std::int64_t{1});area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
+ }
+ void realUdpTrackerUsesSameOwnedSwarmAsHttp() {
+  Profile area;
+  auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  QVERIFY(config&&config->document().replaceValue("Tracker Port UDP Enable","i1e")&&config->save(*area.lease));
+  auto owner=service(area);
+  auto endpoint=startEndpoint(area,*owner);
+  auto catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
+  const quint16 port=endpoint.description().port;
+  QCOMPARE(endpoint.description().udpAnnounceUrl,"udp://127.0.0.1:"+std::to_string(port)+"/announce");
+  QUdpSocket seeder,leecher,foreign;
+  QVERIFY(seeder.bind(QHostAddress::LocalHost,0));
+  QVERIFY(leecher.bind(QHostAddress::LocalHost,0));
+  QVERIFY(foreign.bind(QHostAddress::LocalHost,0));
+  const auto connect=udpPrefix(0x41727101980,0,0x10203040);
+  const auto seedConnect=exchangeUdp(area,*owner,seeder,port,connect);
+  const auto leechConnect=exchangeUdp(area,*owner,leecher,port,connect);
+  QCOMPARE(seedConnect.size(),16);
+  QCOMPARE(leechConnect.size(),16);
+  QCOMPARE(qFromBigEndian<quint32>(seedConnect.constData()),quint32{0});
+  QCOMPARE(qFromBigEndian<quint32>(seedConnect.constData()+4),quint32{0x10203040});
+  const auto seedToken=qFromBigEndian<quint64>(seedConnect.constData()+8);
+  const auto leechToken=qFromBigEndian<quint64>(leechConnect.constData()+8);
+  QVERIFY(seedToken!=leechToken);
+
+  const auto announcePacket=[&](quint64 token,char peer,quint16 listen,quint64 left) {
+    auto request=udpPrefix(token,1,17)+QByteArray::fromStdString(area.hash)+QByteArray(20,peer);
+    udpInteger(request,0,8);udpInteger(request,left,8);udpInteger(request,0,8);
+    udpInteger(request,2,4);udpInteger(request,0,4);udpInteger(request,9,4);
+    udpInteger(request,0xffffffff,4);udpInteger(request,listen,2);
+    return request;
+  };
+  const auto seeded=announcePacket(seedToken,'s',5001,0);
+  const auto wrongSource=exchangeUdp(area,*owner,foreign,port,seeded);
+  QVERIFY(wrongSource.size()>=8);
+  QCOMPARE(qFromBigEndian<quint32>(wrongSource.constData()),quint32{3});
+  QCOMPARE(wrongSource.mid(8),QByteArray("Connection ID mismatch"));
+  auto noSeeds=body(exchange(area,*owner,port,http("/scrape?info_hash="+encoded(area.hash))));
+  QCOMPARE(noSeeds.find("files")->find(area.hash)->find("complete")->integer,std::int64_t{0});
+  const auto seedReply=exchangeUdp(area,*owner,seeder,port,seeded);
+  QCOMPARE(seedReply.size(),20);
+  QCOMPARE(qFromBigEndian<quint32>(seedReply.constData()+16),quint32{1});
+  const auto peerReply=exchangeUdp(area,*owner,leecher,port,announcePacket(leechToken,'l',5002,17));
+  QCOMPARE(peerReply.size(),26);
+  QCOMPARE(qFromBigEndian<quint32>(peerReply.constData()),quint32{1});
+  QCOMPARE(qFromBigEndian<quint32>(peerReply.constData()+12),quint32{1});
+  QCOMPARE(qFromBigEndian<quint32>(peerReply.constData()+16),quint32{1});
+  QCOMPARE(qFromBigEndian<quint32>(peerReply.constData()+20),quint32{0x7f000001});
+  QCOMPARE(qFromBigEndian<quint16>(peerReply.constData()+24),quint16{5001});
+  const auto scrape=udpPrefix(leechToken,2,18)+QByteArray(20,'z')+QByteArray::fromStdString(area.hash);
+  const auto scrapeReply=exchangeUdp(area,*owner,leecher,port,scrape);
+  QCOMPARE(scrapeReply.size(),32);
+  QCOMPARE(qFromBigEndian<quint32>(scrapeReply.constData()+8),quint32{0});
+  QCOMPARE(qFromBigEndian<quint32>(scrapeReply.constData()+20),quint32{1});
+  QCOMPARE(qFromBigEndian<quint32>(scrapeReply.constData()+28),quint32{1});
+  catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&catalog->rows[0].runtime);
+  QCOMPARE(catalog->rows[0].runtime->announces,std::int64_t{2});
+  QVERIFY(catalog->rows[0].runtime->bytesOut>0);
+  QVERIFY(owner->stopListener(*area.lease,501,{}));
+  QVERIFY(exchangeUdp(area,*owner,seeder,port,connect,100).isEmpty());
+  QVERIFY(owner->close().leaseReleased);
+ }
+ void importedTorrentPasswordProtectsUdpPackets() {
+  Profile area;
+  auto saved=storage::ConfigFile::load(*area.lease,"biglybt.config");
+  const auto password=QByteArray("private udp fixture");
+  const auto digest=QCryptographicHash::hash(password,QCryptographicHash::Sha1);
+  QVERIFY(saved&&saved->document().replaceValue("Tracker Port UDP Enable","i1e"));
+  QVERIFY(saved->document().replaceValue("Tracker Password Enable Torrent","i1e"));
+  QVERIFY(saved->document().replaceValue("Tracker Username",b("Tester").toStdString()));
+  QVERIFY(saved->document().replaceValue("Tracker Password",b(digest).toStdString()));
+  QVERIFY(saved->save(*area.lease));
+  auto owner=service(area);
+  auto endpoint=startEndpoint(area,*owner);
+  const auto port=endpoint.description().port;
+  QCOMPARE(endpoint.description().udpAnnounceUrl,"udp://127.0.0.1:"+std::to_string(port)+"/announce?auth");
+  auto catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&owner->start(*area.lease,501,catalog->rows[0].key,{}));
+
+  QUdpSocket socket;
+  QVERIFY(socket.bind(QHostAddress::LocalHost,0));
+  const auto signedPacket=[](QByteArray data,const QByteArray& passwordDigest) {
+    data.append("Tester\0\0",8);
+    const auto signature=QCryptographicHash::hash(data+passwordDigest,QCryptographicHash::Sha1).left(8);
+    return data+signature;
+  };
+  const auto isDenied=[](const QByteArray& reply) {
+    return reply.size()>=8&&qFromBigEndian<quint32>(reply.constData())==3&&reply.mid(8)=="Access Denied";
+  };
+  const auto connect=udpPrefix(0x41727101980,0,42);
+  QVERIFY(exchangeUdp(area,*owner,socket,port,connect,100).isEmpty());
+  QVERIFY(isDenied(exchangeUdp(area,*owner,socket,port,signedPacket(connect,QByteArray(20,'x')))));
+  const auto reply=exchangeUdp(area,*owner,socket,port,signedPacket(connect,digest));
+  QCOMPARE(reply.size(),16);
+  const auto token=qFromBigEndian<quint64>(reply.constData()+8);
+  const auto scrape=udpPrefix(token,2,43)+QByteArray::fromStdString(area.hash);
+  auto changed=signedPacket(scrape,digest);
+  changed[15]=44;
+  QVERIFY(isDenied(exchangeUdp(area,*owner,socket,port,changed)));
+  catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&catalog->rows[0].runtime);
+  QCOMPARE(catalog->rows[0].runtime->scrapes,std::int64_t{0});
+  QCOMPARE(exchangeUdp(area,*owner,socket,port,signedPacket(scrape,digest)).size(),20);
+  catalog=owner->catalog(*area.lease,501);
+  QVERIFY(catalog&&catalog->rows[0].runtime);
+  QCOMPARE(catalog->rows[0].runtime->scrapes,std::int64_t{1});
+  QVERIFY(!bytes(area.path+"/biglybt.config").contains(password));
+  QVERIFY(owner->close().leaseReleased);
  }
  void importedTorrentPasswordProtectsAnnounceAndScrape() {
   Profile area;
@@ -154,7 +287,7 @@ private slots:
  void indeterminateSettingsSaveStopsListenerAndRefusesBlindRetry(){
   Profile area(false);auto owner=service(area);QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));syncCalls=0;failSync=3;auto endpoint=owner->startListener(*area.lease,501,{});failSync=0;QVERIFY(!endpoint);auto catalog=owner->catalog(*area.lease,501);QVERIFY(catalog&&catalog->needsReview&&!catalog->listener.running&&catalog->listener.joined);auto actual=document(bytes(area.path+"/biglybt.config"));QCOMPARE(actual.find("Tracker Port Enable")->integer,std::int64_t{1});QVERIFY(actual.find("Tracker Port")->integer>0);const auto before=bytes(area.path+"/biglybt.config");QVERIFY(!owner->startListener(*area.lease,501,{}));QCOMPARE(bytes(area.path+"/biglybt.config"),before);auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.leaseReleased);area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));
  }
- void unsupportedSettingsRefuseBeforeListener_data(){QTest::addColumn<QString>("key");for(const auto* key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker Public Enable","Tracker NAT Check Enable"}){QTest::newRow(key)<<QString::fromLatin1(key);}}
+ void unsupportedSettingsRefuseBeforeListener_data(){QTest::addColumn<QString>("key");for(const auto* key:{"Tracker Port SSL Enable","Tracker Password Enable Web","Tracker Public Enable","Tracker NAT Check Enable"}){QTest::newRow(key)<<QString::fromLatin1(key);}}
  void unsupportedSettingsRefuseBeforeListener(){QFETCH(QString,key);Profile area(false);auto owner=service(area);QVERIFY(owner->configure(*area.lease,501,{"127.0.0.1",0},{}));auto config=storage::ConfigFile::load(*area.lease,"biglybt.config");QVERIFY(config&&config->document().replaceValue(key.toStdString(),"i1e")&&config->save(*area.lease));const auto before=bytes(area.path+"/biglybt.config");QVERIFY(!owner->startListener(*area.lease,501,{}));auto observed=owner->catalog(*area.lease,501);QVERIFY(observed&&!observed->listener.running&&observed->listener.joined);QCOMPARE(bytes(area.path+"/biglybt.config"),before);QVERIFY(owner->close().leaseReleased);}
  void partialConnectionStopJoinsAndReleasesAllAliases(){Profile area(false);auto owner=service(area);auto endpoint=startEndpoint(area,*owner);QTcpSocket socket;socket.connectToHost(QHostAddress::LocalHost,endpoint.description().port);QTRY_COMPARE_WITH_TIMEOUT(socket.state(),QAbstractSocket::ConnectedState,5000);QVERIFY(socket.write("GET /announce?info_hash=%00")>0);socket.flush();QVERIFY(owner->stopListener(*area.lease,501,{}));QTRY_COMPARE_WITH_TIMEOUT(socket.state(),QAbstractSocket::UnconnectedState,5000);QVERIFY(socket.readAll().isEmpty());QVERIFY(!endpoint.current(*area.lease,501));const auto closed=owner->close();QVERIFY(closed.listenerJoined&&closed.connectionsJoined&&closed.leaseReleased);area.lease.reset();QVERIFY(storage::ProfileLease::acquire(area.path.toStdString()));}
 };

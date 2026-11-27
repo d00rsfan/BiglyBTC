@@ -10,11 +10,14 @@
 #include <QCryptographicHash>
 #include <QEventLoop>
 #include <QHostAddress>
+#include <QMessageAuthenticationCode>
+#include <QNetworkDatagram>
 #include <QPointer>
 #include <QTcpServer>
 #include <QStringDecoder>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QUdpSocket>
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -24,6 +27,7 @@
 #include <map>
 #include <mutex>
 #include <openssl/crypto.h>
+#include <openssl/rand.h>
 #include <set>
 #include <thread>
 namespace biglybtc::tracker {
@@ -107,6 +111,21 @@ bool authenticate(const TorrentCredentials& credentials,std::string_view authori
       CRYPTO_memcmp(credentials.digest.constData(),digest.constData(),digest.size())==0;
 }
 
+constexpr std::size_t UdpAuthenticationSize=16;
+constexpr std::size_t UdpSignatureSize=8;
+
+bool authenticateUdp(const TorrentCredentials& credentials,std::string_view datagram) {
+  // Original UDP authentication includes the fixed-width username in the signed bytes.
+  if (datagram.size()<16+UdpAuthenticationSize) { return false; }
+  const auto unsignedSize=datagram.size()-UdpSignatureSize;
+  QCryptographicHash sha(QCryptographicHash::Sha1);
+  sha.addData(QByteArrayView(datagram.data(),static_cast<qsizetype>(unsignedSize)));
+  sha.addData(credentials.digest);
+  const auto signature=sha.result();
+  return signature.size()>=qsizetype(UdpSignatureSize)&&
+      CRYPTO_memcmp(signature.constData(),datagram.data()+unsignedSize,UdpSignatureSize)==0;
+}
+
 std::string unauthorized() {
   return "HTTP/1.1 401 Unauthorized\r\n"
       "WWW-Authenticate: Basic realm=\"tracker\"\r\n"
@@ -115,40 +134,115 @@ std::string unauthorized() {
 }
 
 struct Policy {
-  TrackerEndpointReview endpoint;bool enabled=false,nat=false;
+  TrackerEndpointReview endpoint;bool enabled=false,nat=false,udp=false;
   detail::WirePolicy wire;
   std::optional<TorrentCredentials> credentials;
-  bool operator==(const Policy& p)const{return endpoint.numericBind==p.endpoint.numericBind&&endpoint.port==p.endpoint.port&&enabled==p.enabled&&nat==p.nat&&credentials==p.credentials&&wire.interval==p.wire.interval&&wire.minInterval==p.wire.minInterval&&wire.scrapeInterval==p.wire.scrapeInterval&&wire.maxPeers==p.wire.maxPeers&&wire.compact==p.wire.compact&&wire.sendPeerIds==p.wire.sendPeerIds&&wire.keyEnabled==p.wire.keyEnabled&&wire.fullScrape==p.wire.fullScrape;}
+  bool operator==(const Policy& p)const{return endpoint.numericBind==p.endpoint.numericBind&&endpoint.port==p.endpoint.port&&enabled==p.enabled&&nat==p.nat&&udp==p.udp&&credentials==p.credentials&&wire.interval==p.wire.interval&&wire.minInterval==p.wire.minInterval&&wire.scrapeInterval==p.wire.scrapeInterval&&wire.maxPeers==p.wire.maxPeers&&wire.compact==p.wire.compact&&wire.sendPeerIds==p.wire.sendPeerIds&&wire.keyEnabled==p.wire.keyEnabled&&wire.fullScrape==p.wire.fullScrape;}
 };
 Policy policy(const storage::ProfileLease& lease,bool active){auto source=config(lease,"biglybt.config");auto d=doc(source?source->document().originalBytes():"de");const auto& root=d.root();Policy out;out.endpoint.numericBind=text(root,"Bind IP for Tracker");const auto port=num(root,"Tracker Port",6969);require(port>=0&&port<=65535,Code::Unsupported,"Unsupported tracker port");out.endpoint.port=static_cast<std::uint16_t>(port);out.enabled=flag(root,"Tracker Port Enable",false);out.nat=flag(root,"Tracker NAT Check Enable",true);
-  for(const auto key:{"Tracker Port SSL Enable","Tracker Port UDP Enable","Tracker Password Enable Web","Tracker I2P Enable","Tracker Tor Enable","Tracker Public Enable","Tracker Server Support Experimental Extensions","Tracker Port Force External","Enable.Proxy","Proxy.Data.Enable"}){require(!flag(root,key,false),Code::Unsupported,"Advanced tracker/auth/proxy/overlay setting is unsupported");}
+  for(const auto key:{"Tracker Port SSL Enable","Tracker Password Enable Web","Tracker I2P Enable","Tracker Tor Enable","Tracker Public Enable","Tracker Server Support Experimental Extensions","Tracker Port Force External","Enable.Proxy","Proxy.Data.Enable"}){require(!flag(root,key,false),Code::Unsupported,"Advanced tracker/auth/proxy/overlay setting is unsupported");}
   for(const auto key:{"Tracker Port Backups","Tracker Port SSL Backups","Tracker Server Not Found Redirect","Tracker Banned Clients"}){require(text(root,key).empty(),Code::Unsupported,"Advanced tracker endpoint policy unsupported");}
   if (flag(root,"Tracker Password Enable Torrent",false)) {
     out.credentials=torrentCredentials(root);
   }
+  out.udp=flag(root,"Tracker Port UDP Enable",false);
   require(flag(root,"Tracker Network Selection Default.Public",true),Code::Unsupported,"Public tracker network disabled");
   out.wire.compact=flag(root,"Tracker Compact Enable",true);out.wire.sendPeerIds=flag(root,"Tracker Send Peer IDs",true);out.wire.keyEnabled=flag(root,"Tracker Key Enable Server",true);out.wire.fullScrape=flag(root,"Tracker Server Full Scrape Enable",true);
   const auto minimum=std::max<std::int64_t>(60,num(root,"Tracker Poll Interval Min",120)),maximum=num(root,"Tracker Poll Interval Max",3600),peers=num(root,"Tracker Max Peers Returned",100),pct=num(root,"Tracker Scrape Retry Percentage",200);
   require(minimum<=3600&&maximum>=minimum&&maximum<=3600&&peers>=0&&peers<=200&&pct>=100&&pct<=1000,Code::Unsupported,"Tracker response limits unsupported");out.wire.interval=static_cast<unsigned>(minimum);out.wire.minInterval=static_cast<unsigned>(minimum);out.wire.scrapeInterval=static_cast<unsigned>(minimum*pct/100);out.wire.maxPeers=static_cast<unsigned>(peers);
   if(active){QHostAddress bind(QString::fromStdString(out.endpoint.numericBind));require(out.enabled&&!out.nat&&bind.protocol()==QAbstractSocket::IPv4Protocol&&!bind.isNull()&&!bind.isMulticast()&&bind!=QHostAddress::AnyIPv4,Code::Unsupported,"Configure an explicit numeric owned HTTP tracker without NAT probing first");require(out.endpoint.port||bind.isLoopback(),Code::Unsupported,"Random tracker port requires explicit loopback review");require(text(root,"Tracker IP")==out.endpoint.numericBind&&text(root,"Sharing Protocol")=="HTTP",Code::Unsupported,"Saved tracker/share endpoint policy differs");}return out;}
-struct Incoming{std::uint64_t id;std::string raw;std::array<unsigned char,4> address;};
+std::array<unsigned char,4> addressBytes(quint32 address) {
+  return {static_cast<unsigned char>(address>>24),static_cast<unsigned char>(address>>16),
+      static_cast<unsigned char>(address>>8),static_cast<unsigned char>(address)};
+}
+quint32 addressNumber(const std::array<unsigned char,4>& bytes) {
+  quint32 result=0;
+  for (auto byte:bytes) { result=(result<<8)|byte; }
+  return result;
+}
+struct Incoming {
+  std::uint64_t id;
+  std::string raw;
+  std::array<unsigned char,4> address;
+  quint16 udpPort=0;
+};
+
+class UdpTrackerTokens {
+  std::array<unsigned char,32> secret_{};
+
+  std::uint64_t connection(const Incoming& request,std::uint64_t minute) const {
+    std::array<unsigned char,14> input{};
+    std::copy(request.address.begin(),request.address.end(),input.begin());
+    input[4]=static_cast<unsigned char>(request.udpPort>>8);
+    input[5]=static_cast<unsigned char>(request.udpPort);
+    for (int index=13;index>=6;--index) { input[index]=static_cast<unsigned char>(minute);minute>>=8; }
+    const auto digest=QMessageAuthenticationCode::hash(
+        QByteArrayView(reinterpret_cast<const char*>(input.data()),input.size()),
+        QByteArrayView(reinterpret_cast<const char*>(secret_.data()),secret_.size()),QCryptographicHash::Sha256);
+    require(digest.size()>=8,Code::Io,"Could not authenticate the UDP tracker source");
+    std::uint64_t value=0;
+    for (int i=0;i<8;++i) { value=(value<<8)|static_cast<unsigned char>(digest.at(i)); }
+    return value;
+  }
+
+  static std::uint64_t minute(std::chrono::steady_clock::time_point now) {
+    return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::minutes>(now.time_since_epoch()).count());
+  }
+public:
+  UdpTrackerTokens() {
+    require(RAND_bytes(secret_.data(),secret_.size())==1,Code::Io,"Could not create UDP tracker connection tokens");
+  }
+  std::uint64_t issue(const Incoming& request,std::chrono::steady_clock::time_point now) const {
+    return connection(request,minute(now));
+  }
+  bool valid(const Incoming& request,std::uint64_t token,std::chrono::steady_clock::time_point now) const {
+    const auto window=minute(now);
+    return token==connection(request,window)||(window&&token==connection(request,window-1));
+  }
+};
 struct Sent{std::uint64_t id;std::size_t bytes;bool done=false;};
 struct Box {
   std::mutex mutex;std::condition_variable ready;bool bound=false,failed=false;std::string error;std::uint16_t port=0;
-  std::atomic<bool> stopping{false},exited{false};std::atomic<std::uint64_t> connections{0};
+  std::atomic<bool> stopping{false},exited{false};std::atomic<std::uint64_t> connections{0},requestSequence{0};
   std::deque<Incoming> incoming;std::deque<Sent> sent;QPointer<QObject> context;
+  QPointer<QUdpSocket> udp;
   std::map<std::uint64_t,QPointer<QTcpSocket>> sockets;std::shared_ptr<const storage::ProfileLease> lease;
 };
 struct Network {
   std::shared_ptr<Box> box=std::make_shared<Box>();std::thread worker;
-  Network(std::shared_ptr<const storage::ProfileLease> lease,TrackerEndpointReview endpoint,std::uint64_t epoch,std::stop_token token){box->lease=std::move(lease);const auto shared=box;
-    worker=std::thread([shared,endpoint=std::move(endpoint),epoch,token]{struct Exit{std::shared_ptr<Box> box;~Exit(){box->exited=true;}} exit{shared};try{
-      QObject context;QTcpServer server;QEventLoop loop;
+  std::optional<UdpTrackerTokens> tokens;
+  Network(std::shared_ptr<const storage::ProfileLease> lease,TrackerEndpointReview endpoint,bool udpEnabled,
+      std::uint64_t epoch,std::stop_token token){
+    if (udpEnabled) { tokens.emplace(); }
+    box->lease=std::move(lease);const auto shared=box;
+    worker=std::thread([shared,endpoint=std::move(endpoint),udpEnabled,epoch,token]{struct Exit{std::shared_ptr<Box> box;~Exit(){box->exited=true;}} exit{shared};try{
+      QObject context;QTcpServer server;QUdpSocket datagrams;QEventLoop loop;
       {std::lock_guard guard(shared->mutex);shared->context=&context;}
       require(!token.stop_requested()&&!shared->stopping&&shared->lease->sourceRevision()==epoch,Code::Conflict,"Tracker source changed before bind");
-      require(server.listen(QHostAddress(QString::fromStdString(endpoint.numericBind)),endpoint.port),Code::Io,"Owned tracker address/port could not bind");
+      const QHostAddress address(QString::fromStdString(endpoint.numericBind));
+      require(server.listen(address,endpoint.port),Code::Io,"Owned tracker address/port could not bind");
+      if (udpEnabled) {
+        require(datagrams.bind(address,server.serverPort(),QUdpSocket::DontShareAddress),Code::Io,
+            "Owned UDP tracker address/port could not bind");
+        {std::lock_guard guard(shared->mutex);shared->udp=&datagrams;}
+        QObject::connect(&datagrams,&QUdpSocket::readyRead,&context,[shared,&datagrams] {
+          while (!shared->stopping&&datagrams.hasPendingDatagrams()) {
+            if (datagrams.pendingDatagramSize()>2048) {
+              char discarded;datagrams.readDatagram(&discarded,1);continue;
+            }
+            const auto packet=datagrams.receiveDatagram(2048);
+            bool ipv4=false;
+            const auto sender=packet.senderAddress().toIPv4Address(&ipv4);
+            if (!ipv4||packet.senderPort()<=0||packet.data().size()<16) { continue; }
+            std::lock_guard guard(shared->mutex);
+            if (shared->incoming.size()>=64) { continue; }
+            shared->incoming.push_back({++shared->requestSequence,packet.data().toStdString(),addressBytes(sender),
+                static_cast<quint16>(packet.senderPort())});
+          }
+        });
+      }
       QObject::connect(&server,&QTcpServer::newConnection,&context,[shared,&server,&context]{while(server.hasPendingConnections()){
-        auto* socket=server.nextPendingConnection();if(!socket){continue;}const auto id=shared->connections.fetch_add(1)+1;
+        auto* socket=server.nextPendingConnection();if(!socket){continue;}++shared->connections;const auto id=++shared->requestSequence;
         {std::lock_guard guard(shared->mutex);if(shared->sockets.size()>=32||shared->stopping){socket->abort();socket->deleteLater();continue;}shared->sockets.emplace(id,socket);}
         auto wire=std::make_shared<QByteArray>();auto queued=std::make_shared<bool>(false);auto sent=std::make_shared<std::size_t>(0);
         QObject::connect(socket,&QTcpSocket::readyRead,&context,[shared,socket,id,wire,queued]{if(shared->stopping||*queued){socket->abort();return;}*wire+=socket->readAll();if(wire->size()>8192){socket->abort();return;}if(!wire->contains("\r\n\r\n")){return;}*queued=true;const auto value=socket->peerAddress().toIPv4Address();Incoming request{id,wire->toStdString(),{static_cast<unsigned char>(value>>24),static_cast<unsigned char>(value>>16),static_cast<unsigned char>(value>>8),static_cast<unsigned char>(value)}};bool full=false;{std::lock_guard guard(shared->mutex);full=shared->incoming.size()>=32;if(!full){shared->incoming.push_back(std::move(request));}}if(full){socket->abort();}});
@@ -158,15 +252,30 @@ struct Network {
       }});
       QTimer stop;QObject::connect(&stop,&QTimer::timeout,&context,[shared,&loop]{if(shared->stopping){loop.quit();}});stop.start(10);
       {std::lock_guard guard(shared->mutex);shared->port=server.serverPort();shared->bound=true;shared->ready.notify_one();}
-      loop.exec();shared->stopping=true;server.close();QObject::disconnect(&server,nullptr,&context,nullptr);
+      loop.exec();shared->stopping=true;datagrams.close();server.close();QObject::disconnect(&server,nullptr,&context,nullptr);
       const auto children=server.findChildren<QTcpSocket*>();for(auto* socket:children){QObject::disconnect(socket,nullptr,&context,nullptr);socket->abort();delete socket;}
-      {std::lock_guard guard(shared->mutex);shared->context.clear();shared->sockets.clear();}
+      {std::lock_guard guard(shared->mutex);shared->context.clear();shared->udp.clear();shared->sockets.clear();}
     }catch(const Failure& e){std::lock_guard guard(shared->mutex);shared->error=e.error.message;shared->failed=true;shared->ready.notify_one();}catch(...){std::lock_guard guard(shared->mutex);shared->error="Owned tracker socket worker failed";shared->failed=true;shared->ready.notify_one();}});
     std::unique_lock guard(box->mutex);if(!box->ready.wait_for(guard,std::chrono::seconds(5),[&]{return box->bound||box->failed;})){box->stopping=true;guard.unlock();worker.join();throw Failure{{Code::Io,"Owned tracker bind timed out"}};}if(box->failed){const auto error=box->error;guard.unlock();worker.join();throw Failure{{Code::Io,error}};}
   }
   ~Network(){close();}
   void close(){box->stopping=true;if(worker.joinable()){worker.join();}box->lease.reset();}
   void reply(std::uint64_t id,std::string bytes,std::uint64_t epoch){std::lock_guard guard(box->mutex);auto* context=box->context.data();if(!context){return;}const auto shared=box;QMetaObject::invokeMethod(context,[shared,id,bytes=std::move(bytes),epoch]{const auto found=shared->sockets.find(id);if(found==shared->sockets.end()||!found->second){return;}auto* socket=found->second.data();if(shared->stopping||!shared->lease||shared->lease->sourceRevision()!=epoch){socket->abort();return;}if(socket->write(bytes.data(),static_cast<qint64>(bytes.size()))<0){socket->abort();return;}socket->disconnectFromHost();},Qt::QueuedConnection);}
+  void replyUdp(const Incoming& request,std::string bytes,std::uint64_t epoch) {
+    std::lock_guard guard(box->mutex);
+    auto* context=box->context.data();
+    if (!context) { return; }
+    const auto shared=box;
+    QMetaObject::invokeMethod(context,[shared,id=request.id,address=request.address,port=request.udpPort,
+        bytes=std::move(bytes),epoch] {
+      qint64 count=0;
+      if (shared->udp&&!shared->stopping&&shared->lease->sourceRevision()==epoch) {
+        count=shared->udp->writeDatagram(bytes.data(),static_cast<qint64>(bytes.size()),QHostAddress(addressNumber(address)),port);
+      }
+      std::lock_guard guard(shared->mutex);
+      shared->sent.push_back({id,count>0?static_cast<std::size_t>(count):0,true});
+    },Qt::QueuedConnection);
+  }
 };
 struct Witness{fs::path file;std::string bytes;std::optional<sharing::SavedShareHandle> share;};
 std::string metadata(const storage::ProfileLease& lease,const fs::path& profilePath,const fs::path& file,const core::TorrentHash& expected){
@@ -215,8 +324,11 @@ std::expected<std::unique_ptr<EmbeddedTrackerService>,Error> EmbeddedTrackerServ
 std::expected<TrackerCatalog,Error> EmbeddedTrackerService::catalog(const storage::ProfileLease& lease,std::uint64_t session){try{impl_->guard(lease,session);impl_->reload();return impl_->view();}catch(const Failure& e){return std::unexpected(e.error);}catch(...){return std::unexpected(Error{Code::Io,"Cannot read tracker catalog"});}}
 std::expected<TrackerCatalog,Error> EmbeddedTrackerService::configure(const storage::ProfileLease& lease,std::uint64_t session,TrackerEndpointReview review,std::stop_token stop){try{impl_->guard(lease,session,true);stopped(stop);require(!impl_->network,Code::Busy,"Stop owned tracker before reconfiguration");QHostAddress address(QString::fromStdString(review.numericBind));require(address.protocol()==QAbstractSocket::IPv4Protocol&&address.toString().toStdString()==review.numericBind&&!address.isMulticast()&&address!=QHostAddress::AnyIPv4&&(review.port||address.isLoopback()),Code::Unsupported,"Review one concrete numeric IPv4 tracker endpoint");{auto gate=take(lease.sourceAccess());auto before=config(lease,"biglybt.config");auto document=doc(before?before->document().originalBytes():"de");for(const auto& [key,value]:std::initializer_list<std::pair<const char*,std::string>>{{"Bind IP for Tracker",b(review.numericBind)},{"Tracker IP",b(review.numericBind)},{"Tracker Port",integer(review.port)},{"Tracker Port Enable","i0e"},{"Tracker NAT Check Enable","i0e"},{"Sharing Protocol",b("HTTP")}}){put(document,key,value);}stopped(stop);impl_->saveFile(lease,"biglybt.config",before,std::move(document));impl_->needsReview=false;impl_->failure.clear();}impl_->reload();return impl_->view();}catch(const Failure& e){return std::unexpected(impl_->effectFailure(e.error));}catch(...){impl_->needsReview=true;impl_->failure="Tracker configure save may require review";impl_->retire();return std::unexpected(Error{Code::Io,impl_->failure});}}
 std::expected<OwnedTrackerEndpoint,Error> EmbeddedTrackerService::startListener(const storage::ProfileLease& lease,std::uint64_t session,std::stop_token stop){try{impl_->guard(lease,session,true);stopped(stop);require(!impl_->network&&!impl_->needsReview,Code::Busy,"Owned tracker is running or needs review");auto before=config(lease,"biglybt.config");auto document=doc(before?before->document().originalBytes():"de");require(!flag(document.root(),"Tracker NAT Check Enable",true),Code::Unsupported,"Explicitly configure HTTP sharing without NAT probing");put(document,"Tracker Port Enable","i1e");const auto oldBytes=before?before->document().originalBytes():std::string{};
-    auto requested=policy(lease,false);QHostAddress address(QString::fromStdString(requested.endpoint.numericBind));require(address.protocol()==QAbstractSocket::IPv4Protocol&&!address.isMulticast()&&address!=QHostAddress::AnyIPv4&&(requested.endpoint.port||address.isLoopback()),Code::Unsupported,"Configure one numeric owned tracker endpoint first");require(text(document.root(),"Sharing Protocol")=="HTTP",Code::Unsupported,"Configure HTTP sharing first");const auto epoch=lease.sourceRevision();impl_->network=std::make_unique<Network>(take(lease.retain()),requested.endpoint,epoch,stop);
-    auto gate=take(lease.sourceAccess());stopped(stop);auto fresh=config(lease,"biglybt.config");require((fresh?fresh->document().originalBytes():std::string{})==oldBytes,Code::Conflict,"Tracker source changed while binding");put(document,"Tracker Port",integer(impl_->network->box->port));impl_->saveFile(lease,"biglybt.config",fresh,std::move(document));auto endpoint=std::make_shared<OwnedTrackerEndpoint::Impl>();endpoint->lease=take(lease.retain());endpoint->profile=impl_->path;endpoint->session=session;endpoint->worker=std::this_thread::get_id();endpoint->network=impl_->network->box;endpoint->expected=policy(lease,true);endpoint->description={"http://"+requested.endpoint.numericBind+':'+std::to_string(impl_->network->box->port)+"/announce",requested.endpoint.numericBind,impl_->network->box->port,++impl_->endpointGeneration};endpoint->active=true;impl_->endpoint=endpoint;return OwnedTrackerEndpoint(std::move(endpoint));
+    auto requested=policy(lease,false);QHostAddress address(QString::fromStdString(requested.endpoint.numericBind));require(address.protocol()==QAbstractSocket::IPv4Protocol&&!address.isMulticast()&&address!=QHostAddress::AnyIPv4&&(requested.endpoint.port||address.isLoopback()),Code::Unsupported,"Configure one numeric owned tracker endpoint first");require(text(document.root(),"Sharing Protocol")=="HTTP",Code::Unsupported,"Configure HTTP sharing first");const auto epoch=lease.sourceRevision();impl_->network=std::make_unique<Network>(take(lease.retain()),requested.endpoint,requested.udp,epoch,stop);
+    auto gate=take(lease.sourceAccess());stopped(stop);auto fresh=config(lease,"biglybt.config");require((fresh?fresh->document().originalBytes():std::string{})==oldBytes,Code::Conflict,"Tracker source changed while binding");put(document,"Tracker Port",integer(impl_->network->box->port));impl_->saveFile(lease,"biglybt.config",fresh,std::move(document));auto endpoint=std::make_shared<OwnedTrackerEndpoint::Impl>();endpoint->lease=take(lease.retain());endpoint->profile=impl_->path;endpoint->session=session;endpoint->worker=std::this_thread::get_id();endpoint->network=impl_->network->box;endpoint->expected=policy(lease,true);endpoint->description={"http://"+requested.endpoint.numericBind+':'+std::to_string(impl_->network->box->port)+"/announce",requested.endpoint.numericBind,impl_->network->box->port,++impl_->endpointGeneration};
+    if(requested.udp){endpoint->description.udpAnnounceUrl="udp://"+requested.endpoint.numericBind+':'+
+        std::to_string(endpoint->description.port)+"/announce"+(requested.credentials?"?auth":"");}
+    endpoint->active=true;impl_->endpoint=endpoint;return OwnedTrackerEndpoint(std::move(endpoint));
   }catch(const Failure& e){if(impl_->worker==std::this_thread::get_id()){impl_->retire();}return std::unexpected(impl_->effectFailure(e.error));}catch(...){impl_->retire();impl_->needsReview=true;impl_->failure="Tracker start/settings publication needs review";return std::unexpected(Error{Code::Io,impl_->failure});}}
 std::expected<OwnedTrackerEndpoint,Error> EmbeddedTrackerService::endpoint(const storage::ProfileLease& lease,std::uint64_t session){try{impl_->guard(lease,session);require(impl_->network&&impl_->endpoint,Code::Conflict,"No accepted owned tracker endpoint");OwnedTrackerEndpoint value(impl_->endpoint);take(value.current(lease,session));return value;}catch(const Failure& e){return std::unexpected(impl_->effectFailure(e.error));}}
 std::expected<TrackerCatalog,Error> EmbeddedTrackerService::stopListener(const storage::ProfileLease& lease,std::uint64_t session,std::stop_token stop){try{impl_->guard(lease,session,true);stopped(stop);impl_->retire();impl_->checkpoint();{auto gate=take(lease.sourceAccess());auto before=config(lease,"biglybt.config");auto document=doc(before?before->document().originalBytes():"de");put(document,"Tracker Port Enable","i0e");impl_->saveFile(lease,"biglybt.config",before,std::move(document));}return impl_->view();}catch(const Failure& e){return std::unexpected(impl_->effectFailure(e.error));}catch(...){impl_->needsReview=true;impl_->failure="Tracker stopped; settings checkpoint needs review";impl_->retire();return std::unexpected(Error{Code::Io,impl_->failure});}}
@@ -238,23 +350,55 @@ std::expected<void,Error> EmbeddedTrackerService::poll(const storage::ProfileLea
   for(const auto& [hash,w]:impl_->witnesses){const auto parsed=core::TorrentHash::parse(hash);require(bool(parsed),Code::InvalidFormat,"Invalid owned tracker identity");if(w.share){take(w.share->current(lease,session));}require(metadata(lease,impl_->path,w.file,*parsed)==w.bytes,Code::Conflict,"Owned tracker metadata changed");}
   impl_->consume(impl_->network->box);std::deque<Incoming> requests;{std::lock_guard guard(impl_->network->box->mutex);requests.swap(impl_->network->box->incoming);}
   const auto& expected=impl_->endpoint->expected;
+  const auto account=[&](const Incoming& request,const detail::WireResponse& response) {
+    if (!response.accountingHash) { return; }
+    auto& total=impl_->torrents.at(*response.accountingHash).stats.bytesIn;
+    require(request.raw.size()<=static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max()-total),
+        Code::Unsupported,"Tracker byte counter exhausted");
+    total+=static_cast<std::int64_t>(request.raw.size());
+    impl_->accounting[request.id]=*response.accountingHash;
+  };
   for (const auto& request:requests) {
     const auto current=take(endpoint.current(lease,session));
+    const auto now=std::chrono::steady_clock::now();
+    if (request.udpPort) {
+      auto packet=std::string_view(request.raw);
+      if (expected.credentials) {
+        if (packet.size()<16+UdpAuthenticationSize) { continue; }
+        packet.remove_suffix(UdpAuthenticationSize);
+      }
+      const auto decoded=detail::parseUdpTrackerRequest(packet);
+      const auto& tokens=impl_->network->tokens;
+      if (!decoded||!tokens) { continue; }
+      if (expected.credentials&&!authenticateUdp(*expected.credentials,request.raw)) {
+        detail::WireResponse denied;denied.udpFailure="Access Denied";
+        ++impl_->completedRequests;
+        impl_->network->replyUdp(request,detail::udpTrackerResponse(*decoded,denied),current);
+        continue;
+      }
+      if (decoded->action==detail::UdpAction::Connect) {
+        ++impl_->network->box->connections;++impl_->completedRequests;
+        impl_->network->replyUdp(request,detail::udpConnectResponse(decoded->transaction,tokens->issue(request,now)),current);
+      }else{
+        detail::WireResponse response;
+        if(tokens->valid(request,decoded->connection,now)){
+          response=detail::trackerResponse(decoded->wire,request.address,impl_->torrents,expected.wire,now);
+          account(request,response);
+        }else{response.udpFailure="Connection ID mismatch";}
+        ++impl_->completedRequests;
+        impl_->network->replyUdp(request,detail::udpTrackerResponse(*decoded,response),current);
+      }
+      continue;
+    }
     const auto decoded=detail::parseTrackerRequest(request.raw);
     ++impl_->completedRequests;
     if (expected.credentials && (!decoded || !authenticate(*expected.credentials,decoded->authorization))) {
       impl_->network->reply(request.id,unauthorized(),current);
       continue;
     }
-    auto response=decoded?detail::trackerResponse(*decoded,request.address,impl_->torrents,expected.wire,
-        std::chrono::steady_clock::now()):detail::WireResponse{detail::trackerFailure(decoded.error()),std::nullopt};
-    if (response.accountingHash) {
-      auto& total=impl_->torrents.at(*response.accountingHash).stats.bytesIn;
-      require(request.raw.size()<=static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max()-total),
-          Code::Unsupported,"Tracker byte counter exhausted");
-      total+=static_cast<std::int64_t>(request.raw.size());
-      impl_->accounting[request.id]=*response.accountingHash;
-    }
+    const auto response=decoded?detail::trackerResponse(*decoded,request.address,impl_->torrents,expected.wire,now)
+        :detail::WireResponse{detail::trackerFailure(decoded.error()),std::nullopt};
+    account(request,response);
     impl_->network->reply(request.id,detail::trackerHttpResponse(response.body),current);
   }
   return {};

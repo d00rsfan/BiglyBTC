@@ -12,6 +12,7 @@ struct TrackerEndpointDescription {
   std::string announceUrl,bindAddress;
   std::uint16_t port=0;
   std::uint64_t generation=0;
+  std::string udpAnnounceUrl{};
 };
 // Genuine accepted owned listener only. No public constructor/URL setter.
 // The start request token is a pre-acceptance fence; a finished request/page

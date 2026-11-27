@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "tracker_protocol.hpp"
 #include <algorithm>
+#include <bit>
 #include <charconv>
 #include <limits>
 #include <set>
@@ -19,6 +20,21 @@ void add(std::int64_t& value,std::int64_t amount){need(value>=0&&amount>=0&&amou
 void counts(WireTorrent& torrent){torrent.stats.seeds=torrent.stats.leechers=0;for(const auto& [id,p]:torrent.peers){(void)id;if(p.left==0){++torrent.stats.seeds;}else{++torrent.stats.leechers;}}}
 std::string ip(std::array<unsigned char,4> a){return std::to_string(a[0])+'.'+std::to_string(a[1])+'.'+std::to_string(a[2])+'.'+std::to_string(a[3]);}
 std::string scrapeEntry(const WireTorrent* torrent){return dictionary({{"complete",integer(torrent?torrent->stats.seeds:0)},{"downloaded",integer(torrent?torrent->stats.completed:0)},{"incomplete",integer(torrent?torrent->stats.leechers:0)}});}
+constexpr std::uint64_t TrackerConnectMagic = 0x41727101980;
+std::uint64_t networkInteger(std::string_view bytes,std::size_t offset,std::size_t width) {
+  std::uint64_t value=0;
+  for (const unsigned char byte:bytes.substr(offset,width)) { value=(value<<8)|byte; }
+  return value;
+}
+void appendNetworkInteger(std::string& out,std::uint64_t value,int bytes) {
+  for (int position=bytes-1;position>=0;--position) { out.push_back(static_cast<char>((value>>(position*8))&0xff)); }
+}
+std::string udpHeader(UdpAction action,std::uint32_t transaction) {
+  std::string out;
+  appendNetworkInteger(out,static_cast<std::uint32_t>(action),4);
+  appendNetworkInteger(out,transaction,4);
+  return out;
+}
 std::int64_t delta(std::int64_t value,std::int64_t previous,std::chrono::steady_clock::duration elapsed){if(value<previous){return 0;}const auto amount=value-previous;const auto millis=std::max<std::int64_t>(25,std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());const auto limit=(std::int64_t{3*1024*1024}+1)*std::min<std::int64_t>(millis,10800000);return amount<=(limit-1)/1000?amount:0;}
 }
 std::expected<WireRequest,std::string> parseTrackerRequest(std::string_view raw){try{
@@ -42,14 +58,95 @@ std::expected<WireRequest,std::string> parseTrackerRequest(std::string_view raw)
   }if(amp==query.npos){break;}at=amp+1;}
   need(!out.hashes.empty(),"Hash missing from request");if(out.announce){need(out.hashes.size()==1&&!out.peerId.empty()&&out.port,"Announce requires one hash, peer_id and port");for(const auto* key:{"uploaded","downloaded","left"}){need(seen.contains(key),"Announce counters missing");}}return out;
 }catch(const Invalid& e){return std::unexpected(e.text);}}
+std::optional<UdpRequest> parseUdpTrackerRequest(std::string_view raw) {
+  if (raw.size()<16||raw.size()>2048) { return {}; }
+  const auto action=networkInteger(raw,8,4);
+  if (action>static_cast<std::uint32_t>(UdpAction::Scrape)) { return {}; }
+  UdpRequest result{static_cast<UdpAction>(action),static_cast<std::uint32_t>(networkInteger(raw,12,4)),
+      networkInteger(raw,0,8),{}};
+  if (result.action==UdpAction::Connect) {
+    return raw.size()==16&&result.connection==TrackerConnectMagic?std::optional{std::move(result)}:std::nullopt;
+  }
+  auto& request=result.wire;
+  request.udp=true;
+  if (result.action==UdpAction::Scrape) {
+    const auto hashes=raw.substr(16);
+    if (hashes.empty()||hashes.size()%20||hashes.size()/20>32) { return {}; }
+    for (std::size_t offset=0;offset<hashes.size();offset+=20) { request.hashes.emplace_back(hashes.substr(offset,20)); }
+    return result;
+  }
+  if (raw.size()<98) { return {}; }
+  request.announce=true;
+  request.compact=true;
+  request.hashes.emplace_back(raw.substr(16,20));
+  request.peerId=raw.substr(36,20);
+  request.downloaded=std::bit_cast<std::int64_t>(networkInteger(raw,56,8));
+  request.left=std::bit_cast<std::int64_t>(networkInteger(raw,64,8));
+  request.uploaded=std::bit_cast<std::int64_t>(networkInteger(raw,72,8));
+  const auto event=networkInteger(raw,80,4);
+  if (event>3||request.downloaded<0||request.left<0||request.uploaded<0) { return {}; }
+  constexpr std::array<std::string_view,4> events{"","completed","started","stopped"};
+  request.event=events[event];
+  const auto overridden=networkInteger(raw,84,4);
+  if (overridden) {
+    std::array<unsigned char,4> bytes{};
+    for (std::size_t index=0;index<bytes.size();++index) { bytes[index]=static_cast<unsigned char>(raw[84+index]); }
+    request.ip=ip(bytes);
+  }
+  request.key=std::to_string(std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(networkInteger(raw,88,4))));
+  request.numWant=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(networkInteger(raw,92,4)));
+  request.port=static_cast<std::uint16_t>(networkInteger(raw,96,2));
+  if (request.numWant< -1||request.numWant>10000||!request.port) { return {}; }
+  return result;
+}
+std::string udpConnectResponse(std::uint32_t transaction,std::uint64_t connection) {
+  auto out=udpHeader(UdpAction::Connect,transaction);
+  appendNetworkInteger(out,connection,8);
+  return out;
+}
+std::string udpTrackerResponse(const UdpRequest& request,const WireResponse& values) {
+  if (!values.udpFailure.empty()) { return udpHeader(UdpAction::Error,request.transaction)+values.udpFailure; }
+  auto out=udpHeader(request.action,request.transaction);
+  if (request.action==UdpAction::Announce&&values.udpAnnounce) {
+    const auto& announce=*values.udpAnnounce;
+    appendNetworkInteger(out,announce.interval,4);
+    appendNetworkInteger(out,announce.leechers,4);
+    appendNetworkInteger(out,announce.seeds,4);
+    out+=announce.peers;
+  }else if (request.action==UdpAction::Scrape) {
+    for (const auto& hash:request.wire.hashes) {
+      const auto found=values.udpScrape.find(hash);
+      const auto stats=found==values.udpScrape.end()?std::array<std::uint32_t,3>{}:found->second;
+      for(const auto value:stats){appendNetworkInteger(out,value,4);}
+    }
+  }
+  return out;
+}
 std::string trackerFailure(std::string_view reason){return dictionary({{"failure reason",bytes(reason.substr(0,256))}});}
 std::string trackerHttpResponse(std::string_view body){return "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "+std::to_string(body.size())+"\r\nConnection: close\r\n\r\n"+std::string(body);}
 WireResponse trackerResponse(const WireRequest& request,std::array<unsigned char,4> address,std::map<std::string,WireTorrent>& registry,const WirePolicy& policy,std::chrono::steady_clock::time_point now){try{
   need(policy.interval>=60&&policy.interval<=3600&&policy.maxPeers<=200,"Unsupported tracker response policy");for(auto& [hash,t]:registry){(void)hash;for(auto i=t.peers.begin();i!=t.peers.end();){if(now-i->second.seen>std::chrono::seconds(policy.interval*3)){i=t.peers.erase(i);}else{++i;}}counts(t);}
   if(request.fullScrape||!request.announce){need(!request.fullScrape||policy.fullScrape,"Full scrape disabled");std::string files="d";std::set<std::string> hashes(request.hashes.begin(),request.hashes.end());if(request.fullScrape){for(const auto& [hash,t]:registry){if(t.serving){hashes.insert(hash);}}}need(hashes.size()<=128,"Scrape exceeds tracker bound");std::optional<std::string> account;
-    for(const auto& hash:hashes){auto found=registry.find(hash);WireTorrent* torrent=found!=registry.end()&&found->second.serving?&found->second:nullptr;if(torrent){add(torrent->stats.scrapes,1);if(hashes.size()==1){account=hash;}}files+=bytes(hash)+scrapeEntry(torrent);}files+='e';return {dictionary({{"files",files},{"flags",dictionary({{"min_request_interval",integer(policy.scrapeInterval)}})}}),std::move(account)};
+    WireResponse output;
+    for (const auto& hash:hashes) {
+      const auto found=registry.find(hash);
+      WireTorrent* torrent=found!=registry.end()&&found->second.serving?&found->second:nullptr;
+      if (torrent) { add(torrent->stats.scrapes,1);if(hashes.size()==1){account=hash;} }
+      if (request.udp) {
+        if (torrent) {
+          output.udpScrape.emplace(hash,std::array<std::uint32_t,3>{torrent->stats.seeds,
+              static_cast<std::uint32_t>(torrent->stats.completed),torrent->stats.leechers});
+        }
+      }else{files+=bytes(hash)+scrapeEntry(torrent);}
+    }
+    if (!request.udp) {
+      files+='e';
+      output.body=dictionary({{"files",files},{"flags",dictionary({{"min_request_interval",integer(policy.scrapeInterval)}})}});
+    }
+    output.accountingHash=std::move(account);
+    return output;
   }
-  const auto found=registry.find(request.hashes.front());need(found!=registry.end()&&found->second.serving,"Torrent unauthorised");auto& actual=found->second;auto next=actual;need(!request.ip||*request.ip==ip(address),"IP override unsupported");need(!request.compact||policy.compact,"Compact replies disabled");auto old=next.peers.find(request.peerId);
+  const auto found=registry.find(request.hashes.front());need(found!=registry.end()&&found->second.serving,"Torrent unauthorised");auto& actual=found->second;auto next=actual;need(!request.ip||*request.ip==ip(address),"IP override unsupported");need(!request.compact||policy.compact||request.udp,"Compact replies disabled");auto old=next.peers.find(request.peerId);
   if(old!=next.peers.end()){need(old->second.address==address&&(!policy.keyEnabled||old->second.key==request.key),"Peer identity or key changed");}
   const bool existed=old!=next.peers.end();const bool completed=existed&&old->second.completed;
   if(existed){add(next.stats.uploaded,delta(request.uploaded,old->second.uploaded,now-old->second.seen));add(next.stats.downloaded,delta(request.downloaded,old->second.downloaded,now-old->second.seen));}
@@ -60,6 +157,17 @@ WireResponse trackerResponse(const WireRequest& request,std::array<unsigned char
     const bool isComplete=completed||request.event=="completed";if(request.event=="completed"&&!completed){add(next.stats.completed,1);}next.peers.insert_or_assign(request.peerId,WirePeer{request.peerId,request.key,address,request.port,request.uploaded,request.downloaded,request.left,isComplete,now});
   }counts(next);std::string peers=request.compact?"":"l";const auto wanted=request.event=="stopped"?0:std::min<unsigned>(policy.maxPeers,request.numWant<0?policy.maxPeers:static_cast<unsigned>(request.numWant));unsigned sent=0;
   for(const auto& [id,peer]:next.peers){if(id==request.peerId||sent==wanted){continue;}if(request.compact){for(const auto c:peer.address){peers+=static_cast<char>(c);}peers+=static_cast<char>(peer.port>>8);peers+=static_cast<char>(peer.port&255);}else{std::map<std::string,std::string> fields{{"ip",bytes(ip(peer.address))},{"port",integer(peer.port)}};if(policy.sendPeerIds&&!request.noPeerId){fields.emplace("peer id",bytes(peer.id));}std::string encoded="d";for(const auto& [key,value]:fields){encoded+=bytes(key)+value;}peers+=encoded+'e';}++sent;}
+  if (request.udp) {
+    const auto leechers=next.stats.leechers;
+    const auto seeders=next.stats.seeds;
+    actual=std::move(next);
+    WireResponse output{{},request.hashes.front()};
+    output.udpAnnounce=UdpAnnounceValues{policy.interval,leechers,seeders,std::move(peers)};
+    return output;
+  }
   if(request.compact){peers=bytes(peers);}else{peers+='e';}actual=std::move(next);return {dictionary({{"complete",integer(actual.stats.seeds)},{"incomplete",integer(actual.stats.leechers)},{"interval",integer(policy.interval)},{"min interval",integer(policy.minInterval)},{"peers",peers}}),request.hashes.front()};
-}catch(const Invalid& e){return {trackerFailure(e.text),std::nullopt};}}
+}catch(const Invalid& e){
+  if (request.udp) { WireResponse output;output.udpFailure=e.text;return output; }
+  return {trackerFailure(e.text),std::nullopt};
+}}
 } // namespace biglybtc::tracker::detail
