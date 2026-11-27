@@ -192,9 +192,9 @@ int main() {
       }
       auto owner=fixture.prepare();
       std::vector<std::uint8_t> pieces(static_cast<std::size_t>(owner.parameters().ti->num_pieces()));
-      pieces[retainedPiece]=1;
+      pieces.at(retainedPiece)=1;
       auto missingPiece=pieces;
-      missingPiece[compact?2:1]=1;
+      missingPiece.at(compact?2:1)=1;
       require(!owner.prepareBackupResume(*fixture.lease,missingPiece),"Refuse a supposedly verified piece that has a physical gap");
       auto resume=owner.prepareBackupResume(*fixture.lease,pieces);
       require(resume.has_value()&&resume->completedBytes==static_cast<std::int64_t>(piece),"Prepare source-bound progress for the backed piece");
@@ -209,7 +209,7 @@ int main() {
       require(backup.has_value(),backup?"Copy mapped backup":backup.error().message);
       const auto state=core::Document::parse(read(backup->directory/"active"/sourceState.filename()));
       std::string expected(pieces.size(),'\0');
-      expected[retainedPiece]='\1';
+      expected.at(retainedPiece)='\1';
       require(state&&state->find("resume")->find("data")->find("resume data")->bytes==expected,
           "The copied profile contains only the physically proven piece as verified");
       require(read(backup->directory/relativeControl)==controlBefore&&read(sourceState)==stateBefore
