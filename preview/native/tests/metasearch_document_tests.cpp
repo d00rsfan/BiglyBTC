@@ -49,6 +49,29 @@ private slots:
   QCOMPARE(regex->rows[0].category,std::optional<std::string>{"Books & magazines"});
   QCOMPARE(regex->rows[0].categoryTags,(std::vector<std::string>{"Books & magazines"}));
  }
+ void originalRankUsesSuperSeedsVotesAndPrivateResult() {
+  s::MetasearchRecipe recipe;
+  recipe.kind=s::MetasearchRecipeKind::Json;
+  recipe.mappings={{"title",1},{"seeds",5},{"peers",4},{"comments",7},{"votes",10},{"superseeds",11},{"private",12},{"down",14}};
+  const auto parsed=s::parseMetasearchDocument(recipe,R"([{"title":"Name","seeds":100,"peers":49,
+    "comments":"<b>1,234</b>","votes":60,"superseeds":2,"private":"yes","down":1}])",{},"Name absent");
+  QVERIFY(parsed&&parsed->rows.size()==1);
+  const auto& row=parsed->rows.front();
+  QVERIFY(!row.incomplete&&row.privateTorrent&&row.rank);
+  QCOMPARE(row.comments,1234);
+  QCOMPARE(row.superSeeds,2);
+  QCOMPARE(row.votes,60);
+  QCOMPARE(row.votesDown,1);
+  QVERIFY(std::abs(*row.rank-0.13499188f)<0.000001f);
+
+  recipe.kind=s::MetasearchRecipeKind::Regex;
+  recipe.resultPattern="<r>(.*?)</r><v>(.*?)</v>";
+  recipe.rankBias=0.5f;
+  recipe.mappings={{"1",1},{"2",10}};
+  const auto regex=s::parseMetasearchDocument(recipe,"<r>Name</r><v>6</v>",{},"Name");
+  QVERIFY(regex&&regex->rows.size()==1&&regex->rows.front().rank);
+  QVERIFY(std::abs(*regex->rows.front().rank-0.150515f)<0.000001f);
+ }
  void mappedJsonRankUsesSavedBiasAndResponseDivisor(){
   s::MetasearchRecipe recipe;
   recipe.kind=s::MetasearchRecipeKind::Json;

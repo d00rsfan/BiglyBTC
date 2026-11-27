@@ -60,7 +60,8 @@ struct MetasearchResultKey {
 struct MetasearchRowValues {
   std::optional<std::string> title,publicationText,detailsLink,torrentLink,downloadButtonLink,hash,uid,rawTorrentLink;
   std::int64_t size=-1;
-  std::int32_t seeds=-1,peers=-1;
+  std::int32_t seeds=-1,peers=-1,superSeeds=-1,votes=-1,votesDown=-1,comments=-1;
+  bool privateTorrent=false;
   std::optional<float> rank;
   std::optional<std::string> category;
   std::vector<std::string> categoryTags;

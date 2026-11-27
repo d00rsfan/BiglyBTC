@@ -120,6 +120,11 @@ void SessionBridge::pollMetasearch(){
     else{const auto key=metasearchKey(u.engine.engine);for(auto& e:p.engines){if(e.key==key){e.state=u.cancelled?ui::MetasearchEngineState::Cancelled:u.engine.failure?ui::MetasearchEngineState::Failed:ui::MetasearchEngineState::Ready;e.results=u.engine.rows.size();e.message=text(u.engine.diagnostic).left(2048);if(e.message.isEmpty()&&u.engine.failure){e.message=metasearchFailure(*u.engine.failure);}}}
       for(const auto& value:u.engine.rows){if(p.rows.size()==ui::MaximumMetasearchRows){p.truncated=true;break;}const auto& v=value.values;ui::MetasearchResultRow row;row.key={value.key.queryNonce,value.key.rowId};row.engine=metasearchKey(value.engine);row.source=host_->metasearchName(row.engine);const auto str=[](const auto& s){return s?text(*s).left(2048):QString{};};row.title=str(v.title);row.publication=str(v.publicationText);row.link=(v.torrentLink?v.torrentLink:v.downloadButtonLink)?text(*(v.torrentLink?v.torrentLink:v.downloadButtonLink)).left(4096):QString{};row.details=str(v.detailsLink);if(v.size>=0){row.bytes=v.size;}if(v.seeds>=0){row.seeds=v.seeds;}if(v.peers>=0){row.peers=v.peers;}
         row.rank=v.rank;
+        if(v.superSeeds>=0){row.rankDetails.push_back(tr("Super seeds %1").arg(v.superSeeds));}
+        if(v.comments>=0){row.rankDetails.push_back(tr("Comments %1").arg(v.comments));}
+        if(v.votes>=0){row.rankDetails.push_back(tr("Votes %1").arg(v.votes));}
+        if(v.votesDown>=0){row.rankDetails.push_back(tr("Downvotes %1").arg(v.votesDown));}
+        if(v.privateTorrent){row.rankDetails.push_back(tr("Private torrent"));}
         if(v.category){row.category=text(*v.category);}
         for(const auto& tag:v.categoryTags){row.categoryTags.push_back(text(tag));}
         const auto url=QUrl::fromEncoded(row.link.toUtf8(),QUrl::StrictMode);const bool actualRawLink=v.rawTorrentLink&&!v.rawTorrentLink->empty();row.downloadable=actualRawLink&&!v.incomplete&&url.isValid()&&(((url.scheme()==QStringLiteral("http")||url.scheme()==QStringLiteral("https"))&&!url.host().isEmpty())||url.scheme()==QStringLiteral("magnet"));

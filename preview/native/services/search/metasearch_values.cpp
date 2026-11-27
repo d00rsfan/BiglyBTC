@@ -40,21 +40,20 @@ MetasearchRecipe recipe(const N& n){
   std::size_t captures=0;
   if(type==1){out.resultPattern=text(n,"regex.pattern",2048).value_or("");while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.front())<=32){out.resultPattern.erase(0,1);}while(!out.resultPattern.empty()&&static_cast<unsigned char>(out.resultPattern.back())<=32){out.resultPattern.pop_back();}const auto syntax=inspectMetasearchPattern(out.resultPattern);require(bool(syntax)&&!syntax->nullable,E::Unsupported,"This result pattern is outside the bounded Java subset");captures=syntax->captures;}
   out.rankDivisorPath=text(n,"rank.divisor.path").value_or("");
-  if(type==2){
-    const auto readRankSetting=[&](std::string_view key,float fallback){
-      const auto setting=text(n,key,128);
-      if(!setting){return fallback;}
-      const auto decoded=parseMetasearchFloat(*setting);
-      require(decoded.has_value(),E::Malformed,"Malformed saved rank setting");
-      return *decoded;
-    };
-    out.rankBias=readRankSetting("rank_bias",1.0f);
-    out.rankPreference=readRankSetting("pref_count",0.0f);
-  }else{require(out.rankDivisorPath.empty(),E::Unsupported);}
+  if(type!=2){require(out.rankDivisorPath.empty(),E::Unsupported);}
+  const auto readRankSetting=[&](std::string_view key,float fallback){
+    const auto setting=text(n,key,128);
+    if(!setting){return fallback;}
+    const auto decoded=parseMetasearchFloat(*setting);
+    require(decoded.has_value(),E::Malformed,"Malformed saved rank setting");
+    return *decoded;
+  };
+  out.rankBias=readRankSetting("rank_bias",1.0f);
+  out.rankPreference=readRankSetting("pref_count",0.0f);
   out.resultPath=text(n,"json.path").value_or("");
   if(!out.resultPath.empty()){std::size_t offset=0;while(offset<out.resultPath.size()){const auto end=out.resultPath.find('.',offset);auto part=std::string_view(out.resultPath).substr(offset,end==std::string::npos?end:end-offset);require(!part.empty(),E::Unsupported);if(part.front()=='['){require(part.size()>2&&part.back()==']'&&std::ranges::all_of(part.substr(1,part.size()-2),[](unsigned char c){return c>='0'&&c<='9';}),E::Unsupported);}offset=end==std::string::npos?out.resultPath.size():end+1;}require(out.resultPath.back()!='.',E::Unsupported);}
   require(!maps->children.empty(),E::Unsupported);
-  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);auto filter=text(m,"post_filter",2048).value_or("");const auto filterSyntax=inspectMetasearchPattern(filter);require(bool(filterSyntax),E::Unsupported,"This post-filter is outside the bounded Java subset");if(!name){continue;}mappingSource(*name,type==1,captures);constexpr int fields[]{1,2,3,4,5,6,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields)||(type==2&&field==201),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field,std::move(filter)});}
+  for(const auto& m:maps->children){require(m.type==N::Type::Dictionary,E::Malformed);auto name=text(m,"name");const auto field=integer(m,"field",0);auto filter=text(m,"post_filter",2048).value_or("");const auto filterSyntax=inspectMetasearchPattern(filter);require(bool(filterSyntax),E::Unsupported,"This post-filter is outside the bounded Java subset");if(!name){continue;}mappingSource(*name,type==1,captures);constexpr int fields[]{1,2,3,4,5,6,7,10,11,12,14,102,103,105,200};require(std::ranges::find(fields,field)!=std::end(fields)||(type==2&&field==201),E::Unsupported,"This engine uses an unsupported result field");out.mappings.push_back({std::move(*name),field,std::move(filter)});}
   return out;
 }
 }

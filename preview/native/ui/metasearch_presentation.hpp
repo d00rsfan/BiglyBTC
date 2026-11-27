@@ -21,7 +21,7 @@ struct MetasearchResultKey {quint64 queryNonce=0,rowId=0;bool operator==(const M
 enum class MetasearchState {Started,Results,Ready,Rejected,Cancelled};
 enum class MetasearchEngineState {Queued,Searching,Ready,Failed,Cancelled};
 struct MetasearchEngineProgress {MetasearchEngineKey key;QString name,message;MetasearchEngineState state=MetasearchEngineState::Queued;quint64 results=0;};
-struct MetasearchResultRow {MetasearchResultKey key;MetasearchEngineKey engine;QString source,title,publication,link,details,downloadReason;std::optional<qint64> bytes,seeds,peers;std::optional<double> rank;bool downloadable=false;QString category{};QStringList categoryTags{};};
+struct MetasearchResultRow {MetasearchResultKey key;MetasearchEngineKey engine;QString source,title,publication,link,details,downloadReason;std::optional<qint64> bytes,seeds,peers;std::optional<double> rank;bool downloadable=false;QString category{};QStringList categoryTags{};QStringList rankDetails{};};
 struct MetasearchPacket {MetasearchQueryKey key;quint64 sequence=0,queryNonce=0;MetasearchState state=MetasearchState::Rejected;std::vector<MetasearchEngineProgress> engines;std::vector<MetasearchResultRow> rows;bool truncated=false;QString message;};
 using MetasearchPresentation=std::shared_ptr<const MetasearchPacket>;
 struct MetasearchDownloadKey {MetasearchQueryKey query;MetasearchResultKey result;quint64 request=0;bool operator==(const MetasearchDownloadKey&)const=default;};

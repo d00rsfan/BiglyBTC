@@ -141,11 +141,16 @@ std::optional<float> jsonRankDivisor(const Json& tree,std::size_t root,const std
   const auto& node=tree.nodes[root];
   return node.kind==Kind::Number?parseMetasearchFloat(node.scalar.toLatin1().toStdString()):std::nullopt;
 }
-float estimatedJsonRank(const MetasearchRowValues& row,const std::optional<QString>& title,std::string_view query){
+float estimatedRank(const MetasearchRowValues& row,const std::optional<QString>& title,std::string_view query){
   const auto seeds=static_cast<std::uint32_t>(std::max<std::int32_t>(row.seeds,0));
   const auto peers=static_cast<std::uint32_t>(std::max<std::int32_t>(row.peers,0));
-  const auto virtualPeers=std::max<std::int32_t>(std::bit_cast<std::int32_t>(3*seeds+peers+2),2);
+  const auto superSeeds=static_cast<std::uint32_t>(std::max<std::int32_t>(row.superSeeds,0));
+  const auto votes=static_cast<std::uint32_t>(std::clamp<std::int32_t>(row.votes,0,50));
+  const auto votesDown=static_cast<std::uint32_t>(std::max<std::int32_t>(row.votesDown,0));
+  // The original Java result performs these operations with signed 32-bit int wrapping.
+  const auto virtualPeers=std::max<std::int32_t>(std::bit_cast<std::int32_t>(3*seeds+peers+2+50*superSeeds+5*votes-200*votesDown),2);
   auto rank=std::min(static_cast<float>(std::log(virtualPeers)/std::log(10.0))/5.0f,2.0f);
+  if(row.privateTorrent){rank/=2.0f;}
   if(!title){return rank;}
   const auto lowerTitle=title->toLower();
   const auto queryText=QString::fromUtf8(query.data(),static_cast<qsizetype>(query.size()));
@@ -163,7 +168,27 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
   MetasearchRowValues out;std::optional<QString> title,date,details,torrent,button,hash;
   float jsonRank=-1.0f;
   for(const auto& mapped:values){const auto& mapping=*mapped.mapping;const auto& content=mapped.content;const bool decimal=mapped.decimal;
-    if(decimal&&mapping.field!=3&&mapping.field!=4&&mapping.field!=5&&mapping.field!=6&&mapping.field!=201){out.incomplete=true;continue;}
+    const auto countField=[&]() -> std::int32_t* {
+      switch(mapping.field){
+        case 4:return &out.peers;
+        case 5:return &out.seeds;
+        case 7:return &out.comments;
+        case 10:return &out.votes;
+        case 11:return &out.superSeeds;
+        case 14:return &out.votesDown;
+        default:return nullptr;
+      }
+    };
+    if(auto* count=countField()){
+      if(decimal){continue;}
+      auto decoded=html(plain(content));
+      if(!decoded){out.incomplete=true;continue;}
+      decoded->remove(u',');decoded->remove(u' ');
+      if(!ascii(*decoded)){out.incomplete=true;continue;}
+      if(const auto value=integer(*decoded)){*count=*value;}
+      continue;
+    }
+    if(decimal&&mapping.field!=3&&mapping.field!=6&&mapping.field!=12&&mapping.field!=201){out.incomplete=true;continue;}
     const auto setHash=[&](QString value){hash=normalizedHash(std::move(value));if(hash){QByteArray raw;unsigned bits=0,pending=0;constexpr auto alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";bool valid=canonical32(*hash);
       if(valid){for(const auto c:*hash){const auto index=QByteArrayView(alphabet).indexOf(static_cast<char>(c.toUpper().unicode()));pending=(pending<<5)|static_cast<unsigned>(index);bits+=5;if(bits>=8){bits-=8;raw+=static_cast<char>((pending>>bits)&255);}}}
       if(!valid){out.incomplete=true;return;}const auto magnet=QStringLiteral("magnet:?xt=urn:btih:")+QString::fromLatin1(raw.toHex().toUpper());if(!torrent){torrent=magnet;}if(!button){button=magnet;}}};
@@ -171,7 +196,7 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
       case 1:title=html(plain(content));if(!title){out.incomplete=true;}break;
       case 2:date=content;break; // Raw publication text only; no epoch/age claim.
       case 3:if(const auto value=size(content);value&&*value>=0){out.size=*value;}break;
-      case 4:case 5:{if(decimal){break;}auto decoded=html(plain(content));if(!decoded){out.incomplete=true;break;}decoded->remove(u',');decoded->remove(u' ');if(!ascii(*decoded)){out.incomplete=true;break;}if(const auto value=integer(*decoded)){if(mapping.field==4){out.peers=*value;}else{out.seeds=*value;}}break;}
+      case 12:out.privateTorrent|=!content.isEmpty();break;
       case 6:{
         const auto categoryText=[&](const QString& raw) {
           auto decoded=html(plain(raw));
@@ -205,8 +230,8 @@ MetasearchRowValues projectedRow(const std::vector<MappedValue>& values,const Rs
       default:out.incomplete=true;break;
     }
   }
-  if(recipe.kind==MetasearchRecipeKind::Json&&jsonRank!=-2.0f){
-    const auto raw=jsonRank==-1.0f?estimatedJsonRank(out,title,query):jsonRank;
+  if(jsonRank!=-2.0f){
+    const auto raw=jsonRank==-1.0f?estimatedRank(out,title,query):jsonRank;
     const auto biased=(raw*recipe.rankBias)*(1.0+0.025*recipe.rankPreference);
     if(!std::isnan(biased)){out.rank=static_cast<float>(std::clamp(biased,0.0,1.0));}
   }
@@ -281,7 +306,7 @@ std::expected<MetasearchDocument,E> parseMetasearchDocument(const MetasearchReci
         for(const auto& mapping:recipe.mappings){std::optional<QString> content;if(mapping.name.find("${")!=mapping.name.npos){content=mappedExpression(mapping.name,get,budget);}else{content=get(QString::fromStdString(mapping.name));}if(!content){continue;}if(!postFilter(mapping,*content,actualQueryUtf8,budget)){accepted=false;break;}values.push_back({&mapping,std::move(*content),false});}
         // Intentional correction: a failed post-filter rejects the whole row;
         // a later mapped hash cannot resurrect it as Original RegexEngine can.
-        if(accepted&&!values.empty()){require(out.rows.size()<1000,E::Limit);auto row=projectedRow(values,context,recipe);bound(row,text);out.partial=out.partial||row.incomplete;out.rows.push_back(std::move(row));}
+        if(accepted&&!values.empty()){require(out.rows.size()<1000,E::Limit);auto row=projectedRow(values,context,recipe,actualQueryUtf8);bound(row,text);out.partial=out.partial||row.incomplete;out.rows.push_back(std::move(row));}
       }
     }return out;
   }

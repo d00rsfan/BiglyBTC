@@ -109,6 +109,7 @@ void MetasearchPage::sortResults(int column,Qt::SortOrder order){
 void MetasearchPage::render(){
  const auto packet=rows_;const auto revision=revision_;QPointer<MetasearchPage> alive(this);table_->setSortingEnabled(false);if(!alive||revision_!=revision){return;}table_->setRowCount(0);if(!alive||revision_!=revision){return;}
  for(const auto& row:packet){const int index=table_->rowCount();table_->insertRow(index);if(!alive||revision_!=revision){return;}std::array<QTableWidgetItem*,9> cells{new SortItem(row.title.left(MaximumMetasearchChars)),new SortItem(number(row.bytes),row.bytes),new SortItem(number(row.seeds),row.seeds),new SortItem(number(row.peers),row.peers),new SortItem(row.source.left(MaximumMetasearchChars)),row.rank?new SortItem(QString::number(*row.rank,'g',6),*row.rank):new SortItem(QStringLiteral("—")),new SortItem(row.publication.left(MaximumMetasearchChars)),new SortItem(row.link.left(MaximumMetasearchChars)),new SortItem(row.category.left(MaximumMetasearchChars))};
+  if(!row.rankDetails.isEmpty()){cells[5]->setToolTip(row.rankDetails.join(u'\n').left(MaximumMetasearchChars));}
   if(!row.categoryTags.isEmpty()){
     auto tooltip=row.categoryTags.join(u'\n').left(MaximumMetasearchChars).toHtmlEscaped();
     tooltip.replace(u'\n',QStringLiteral("<br>"));
