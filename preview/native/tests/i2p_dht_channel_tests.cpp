@@ -5,7 +5,9 @@
 #include "owner_runtime_guard.hpp"
 #include "profile_owner.hpp"
 #include "saved_subscription_seed.hpp"
+#include "stream.hpp"
 #include <QDateTime>
+#include <QtEndian>
 #endif
 #include <QElapsedTimer>
 #include <QFile>
@@ -34,6 +36,182 @@ struct Router {
   bool status(std::uint32_t nonce,std::uint32_t message,cp::Byte code,std::uint16_t session=7){auto data=cp::encodeMessageStatus({session,message,code,0,nonce});return data&&send(*data);}
   bool lease(std::uint64_t expiry=Now+600000){cp::RequestedLease l;l.gateway.fill(0x51);l.tunnelId=33;l.expiresMilliseconds=expiry;auto data=cp::encodeLeaseRequest({7,{l}});return data&&send(*data);}
 };
+#ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
+namespace stream=i2p::streaming;
+namespace discovery=i2p::dht;
+class SubscriptionLeecher {
+public:
+  SubscriptionLeecher(Router& router, const i2p::ClientIdentity& remote, i2p::Destination local,
+      const discovery::Contact& contact, std::string_view key, std::string_view payload)
+      : router_(router), remote_(remote), local_(std::move(local)), contact_(contact),
+        key_(key), payload_(payload) { clock_.start(); }
+
+  bool pump() {
+    if (!failure.isEmpty()) { return true; }
+    try {
+      while (router_.next()) { receive(router_.take()); }
+      if (!connection_ && resolvedAt_ && elapsed()-*resolvedAt_>=500) {
+        connection_.emplace(1,1717,*remote_.destination(),local_,stream::MaximumWindow,elapsed());
+      }
+      if (!connection_) { return false; }
+      if (!offered_ && connection_->observation().phase==stream::Phase::Established) {
+        QByteArray handshake("\x13" "BitTorrent protocol",20);
+        handshake += QByteArray(8,'\0') + QByteArray::fromStdString(key_) + "-BB0001-123456789012";
+        write(handshake);
+        offered_=true;
+      }
+      const auto received=connection_->read(65536);
+      data_.append(reinterpret_cast<const char*>(received.data()),static_cast<qsizetype>(received.size()));
+      require(data_.size()<=65536,"Unbounded subscription peer response");
+      processMessages();
+      for (unsigned turn=0; turn<8; ++turn) {
+        const auto packet=connection_->next(elapsed());
+        if (!packet) { break; }
+        const auto bytes=stream::encode(*packet,remote_);
+        require(bool(bytes),"Cannot sign the test peer's Streaming packet");
+        const auto mux=stream::encodeMux({6881,6881,*bytes});
+        require(bool(mux),"Cannot encode the test peer's Streaming mux");
+        deliver(*mux);
+        connection_->dispatched(*packet,elapsed());
+      }
+      return announcing_ && blocks_==expectedBlocks();
+    } catch (const std::exception& error) {
+      failure=QString::fromUtf8(error.what());
+      return true;
+    }
+  }
+  QString state() const {
+    return QStringLiteral("announce=%1 peer-resolved=%2 stream-phase=%3 peer-handshake=%4 requests=%5 blocks=%6")
+        .arg(announcing_).arg(resolvedAt_.has_value())
+        .arg(connection_ ? static_cast<int>(connection_->observation().phase) : -1)
+        .arg(handshake_).arg(requested_).arg(blocks_);
+  }
+  QString failure;
+
+private:
+  static void require(bool condition,const char* reason) { if (!condition) { throw std::runtime_error(reason); } }
+  std::uint64_t elapsed() const { return static_cast<std::uint64_t>(clock_.elapsed()); }
+  static void appendInt(QByteArray& bytes,quint32 value) {
+    const auto wire=qToBigEndian(value);
+    bytes.append(reinterpret_cast<const char*>(&wire),sizeof(wire));
+  }
+  static quint32 readInt(const char* bytes) { return qFromBigEndian<quint32>(bytes); }
+  unsigned expectedBlocks() const { return payload_.size()>PieceBytes ? 2 : 1; }
+  std::size_t length(unsigned index) const { return std::min<std::size_t>(8192,payload_.size()-index*PieceBytes); }
+  void deliver(const i2p::Bytes& payload) {
+    const auto frame=cp::encodeMessagePayload({7,messageId_++,payload});
+    require(frame && router_.send(*frame),"Cannot route a test peer packet through actual I2CP");
+  }
+  void write(const QByteArray& bytes) {
+    require(bool(connection_->write({reinterpret_cast<const i2p::Byte*>(bytes.constData()),
+        static_cast<std::size_t>(bytes.size())})),"Cannot queue the test peer's BitTorrent request");
+  }
+  void receive(const cp::Frame& frame) {
+    if (frame.type==cp::HostLookupType) {
+      const auto request=cp::decodeHostLookup(frame);
+      require(request && request->hash==remote_.destination()->hash,"Owned SDK must resolve the discovered peer");
+      const auto reply=cp::encodeHostReply({7,request->request,0,*remote_.destination()});
+      require(reply && router_.send(*reply),"Cannot send the resolved test peer Destination");
+      resolvedAt_=elapsed();
+    } else if (frame.type==cp::SendMessageType || frame.type==cp::SendMessageExpiresType) {
+      if (frame.type==cp::SendMessageExpiresType) {
+        if (const auto dht=cp::decodeDhtSendDatagram(frame); dht) {
+          require(dht->recipient.wire==remote_.destination()->wire,"Wrong I2P announcement destination");
+          receiveAnnouncement(dht->payload);
+          return;
+        }
+      }
+      const auto sent=cp::decodeSendDatagram(frame);
+      require(sent && sent->recipient.wire==remote_.destination()->wire,"Wrong peer transport destination");
+      const auto mux=stream::decodeMux(sent->payload);
+      require(mux && mux->fromPort==6881 && mux->toPort==6881,"Wrong owned Streaming ports");
+      auto packet=stream::decode(mux->packet,local_);
+      require(bool(packet),"Invalid Streaming packet from the owned SDK");
+      if (!connection_) {
+        packet=stream::decodeInitialSyn(mux->packet,*remote_.destination());
+        require(bool(packet),"Owned SDK did not sign its initial peer SYN");
+        auto accepted=stream::Connection::accept(1,1717,*remote_.destination(),local_,*packet,stream::MaximumWindow,elapsed());
+        require(bool(accepted),"Test peer could not accept the owned SDK connection");
+        connection_.emplace(std::move(*accepted));
+      } else if (packet->send==1717) { connection_->receive(std::move(*packet),elapsed()); }
+    } else {
+      throw std::runtime_error("Unexpected I2CP frame type " + std::to_string(frame.type) + " in the subscription transfer");
+    }
+  }
+  void receiveAnnouncement(const i2p::Bytes& payload) {
+    const auto mux=cp::decodeDhtMuxDatagram(payload);
+    require(mux && mux->protocol==18,"Unexpected owned DHT dispatch while serving the seed");
+    const auto message=discovery::decode(mux->datagram);
+    require(message && message->method==discovery::Method::AnnouncePeer && message->seed
+        && std::string_view(reinterpret_cast<const char*>(message->target.data()),message->target.size())==key_,
+        "Wrong signed seed key in actual I2P announce");
+    discovery::Message ack;
+    ack.kind=discovery::Kind::Reply;
+    ack.id=contact_.id;
+    ack.transaction=message->transaction;
+    const auto bytes=discovery::encode(ack);
+    require(bool(bytes),"Cannot encode the test router's DHT acknowledgement");
+    const auto reply=cp::encodeDhtMuxDatagram({18,contact_.port,10001,*bytes},cp::GzipMode::Deflate);
+    require(bool(reply),"Cannot mux the test router's DHT acknowledgement");
+    deliver(*reply);
+    announcing_=true;
+  }
+  void processMessages() {
+    if (!handshake_) {
+      if (data_.size()<68) { return; }
+      require(data_.first(20)==QByteArray("\x13" "BitTorrent protocol",20)
+          && data_.mid(28,20)==QByteArray::fromStdString(key_),"Peer-wire handshake must use the signed subscription hash");
+      handshake_=true;
+      data_.remove(0,68);
+      write(QByteArray("\0\0\0\1\2",5));
+    }
+    while (data_.size()>=4) {
+      const auto size=readInt(data_.constData());
+      require(size<=32768,"Unbounded BitTorrent message length");
+      if (data_.size()<4+static_cast<qsizetype>(size)) { break; }
+      const auto packet=data_.mid(4,size);
+      data_.remove(0,4+static_cast<qsizetype>(size));
+      if (packet==QByteArray(1,'\0')) { continue; }
+      if (packet==QByteArray(1,'\1') && !requested_) {
+        QByteArray request;
+        for (unsigned index=0; index<expectedBlocks(); ++index) {
+          appendInt(request,13);
+          request.append('\6');
+          appendInt(request,index);
+          appendInt(request,0);
+          appendInt(request,static_cast<quint32>(length(index)));
+        }
+        write(request);
+        requested_=true;
+      }
+      if (packet.size()>=9 && packet.front()=='\7') {
+        const auto index=readInt(packet.constData()+1);
+        require(requested_ && index<expectedBlocks() && !seen_[index] && readInt(packet.constData()+5)==0,
+            "Expected one requested block from each checked piece");
+        require(packet.sliced(9)==QByteArray(payload_.data()+index*PieceBytes,static_cast<qsizetype>(length(index))),
+            "Owned I2P peer returned different signed subscription bytes");
+        seen_[index]=true;
+        ++blocks_;
+      }
+    }
+  }
+
+  static constexpr std::size_t PieceBytes=256*1024;
+  Router& router_;
+  const i2p::ClientIdentity& remote_;
+  i2p::Destination local_;
+  discovery::Contact contact_;
+  std::string key_,payload_;
+  QElapsedTimer clock_;
+  std::optional<stream::Connection> connection_;
+  std::optional<std::uint64_t> resolvedAt_;
+  QByteArray data_;
+  std::array<bool,2> seen_{};
+  std::uint32_t messageId_=30;
+  unsigned blocks_=0;
+  bool offered_=false,handshake_=false,requested_=false,announcing_=false;
+};
+#endif
 }
 
 namespace d=i2p::dht;
@@ -52,11 +230,14 @@ private slots:
 #ifdef BIGLYBTC_I2P_TEST_SUBSCRIPTION_FIXTURE
   void actualSignedPrivateSeed_data() {
     QTest::addColumn<bool>("withdraw");
-    QTest::newRow("announce-checked-signed-version") << false;
-    QTest::newRow("withdraw-before-announce") << true;
+    QTest::addColumn<bool>("transfer");
+    QTest::newRow("announce-checked-signed-version") << false << false;
+    QTest::newRow("withdraw-before-announce") << true << false;
+    QTest::newRow("stream-checked-signed-pieces") << false << true;
   }
   void actualSignedPrivateSeed() {
     QFETCH(bool,withdraw);
+    QFETCH(bool,transfer);
     namespace original=owned_i2p_test;
     namespace search=biglybtc::search;
     namespace engine=biglybtc::engine;
@@ -127,7 +308,11 @@ private slots:
     response.id=contact.id;
     response.transaction=query->transaction;
     response.token={0,0xff,0x51};
-    response.hasNodes=true;
+    response.hasNodes=!transfer;
+    if (transfer) {
+      response.hasPeers=true;
+      response.peers={{remote.destination()->hash,false}};
+    }
     const auto reply=d::encode(response);
     QVERIFY(reply);
     const auto packet=cp::encodeDhtMuxDatagram({18,10002,10001,*reply},cp::GzipMode::Deflate);
@@ -136,6 +321,11 @@ private slots:
     if (withdraw) {
       QTest::qWait(1000);
       QVERIFY(!router.next());
+    } else if (transfer) {
+      auto local=signer("ed25519");
+      SubscriptionLeecher leecher(router,remote,*local.destination(),contact,key,body);
+      QTRY_VERIFY2_WITH_TIMEOUT(leecher.pump(),qPrintable(leecher.state()),15000);
+      QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
     } else {
       QTRY_VERIFY(router.next());
       const auto packet=cp::decodeDhtSendDatagram(router.take());
