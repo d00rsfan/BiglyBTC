@@ -58,6 +58,14 @@ bool readAzureusValue(const B& row,AzureusValue& output) {
 constexpr std::size_t MaximumAzureusStoreKeys=8;
 constexpr std::size_t AzureusStoreTokenBytes=8;
 constexpr std::int32_t MaximumAzureusRead=16*1024;
+constexpr std::size_t MaximumBridgeRequest=1024;
+constexpr unsigned MinimumBridgeProtocol=3;
+
+bool readBridgeRequest(const B* value,Bytes& result) {
+  if (!is(value,B::Type::Bytes)||!decodeAzureusBridgeRequest(view(value->bytes))) { return false; }
+  result.assign(value->bytes.begin(),value->bytes.end());
+  return true;
+}
 
 bool readAzureusValues(const B* row,std::vector<AzureusValue>& output) {
   if (!is(row,B::Type::List)||row->children.size()>MaximumPeers) { return false; }
@@ -96,11 +104,17 @@ Result<AzureusMessage> readAzureusMessage(const B& row,Kind kind) {
       auto& read=result.payload.emplace<AzureusReadPacket>();
       std::uint8_t type=0;
       const auto* fragment=row.find("d");
+      const auto* key=row.find("r");
       if (!readInteger(row,"p",type)||type>1||!readInteger(row,"_t",read.now)||!readInteger(row,"c",read.connection)
           ||!readInteger(row,"s",read.start)||!readInteger(row,"l",read.length)||!readInteger(row,"t",read.total)
-          ||!fixed(row.find("z"),read.handler)||!fixed(row.find("r"),read.key)||!is(fragment,B::Type::Bytes)
+          ||!fixed(row.find("z"),read.handler)||!is(fragment,B::Type::Bytes)
           ||read.start<0||read.length<0||read.total<0||read.total>MaximumAzureusRead) {
         return bad("Invalid I2P Azureus DATA read fields");
+      }
+      const bool bridge=read.handler==AzureusBridgeTransferHandler;
+      const bool validKey=bridge?readBridgeRequest(key,read.bridgeRequest):fixed(key,read.key);
+      if (!validKey) {
+        return bad("Invalid I2P Azureus DATA request key");
       }
       read.type=static_cast<AzureusReadPacketType>(type);
       if (read.type==AzureusReadPacketType::Request) {
@@ -217,7 +231,7 @@ std::string writeAzureusMessage(const AzureusMessage& message) {
     fields["c"]=number(read->connection);
     fields["p"]=number(static_cast<std::uint8_t>(read->type));
     fields["z"]=bytes(read->handler);
-    fields["r"]=bytes(read->key);
+    fields["r"]=bytes(read->bridgeRequest.empty()?View(read->key):View(read->bridgeRequest));
     fields["s"]=number(read->start);
     fields["l"]=number(read->length);
     fields["t"]=number(read->total);
@@ -230,6 +244,27 @@ std::string writeAzureusMessage(const AzureusMessage& message) {
   }
   return dict(fields);
 }
+}
+Result<AzureusBridgeMapping> decodeAzureusBridgeRequest(View wire) {
+  if (wire.empty()||wire.size()>MaximumBridgeRequest) { return bad("Invalid I2P bridge request size"); }
+  const auto request=core::Document::parse(text(wire),{MaximumBridgeRequest,512,8,2});
+  if (!request||request->root().type!=B::Type::Dictionary||request->root().children.size()!=4) {
+    return bad("Invalid I2P bridge request");
+  }
+  const auto* key=request->find("k");
+  const auto* value=request->find("v");
+  if (!is(key,B::Type::Bytes)||key->bytes.empty()||!is(value,B::Type::Bytes)||value->bytes.empty()) {
+    return bad("Missing I2P bridge mapping");
+  }
+  return AzureusBridgeMapping{Bytes(key->bytes.begin(),key->bytes.end()),Bytes(value->bytes.begin(),value->bytes.end())};
+}
+Result<Bytes> encodeAzureusBridgeRequest(const AzureusBridgeMapping& mapping) {
+  if (mapping.key.empty()||mapping.key.size()>512||mapping.value.empty()||mapping.value.size()>512) {
+    return bad("Invalid I2P bridge mapping size");
+  }
+  const auto encoded=dict({{"k",bytes(mapping.key)},{"v",bytes(mapping.value)}});
+  if (encoded.size()>MaximumBridgeRequest) { return bad("Invalid I2P bridge request size"); }
+  return Bytes(encoded.begin(),encoded.end());
 }
 bool validContact(const Contact& c)noexcept{
   if(!c.port||c.port>=65535||allZero(c.hash)||allZero(c.id)){return false;}
@@ -294,7 +329,8 @@ Result<Message> decode(View wire){
     if (const auto* request=std::get_if<AzureusFindValue>(&azureus->payload)) { m.target=request->key; }
     else if (std::holds_alternative<AzureusStore>(azureus->payload)||std::holds_alternative<AzureusStoreAck>(azureus->payload)) {
       m.method=Method::AzureusStore;
-    } else if (std::holds_alternative<AzureusReadPacket>(azureus->payload)) {
+    } else if (const auto* data=std::get_if<AzureusReadPacket>(&azureus->payload)) {
+      if (!data->bridgeRequest.empty()&&m.version<MinimumBridgeProtocol) { return bad("Unsupported I2P bridge version"); }
       m.method=Method::AzureusData;
     }
     m.azureus=std::move(*azureus);
@@ -336,6 +372,10 @@ Result<Bytes> encodeVersioned(const Message& m,bool ordinary){
         || (m.method==Method::AzureusData)!=data
         || (store&&m.token.size()!=AzureusStoreTokenBytes)) {
       return bad("Inconsistent I2P Azureus envelope");
+    }
+    if (const auto* packet=std::get_if<AzureusReadPacket>(&payload)) {
+      const bool bridge=packet->handler==AzureusBridgeTransferHandler;
+      if (bridge!=!packet->bridgeRequest.empty()) { return bad("Inconsistent I2P Azureus DATA request key"); }
     }
   } else if (azureus) { return bad("Missing I2P Azureus envelope"); }
   if(m.kind==Kind::Query&&m.method==Method::AnnouncePeer&&m.token.empty()){return bad("Outgoing raw announce requires token");} // Preserve existing client encode contract.

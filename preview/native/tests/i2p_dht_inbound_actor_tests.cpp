@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "actor.hpp"
+#include <QCryptographicHash>
 #include "transaction_history.hpp"
 #include "owned_i2p_profile_fixture.hpp"
 #include "source_permit.hpp"
@@ -116,7 +117,13 @@ private slots:
     const auto detach=qScopeGuard([&]{driver.actor=nullptr;});
     d::Actor::Options options{*local,10000,{peer},3,true};
     options.azureusValues=true;
-    QVERIFY(actor.begin(options));
+    options.azureusReplicas=true;
+    const d::AzureusBridgeMapping mapping{{'k',0xff},{0x1,0x0,0x3}};
+    std::size_t relayCalls=0;
+    QVERIFY(actor.begin(options,{},{},[&](const d::AzureusBridgeMapping& delivered) {
+      ++relayCalls;
+      return delivered.key==mapping.key&&delivered.value==mapping.value;
+    }));
     QTRY_VERIFY(actor.inboundEnabled());
 
     d::Id versionKey{};
@@ -177,13 +184,8 @@ private slots:
     QTRY_VERIFY(router.next());
     const auto first=takeRead();
     QVERIFY(first&&first->handler==handler&&first->key==key&&first->start==0&&first->length==0);
-    const auto send=[&](const i2p::ClientIdentity& signer,const d::Id& id,d::AzureusReadPacket data,std::uint8_t serial) {
-      d::Message message;
-      message.id=id;
-      message.method=d::Method::AzureusData;
-      message.wakeRequested=true;
+    const auto sendSigned=[&](const i2p::ClientIdentity& signer,d::Message message,std::uint8_t serial) {
       message.transaction={serial,1,2,3};
-      message.azureus=d::AzureusMessage{100,0,std::move(data)};
       const auto query=d::encode(message);
       QVERIFY(query);
       const auto signedReply=i2p::encode1(signer.destination()->wire,signer.signingPrivateKey(),*query);
@@ -192,6 +194,14 @@ private slots:
       QVERIFY(mux);
       const auto packet=cp::encodeMessagePayload({7,1000U+serial,*mux});
       QVERIFY(packet&&router.send(*packet));
+    };
+    const auto send=[&](const i2p::ClientIdentity& signer,const d::Id& id,d::AzureusReadPacket data,std::uint8_t serial) {
+      d::Message message;
+      message.id=id;
+      message.method=d::Method::AzureusData;
+      message.wakeRequested=true;
+      message.azureus=d::AzureusMessage{100,0,std::move(data)};
+      sendSigned(signer,std::move(message),serial);
     };
     auto part=*first;
     part.type=d::AzureusReadPacketType::Reply;
@@ -224,6 +234,89 @@ private slots:
     QTest::qWait(100);
     QCOMPARE(actor.metainfoObservation().phase,d::Phase::Cancelled);
     QVERIFY(actor.metainfoObservation().data.empty());
+
+    const auto mappingWire=d::encodeAzureusBridgeRequest(mapping);
+    QVERIFY(mappingWire);
+    const auto reading=actor.readAzureusBridge(peer,mapping,5000);
+    QVERIFY(reading);
+    QTRY_VERIFY(router.next());
+    const auto relay=takeRead();
+    QVERIFY(relay&&relay->handler==d::AzureusBridgeTransferHandler&&relay->bridgeRequest==*mappingWire);
+    const i2p::Bytes accepted{'d','1',':','a','i','1','e','e'};
+    auto relayReply=*relay;
+    relayReply.type=d::AzureusReadPacketType::Reply;
+    relayReply.fragment=accepted;
+    relayReply.length=relayReply.total=static_cast<std::int32_t>(accepted.size());
+    auto other=mapping;
+    other.value.front()^=1;
+    const auto otherWire=d::encodeAzureusBridgeRequest(other);
+    QVERIFY(otherWire);
+    relayReply.bridgeRequest=*otherWire;
+    send(remote,*remoteId,relayReply,21);
+    QTest::qWait(100);
+    QCOMPARE(actor.metainfoObservation().phase,d::Phase::Running);
+    relayReply.bridgeRequest=*mappingWire;
+    send(remote,*remoteId,relayReply,22);
+    QTRY_COMPARE(actor.metainfoObservation().phase,d::Phase::Complete);
+    QCOMPARE(actor.metainfoObservation().operation,*reading);
+    QCOMPARE(actor.metainfoObservation().data,accepted);
+    QCOMPARE(relayCalls,std::size_t(0));
+
+    send(remote,*remoteId,*relay,23);
+    QTRY_VERIFY(router.next());
+    const auto unknownMapping=takeRead();
+    const i2p::Bytes denied{'d','1',':','a','i','0','e','e'};
+    QVERIFY(unknownMapping&&unknownMapping->fragment==denied);
+    QCOMPARE(relayCalls,std::size_t(0));
+
+    const QByteArrayView applicationKey(reinterpret_cast<const char*>(mapping.key.data()),mapping.key.size());
+    const auto hash=QCryptographicHash::hash(applicationKey,QCryptographicHash::Sha1);
+    d::Id relayKey{};
+    std::ranges::copy(hash,relayKey.begin());
+    const auto wall=QDateTime::currentMSecsSinceEpoch();
+    d::Message lookupForStore;
+    lookupForStore.id=*remoteId;
+    lookupForStore.method=d::Method::AzureusFindValue;
+    lookupForStore.wakeRequested=true;
+    lookupForStore.azureus=d::AzureusMessage{100,0,d::AzureusFindValue{relayKey,4,0,wall}};
+    const auto takeControlReply=[&]()->std::optional<d::Message> {
+      const auto packet=cp::decodeDhtSendDatagram(router.take());
+      if (!packet||packet->recipient.wire!=remote.destination()->wire) { return {}; }
+      const auto mux=cp::decodeDhtMuxDatagram(packet->payload);
+      if (!mux||mux->protocol!=18) { return {}; }
+      const auto decoded=d::decode(mux->datagram);
+      return decoded?std::optional{*decoded}:std::nullopt;
+    };
+    sendSigned(remote,lookupForStore,25);
+    QTRY_VERIFY(router.next());
+    const auto target=takeControlReply();
+    QVERIFY(target&&target->method==d::Method::AzureusFindValue&&target->token.size()==8);
+    d::AzureusValue relayValue;
+    relayValue.created=wall;
+    relayValue.flags=0x10;
+    relayValue.bytes=mapping.value;
+    d::Message store=lookupForStore;
+    store.method=d::Method::AzureusStore;
+    store.token=target->token;
+    store.azureus=d::AzureusMessage{100,0,d::AzureusStore{{{relayKey,{relayValue}}},wall}};
+    sendSigned(remote,store,26);
+    QTRY_VERIFY(router.next());
+    const auto stored=takeControlReply();
+    QVERIFY(stored&&stored->method==d::Method::AzureusStore);
+
+    send(remote,*remoteId,*relay,27);
+    QTRY_VERIFY(router.next());
+    const auto acknowledged=takeRead();
+    QVERIFY(acknowledged&&acknowledged->type==d::AzureusReadPacketType::Reply&&
+        acknowledged->bridgeRequest==*mappingWire&&acknowledged->fragment==accepted);
+    auto refused=*relay;
+    refused.bridgeRequest=*otherWire;
+    ++refused.connection;
+    send(remote,*remoteId,refused,24);
+    QTRY_VERIFY(router.next());
+    const auto rejection=takeRead();
+    QVERIFY(rejection&&rejection->connection==refused.connection&&rejection->fragment==denied);
+    QCOMPARE(relayCalls,std::size_t(1));
 
 #if defined(BIGLYBTC_TEST_LIVE_I2P_BRIDGE)
     namespace search=biglybtc::search;

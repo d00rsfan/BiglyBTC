@@ -7,6 +7,7 @@
 #include <bit>
 #include <deque>
 #include "../azureus_router/router.hpp"
+#include <QCryptographicHash>
 #include <QDateTime>
 #include <QMetaObject>
 #include <QPointer>
@@ -28,12 +29,14 @@ struct Actor::Impl {
   int azureusClockOffset=0;
   AzureusLocalRead azureusLocalRead;
   AzureusMetainfoRead azureusMetainfoRead;
+  AzureusBridgeRelay azureusBridgeRelay;
   static constexpr std::size_t MaximumMetainfo=4096;
   struct MetainfoTransfer {
     std::uint64_t operation=0,ticket=0,resolver=0;
     Phase phase=Phase::Idle;
     Contact peer;
     Id handler{},key{};
+    Bytes bridgeRequest;
     std::int64_t connection=0;
     Clock::time_point end{},next{};
     bool written=false;
@@ -81,7 +84,7 @@ struct Actor::Impl {
   }
   void close(){
     const auto ownedScope=scope;
-    stopInbound();stopMetainfo(Phase::Closed);timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};azureusMetainfoRead={};
+    stopInbound();stopMetainfo(Phase::Closed);timer.stop();cancelPending();lookup.close();enabled=false;scope=0;localDestination.clear();azureusLocalRead={};azureusMetainfoRead={};azureusBridgeRelay={};
     if(channel&&onThread()&&ownedScope){channel->disableDhtDatagrams(ownedScope);}notify();
   }
   void safeClose()noexcept{try{close();}catch(...){timer.stop();stopInbound();stopMetainfo(Phase::Closed);enabled=false;scope=0;lookup.close();}}
@@ -210,8 +213,21 @@ struct Actor::Impl {
     if (!validContact(requester)) { return; }
     const auto& request=std::get<AzureusReadPacket>(message.azureus->payload);
     if (request.type==AzureusReadPacketType::Reply) { acceptMetainfo(requester,request);return; }
-    if (!azureusMetainfoRead) { return; }
-    auto whole=azureusMetainfoRead(request.handler,request.key);
+    std::optional<Bytes> whole;
+    if (request.bridgeRequest.empty()) {
+      if (azureusMetainfoRead) { whole=azureusMetainfoRead(request.handler,request.key); }
+    } else if (azureusBridgeRelay&&request.start==0&&!request.length) {
+      const auto mapping=decodeAzureusBridgeRequest(request.bridgeRequest);
+      if (mapping) {
+        const QByteArrayView key(reinterpret_cast<const char*>(mapping->key.data()),static_cast<qsizetype>(mapping->key.size()));
+        const auto digest=QCryptographicHash::hash(key,QCryptographicHash::Sha1);
+        Id target{};
+        std::ranges::copy(digest,target.begin());
+        const bool accepted=responder&&responder->hasBridgeValue(target,mapping->value,QDateTime::currentMSecsSinceEpoch())&&
+            inboundCurrent(data.end)&&azureusBridgeRelay(*mapping);
+        whole=Bytes{'d','1',':','a','i',static_cast<Byte>(accepted?'1':'0'),'e','e'};
+      }
+    }
     if (!whole||whole->empty()||whole->size()>MaximumMetainfo||static_cast<std::size_t>(request.start)>=whole->size()) { return; }
     const auto remaining=whole->size()-static_cast<std::size_t>(request.start);
     if (request.length&&static_cast<std::size_t>(request.length)>remaining) { return; }
@@ -220,7 +236,7 @@ struct Actor::Impl {
     if (!tx) { return; }
     AzureusReadPacket response{AzureusReadPacketType::Reply,request.handler,request.key,
         QDateTime::currentMSecsSinceEpoch()+azureusClockOffset,request.connection,request.start,
-        static_cast<std::int32_t>(length),static_cast<std::int32_t>(whole->size()),{}};
+        static_cast<std::int32_t>(length),static_cast<std::int32_t>(whole->size()),{},request.bridgeRequest};
     const auto fragment=View(*whole).subspan(static_cast<std::size_t>(request.start),length);
     response.fragment.assign(fragment.begin(),fragment.end());
     Message outgoing;
@@ -239,9 +255,11 @@ struct Actor::Impl {
         static_cast<unsigned>(std::min<std::int64_t>(left,30000)));
     if (written) { replyTickets.push_back(*written); }
   }
-  Result<std::uint64_t> startMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout) {
+  Result<std::uint64_t> startMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout,
+      Bytes bridgeRequest={}) {
     if (!onThread()||!current()||!azureusInstance||!inboundRequested||metainfo.phase==Phase::Running
-        ||!validContact(peer)||peer.hash==localHash||!timeout||timeout>120000||!nextOperation) {
+        ||!validContact(peer)||peer.hash==localHash||!timeout||timeout>120000||!nextOperation||
+        (handler==AzureusBridgeTransferHandler)!=!bridgeRequest.empty()) {
       return std::unexpected(Error{ErrorCode::InvalidFormat,"Current I2P metainfo route required"});
     }
     Contact endpoint=peer;
@@ -262,6 +280,7 @@ struct Actor::Impl {
     transfer.peer=std::move(endpoint);
     transfer.handler=handler;
     transfer.key=key;
+    transfer.bridgeRequest=std::move(bridgeRequest);
     transfer.connection=connection;
     transfer.next=Clock::now();
     transfer.end=transfer.next+std::chrono::milliseconds(timeout);
@@ -291,7 +310,8 @@ struct Actor::Impl {
         ||!peer.destination||!metainfo.peer.destination||peer.id!=metainfo.peer.id
         ||peer.hash!=metainfo.peer.hash||peer.port!=metainfo.peer.port
         ||peer.destination->wire!=metainfo.peer.destination->wire||packet.connection!=metainfo.connection
-        ||packet.handler!=metainfo.handler||packet.key!=metainfo.key||packet.fragment.empty()
+        ||packet.handler!=metainfo.handler||packet.key!=metainfo.key||packet.bridgeRequest!=metainfo.bridgeRequest
+        ||packet.fragment.empty()
         ||static_cast<std::size_t>(packet.total)>MaximumMetainfo) { return; }
     const auto total=static_cast<std::size_t>(packet.total);
     const auto start=static_cast<std::size_t>(packet.start);
@@ -349,7 +369,7 @@ struct Actor::Impl {
     auto tx=transaction(now());
     if (!tx) { stopMetainfo(Phase::Failed);notify();return; }
     AzureusReadPacket packet{AzureusReadPacketType::Request,metainfo.handler,metainfo.key,
-        QDateTime::currentMSecsSinceEpoch()+azureusClockOffset,metainfo.connection,0,0,0,{}};
+        QDateTime::currentMSecsSinceEpoch()+azureusClockOffset,metainfo.connection,0,0,0,{},metainfo.bridgeRequest};
     if (!metainfo.received.empty()) {
       const auto missing=std::find(metainfo.received.begin(),metainfo.received.end(),false);
       const auto present=std::find(missing,metainfo.received.end(),true);
@@ -377,9 +397,10 @@ struct Actor::Impl {
     if(channel->dhtScopeObservation(scope).queued||options.routingMaintenance
         ||metainfo.phase==Phase::Running||(lookup.running()&&lookup.options().azureus&&lookup.options().announce)){pump(true);}return inboundRequested&&current();
   }
-  bool begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo){
+  bool begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo,AzureusBridgeRelay bridge){
     if(!onThread()||enabled||!channel||((value.routingMaintenance||!value.savedContacts.empty())&&!value.inbound)||value.savedContacts.size()>MaximumSavedContacts||value.seeds.empty()||value.seeds.size()>20||!value.parallelism||value.parallelism>3
-        ||((read||metainfo||value.azureusReplicas)&&!value.azureusValues)){return false;}
+        ||((read||metainfo||bridge||value.azureusReplicas)&&!value.azureusValues)||
+        (bridge&&(!value.inbound||!value.azureusReplicas))){return false;}
     auto identity=channel->ownedLeaseDestination();if(!identity){return false;}
     Contact local{value.localId,identity->hash,value.queryPort,{}};if(!validContact(local)){return false;}
     if(std::any_of(value.seeds.begin(),value.seeds.end(),[&](const auto& c){return !validContact(c)||c.hash==identity->hash;})){return false;}
@@ -397,7 +418,7 @@ struct Actor::Impl {
     }
     if(!channel->enableDhtDatagrams(value.queryPort)){return false;}scope=channel->dhtScopeGeneration();enabled=true;
     if ((value.inbound||value.azureusReplicas||read||metainfo)&&!enableInbound(value.inbound)) { close();return false; }
-    azureusLocalRead=std::move(read);azureusMetainfoRead=std::move(metainfo);notify();return true;
+    azureusLocalRead=std::move(read);azureusMetainfoRead=std::move(metainfo);azureusBridgeRelay=std::move(bridge);notify();return true;
   }
   Result<std::uint64_t> start(const Id& target,bool seed,bool announce,unsigned timeout,std::optional<AzureusLookup> azureus={}){
     if(!onThread()||!current()||lookup.running()||(azureus&&!azureusInstance)){return std::unexpected(Error{ErrorCode::InvalidFormat,"Current idle explicitly bound DHT actor required"});}
@@ -533,8 +554,8 @@ struct Actor::Impl {
 };
 Actor::Actor(i2cp::InitialChannel& c,QObject* parent):QObject(parent),impl_(std::make_unique<Impl>(this,c)){}
 Actor::~Actor(){impl_->safeClose();}
-bool Actor::begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo){
-  try{return impl_->begin(value,std::move(read),std::move(metainfo));}catch(...){impl_->safeClose();return false;}}
+bool Actor::begin(const Options& value,AzureusLocalRead read,AzureusMetainfoRead metainfo,AzureusBridgeRelay bridge){
+  try{return impl_->begin(value,std::move(read),std::move(metainfo),std::move(bridge));}catch(...){impl_->safeClose();return false;}}
 Result<std::uint64_t> Actor::lookupPeers(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,false,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::announceSelf(const Id& target,bool seed,unsigned timeout){try{return impl_->start(target,seed,true,timeout);}catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"DHT actor resources unavailable"});}}
 Result<std::uint64_t> Actor::lookupAzureusValues(const Id& target,AzureusLookup options,unsigned timeout){
@@ -548,6 +569,16 @@ Result<std::uint64_t> Actor::publishAzureusValue(const Id& target,AzureusLookup 
 Result<std::uint64_t> Actor::readAzureusMetainfo(const Contact& peer,const Id& handler,const Id& key,unsigned timeout){
   try{return impl_->startMetainfo(peer,handler,key,timeout);}
   catch(...){impl_->safeClose();return std::unexpected(Error{ErrorCode::CryptoFailure,"I2P metainfo reader unavailable"});}
+}
+Result<std::uint64_t> Actor::readAzureusBridge(const Contact& peer,const AzureusBridgeMapping& mapping,unsigned timeout) {
+  try {
+    auto request=encodeAzureusBridgeRequest(mapping);
+    if (!request) { return std::unexpected(request.error()); }
+    return impl_->startMetainfo(peer,AzureusBridgeTransferHandler,{},timeout,std::move(*request));
+  } catch (...) {
+    impl_->safeClose();
+    return std::unexpected(Error{ErrorCode::CryptoFailure,"I2P bridge reader unavailable"});
+  }
 }
 Actor::MetainfoObservation Actor::metainfoObservation()const {
   if (!impl_->onThread()) { return {}; }

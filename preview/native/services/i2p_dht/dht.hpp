@@ -38,15 +38,24 @@ struct AzureusStoreEntry {Id key{};std::vector<AzureusValue> values;};
 struct AzureusStore {std::vector<AzureusStoreEntry> entries;std::int64_t now=0;};
 struct AzureusStoreAck {Bytes diversification;};
 enum class AzureusReadPacketType:std::uint8_t {Request=0,Reply=1};
+// SHA-1 of the Java DistributedDatabase transfer type name.
+inline constexpr Id AzureusBridgeTransferHandler{
+    0xc6,0x3e,0xc0,0xbc,0xd6,0x32,0xbd,0x7d,0x76,0x8a,0x59,0xdf,0xa9,0x11,0x56,0x4b,0x3f,0xf3,0x8b,0xe4};
+struct AzureusBridgeMapping {Bytes key,value;};
+Result<AzureusBridgeMapping> decodeAzureusBridgeRequest(View);
+Result<Bytes> encodeAzureusBridgeRequest(const AzureusBridgeMapping&);
 struct AzureusReadPacket {
   AzureusReadPacketType type=AzureusReadPacketType::Request;
   Id handler{},key{};
   std::int64_t now=0,connection=0;
   std::int32_t start=0,length=0,total=0;
   Bytes fragment;
+  // The bridge uses an original bencoded mapping in place of the torrent key.
+  Bytes bridgeRequest{};
 };
 using AzureusLocalRead=std::function<std::optional<AzureusValue>(const Id&)>;
 using AzureusMetainfoRead=std::function<std::optional<Bytes>(const Id& handler,const Id& key)>;
+using AzureusBridgeRelay=std::function<bool(const AzureusBridgeMapping&)>;
 using AzureusPayload=std::variant<AzureusFindValue,std::vector<AzureusContact>,AzureusValueHit,AzureusKeyBlock,
     AzureusStore,AzureusStoreAck,AzureusReadPacket>;
 struct AzureusMessage {

@@ -67,6 +67,7 @@ private:
 class AzureusReplicas final {
 public:
   bool contains(const Id&,std::int64_t wall) const noexcept;
+  bool containsSingleValue(const Id&,View value,std::int64_t wall) const noexcept;
   std::vector<AzureusValue> read(const AzureusFindValue&,std::int64_t wall);
   void store(AzureusStoreEntry&&,const Contact& sender,std::int64_t senderTime,std::int64_t wall);
   void close() noexcept { records_.clear(); }

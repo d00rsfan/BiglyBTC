@@ -6,6 +6,10 @@
 #include <limits>
 #include <openssl/crypto.h>
 namespace biglybtc::services::i2p::dht::inbound {
+bool Responder::hasBridgeValue(const Id& key,View value,std::int64_t wall)const noexcept {
+  return !closed_&&!busy_&&thread_==std::this_thread::get_id()&&replicaTokens_&&
+      replicas_.containsSingleValue(key,value,wall);
+}
 namespace {
 constexpr std::uint64_t increment(std::uint64_t value)noexcept{
   return value==std::numeric_limits<std::uint64_t>::max()?value:value+1;

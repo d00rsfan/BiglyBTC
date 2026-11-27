@@ -39,6 +39,7 @@ public:
   ReplyResult<std::optional<Response>> receive(const Incoming&,std::int64_t wallMillis,RequestPolicy,
       const Current&,const Route&,const AzureusLocalRead& read={});
   ReplyResult<StateCounts> counts()const noexcept;
+  bool hasBridgeValue(const Id&,View value,std::int64_t wallMillis)const noexcept;
   void close()noexcept;
 private:
   Responder(Contact,std::unique_ptr<TokenBindings>,std::unique_ptr<PeerStore>,std::optional<std::int32_t>,

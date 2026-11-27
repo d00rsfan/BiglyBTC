@@ -135,6 +135,14 @@ bool AzureusReplicas::contains(const Id& key,std::int64_t wall) const noexcept {
   return std::ranges::any_of(records_,[&](const auto& replica){return replica.key==key&&wall<=replica.expiry;});
 }
 
+bool AzureusReplicas::containsSingleValue(const Id& key,View value,std::int64_t wall) const noexcept {
+  constexpr std::uint16_t MultipleValues=0x04;
+  return validReplicaClock(wall)&&std::ranges::any_of(records_,[&](const auto& replica) {
+    return replica.key==key&&wall<=replica.expiry&&!(replica.value.flags&MultipleValues)&&
+        std::ranges::equal(replica.value.bytes,value);
+  });
+}
+
 void AzureusReplicas::expire(std::int64_t wall) {
   std::erase_if(records_,[&](const auto& replica){return wall>replica.expiry;});
 }

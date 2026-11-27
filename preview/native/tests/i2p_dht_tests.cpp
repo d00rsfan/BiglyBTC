@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "dht.hpp"
 #include "messages.hpp"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -83,6 +84,51 @@ void distinctReportersAtTheValueLimit() {
   lookup.close();
   require(lookup.snapshot().azureusReporters.empty(),"Closing clears reporter observations");
 }
+void bridgeTransferUsesTheOriginalMappingBytes() {
+  std::string request="d1:k59:subscription:assoc:0102030405060708090A0B0C0D0E0F10111213141:v14:";
+  request.append("\0\0\5\14\1\2\3\4\5\6\7\10\11\12",14);
+  request+='e';
+  d::AzureusReadPacket packet;
+  packet.handler=d::AzureusBridgeTransferHandler;
+  packet.connection=711;
+  packet.now=1761739200123LL;
+  packet.bridgeRequest.assign(request.begin(),request.end());
+  d::Message query;
+  query.id=contact(0x37,10002).id;
+  query.transaction={0x13,0xc9};
+  query.method=d::Method::AzureusData;
+  query.wakeRequested=true;
+  query.azureus=d::AzureusMessage{13,0,packet};
+  const auto wire=take(d::encode(query));
+  const auto incoming=take(d::decode(wire));
+  const auto& decoded=std::get<d::AzureusReadPacket>(incoming.azureus->payload);
+  require(decoded.bridgeRequest==packet.bridgeRequest&&decoded.key==d::Id{}&&decoded.connection==packet.connection,
+      "The original bencoded bridge request is retained byte for byte");
+  require(take(d::encode(incoming))==wire,"Bridge request encodes exactly after decoding");
+
+  const std::array<i::Byte,3> version{'A','Z','4'};
+  auto oldProtocol=wire;
+  const auto header=std::ranges::search(oldProtocol,version);
+  require(!header.empty(),"Bridge wire advertises AZ4");
+  header.begin()[2]='2';
+  require(!d::decode(oldProtocol),"AZ2 cannot request bridge replication");
+
+  auto& outgoing=std::get<d::AzureusReadPacket>(query.azureus->payload);
+  outgoing.type=d::AzureusReadPacketType::Reply;
+  outgoing.fragment={'d','1',':','a','i','1','e','e'};
+  outgoing.length=outgoing.total=static_cast<std::int32_t>(outgoing.fragment.size());
+  const auto reply=take(d::decode(take(d::encode(query))));
+  require(std::get<d::AzureusReadPacket>(reply.azureus->payload).bridgeRequest==packet.bridgeRequest,
+      "Bridge reply echoes the exact request mapping");
+
+  outgoing.handler.fill(0xaf);
+  require(!d::encode(query),"A torrent transfer cannot use a bridge request key");
+  outgoing.handler=d::AzureusBridgeTransferHandler;
+  outgoing.bridgeRequest.assign(20,0x51);
+  require(!d::encode(query),"Bridge transfer cannot use a fixed torrent key");
+  outgoing.bridgeRequest.assign(1025,'!');
+  require(!d::encode(query),"Oversized bridge request is refused");
+}
 void interop(const std::filesystem::path& root){
   for(const std::string family:{"dsa","ed25519"}){
     auto sender=take(i::decodeDestination(read(root/(family+".sender"))));auto key=read(root/(family+".key"));
@@ -102,4 +148,4 @@ void interop(const std::filesystem::path& root){
     }
   }
 }
-int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc==3&&std::string_view(argv[1])=="--java-interop"){interop(argv[2]);std::cout<<"PASS actual Java KRPC and legacy17 objects\n";return 0;}require(argc==1,"Unknown test arguments");controls();distinctReportersAtTheValueLimit();bridgeTransferUsesTheOriginalMappingBytes();std::cout<<"PASS bounded I2P DHT wire/control\n";return 0;}catch(const std::exception& e){std::cerr<<"FAIL "<<e.what()<<'\n';return 1;}}
