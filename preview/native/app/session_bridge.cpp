@@ -28,6 +28,7 @@
 #include "donation_reminder.hpp"
 #include "durable_intake_receipt.hpp"
 #include "download_history_store.hpp"
+#include "download_archive.hpp"
 #include "verified_seeding.hpp"
 #include "allocation_intent.hpp"
 #include "file_operations.hpp"
@@ -3728,6 +3729,35 @@ bool SessionBridge::manualTagCommand(ui::ManualTagCommand request) {
 #include "category_bridge.inc"
 #include "tag_strip_bridge.inc"
 #include "download_history_bridge.inc"
+
+bool SessionBridge::loadDownloadArchive(quint64 session) {
+  if (!session || session != publishedColumnLayoutSession_ || busy_ || closingSession_) { return false; }
+  return dispatch([this, session](std::stop_token stop) {
+    auto packet = std::make_shared<ui::DownloadArchivePacket>();
+    packet->session = session;
+    if (host_ && host_->columnLayoutSession == session) {
+      auto archive = storage::readDownloadArchive(host_->lease, stop);
+      if (archive) {
+        packet->recovered = archive->source && archive->source->recoverySource() != storage::RecoverySource::Primary;
+        packet->rows = std::move(archive->stubs);
+      } else {
+        packet->error = text(archive.error().message);
+      }
+    } else {
+      packet->error = tr("The archive profile is no longer open");
+    }
+    QMetaObject::invokeMethod(this, [this, packet = std::move(packet), stop] {
+      const QPointer<SessionBridge> guard(this);
+      if (!stop.stop_requested() && !closingSession_ && packet->session == publishedColumnLayoutSession_) {
+        emit downloadArchiveLoaded(packet);
+      }
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
 #include "rss_sources_bridge.inc"
 #include "subscriptions_bridge.inc"
 #include "metasearch_bridge.inc"

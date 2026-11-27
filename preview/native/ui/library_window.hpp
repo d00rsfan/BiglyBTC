@@ -46,6 +46,7 @@ class QDialog;
 #include "../app/category_commands.hpp"
 #include "tag_strip.hpp"
 #include "../app/download_history_commands.hpp"
+#include "download_archive_presentation.hpp"
 #include "rss_sources_presentation.hpp"
 #include "metasearch_presentation.hpp"
 #include "subscriptions_presentation.hpp"
@@ -80,6 +81,7 @@ class StatisticsPage;
 class ConsolePage;
 class AllPeersPage;
 class DownloadHistoryPage;
+class DownloadArchiveDialog;
 class RssSourcesPage;
 class MetasearchPage;
 class SubscriptionsPage;
@@ -140,6 +142,7 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   DownloadHistoryPage* downloadHistoryPage()const;
+  void showDownloadArchive(DownloadArchivePresentation);
   SubscriptionsPage* subscriptionsPage()const;
   void setSubscriptionCatalog(SubscriptionCatalogPresentation);
   void setSubscriptionResult(SubscriptionPresentation);
@@ -297,6 +300,7 @@ signals:
   void tagStripSettingsRequested(biglybtc::ui::TagStripSettingsCommand);
   void categoryCommandRequested(biglybtc::ui::CategoryCommand);
   void downloadHistoryCommandRequested(biglybtc::ui::DownloadHistoryCommand);
+  void downloadArchiveRequested(quint64 session);
   void subscriptionCatalogRequested(biglybtc::ui::SubscriptionCatalogKey);
   void subscriptionCommandRequested(biglybtc::ui::SubscriptionCommand);
   void subscriptionCancelRequested(biglybtc::ui::SubscriptionCommandKey);
@@ -550,6 +554,8 @@ private:
   QAction* rssAction_=nullptr;
   QPointer<DownloadHistoryPage> downloadHistoryPage_;
   QAction* downloadHistoryAction_=nullptr;
+  QPointer<DownloadArchiveDialog> downloadArchiveDialog_;
+  QAction* downloadArchiveAction_ = nullptr;
   quint64 downloadHistoryRequest_=0;
   std::optional<DownloadHistoryCommand> pendingDownloadHistoryCommand_;
   I2pPresentation latestI2p_;

@@ -89,63 +89,35 @@ std::expected<RpcProfileSnapshot, Error> readRpcProfileSnapshot(const ProfileLea
     snapshot.identities.push_back(std::move(result));
   }
   if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-  auto archive = ConfigFile::load(lease, "dlarchive.config");
+  auto archive = readDownloadArchive(lease, stop);
   if (!archive) {
-    if (archive.error().code != ErrorCode::Missing) { snapshot.issues.push_back({RpcProfileIssue::Scope::Archive, 0, archive.error()}); }
-  } else {
-    const auto* stubs = archive->document().find("stubs");
-    if (stubs && stubs->type != core::Node::Type::List) {
-      snapshot.issues.push_back({RpcProfileIssue::Scope::Archive, 0, format("Original archive stub list has an invalid type")});
-    } else if (stubs) {
-      if (snapshot.identities.size() > 100000 || stubs->children.size() > 100000 - snapshot.identities.size()) {
-        return std::unexpected(format("Original RPC identity snapshot exceeds its torrent limit"));
-      }
-      for (std::size_t i = 0; i < stubs->children.size(); ++i) {
-        if (stop.stop_requested()) { return std::unexpected(cancelled()); }
-        const auto& stub = stubs->children[i];
-        PersistedRpcIdentity result{true, i, {}, {}, RpcIdOrigin::Unavailable, {}};
-        const auto* hash = stub.find("hash");
-        if (stub.type == core::Node::Type::Dictionary && hash && hash->type == core::Node::Type::Bytes) {
-          const auto identity = core::TorrentHash::parse(hash->bytes);
-          if (identity) {
-            result.hash = *identity;
-            result.addedMillis = integerField(&stub, "dt");
-            auto& metadata = result.archive.emplace();
-            if (const auto* path = stub.find("l"); path && path->type == core::Node::Type::Bytes) {
-              metadata.savePath = path->bytes;
-            }
-            if (const auto* name = stub.find("name"); name && name->type == core::Node::Type::Bytes) {
-              metadata.name = name->bytes;
-            }
-            if (const auto* size = stub.find("s"); size && size->type == core::Node::Type::Integer) {
-              metadata.size = size->integer;
-            }
-            if (const auto* files = stub.find("files")) {
-              if (files->type == core::Node::Type::List) {
-                metadata.files = files->children.size();
-                metadata.fileLengths->reserve(metadata.files);
-                for (const auto& file : files->children) {
-                  const auto* length = file.find("len");
-                  if (!length || length->type != core::Node::Type::Integer) {
-                    metadata.fileLengths.reset();
-                    break;
-                  }
-                  metadata.fileLengths->push_back(length->integer);
-                }
-              } else {
-                metadata.fileLengths.reset();
-              }
-            }
-          }
-        }
-        const auto value = stub.type == core::Node::Type::Dictionary
-            ? readOriginalPluginLongMap(stub.find("attr"), runtimeId, attribute)
-            : std::expected<std::int64_t, AttributeError>(std::unexpected(AttributeError::Root));
-        if (value && result.hash) { result.id = *value; result.origin = RpcIdOrigin::Archive; }
-        else { snapshot.issues.push_back({RpcProfileIssue::Scope::Archive, i, format("Original archive RPC identity is invalid")}); }
-        snapshot.identities.push_back(std::move(result));
-      }
+    if (archive.error().code == ErrorCode::Cancelled) { return std::unexpected(cancelled()); }
+    if (archive.error().code == ErrorCode::Unsupported) {
+      return std::unexpected(format("Original RPC identity snapshot exceeds its torrent limit"));
     }
+    snapshot.issues.push_back({RpcProfileIssue::Scope::Archive, 0, archive.error()});
+    return snapshot;
+  }
+  if (archive->stubs.empty()) { return snapshot; }
+  if (snapshot.identities.size() > 100000 || archive->stubs.size() > 100000 - snapshot.identities.size()) {
+    return std::unexpected(format("Original RPC identity snapshot exceeds its torrent limit"));
+  }
+  const auto& stubs = archive->source->document().find("stubs")->children;
+  for (std::size_t i = 0; i < stubs.size(); ++i) {
+    if (stop.stop_requested()) { return std::unexpected(cancelled()); }
+    const auto& stub = stubs[i];
+    auto& archived = archive->stubs[i];
+    PersistedRpcIdentity result{true, i, std::move(archived.hash), {}, RpcIdOrigin::Unavailable, {}};
+    if (result.hash) {
+      result.addedMillis = archived.metadata.archivedMillis;
+      result.archive = std::move(archived.metadata);
+    }
+    const auto value = stub.type == core::Node::Type::Dictionary
+        ? readOriginalPluginLongMap(stub.find("attr"), runtimeId, attribute)
+        : std::expected<std::int64_t, AttributeError>(std::unexpected(AttributeError::Root));
+    if (value && result.hash) { result.id = *value; result.origin = RpcIdOrigin::Archive; }
+    else { snapshot.issues.push_back({RpcProfileIssue::Scope::Archive, i, format("Original archive RPC identity is invalid")}); }
+    snapshot.identities.push_back(std::move(result));
   }
   return snapshot;
 }

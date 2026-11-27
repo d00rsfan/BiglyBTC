@@ -43,6 +43,7 @@
 #include "category_commands.hpp"
 #include "tag_strip.hpp"
 #include "download_history_commands.hpp"
+#include "download_archive_presentation.hpp"
 #include "country_statistics_presentation.hpp"
 #include "all_peers_presentation.hpp"
 #include "all_trackers_view.hpp"
@@ -144,6 +145,7 @@ public:
   bool activities(quint64,QString,QVector<ui::ActivityRefView>);
   bool activitySettings(quint64,ui::ChatNotificationSettings,ui::ChatNotificationSettings);
   bool downloadHistoryCommand(ui::DownloadHistoryCommand);
+  bool loadDownloadArchive(quint64 session);
   bool subscriptionCatalog(ui::SubscriptionCatalogKey);
   bool subscriptionCommand(ui::SubscriptionCommand);
   void cancelSubscription(ui::SubscriptionCommandKey);
@@ -241,6 +243,7 @@ signals:
   void swarmTagApplicationFinished(quint64 session,QString status);
   void categoryCommandFinished(biglybtc::ui::CategoryCommandPresentation);
   void downloadHistoryCommandFinished(biglybtc::ui::DownloadHistoryCommandPresentation);
+  void downloadArchiveLoaded(biglybtc::ui::DownloadArchivePresentation);
   void subscriptionCatalogReady(biglybtc::ui::SubscriptionCatalogPresentation);
   void subscriptionReady(biglybtc::ui::SubscriptionPresentation);
   void subscriptionHistoryChanged(quint64 session);

@@ -15,6 +15,7 @@
 #include "metasearch_page.hpp"
 #include "metasearch_magnet_dialog.hpp"
 #include "download_history_page.hpp"
+#include "download_archive_dialog.hpp"
 #include "rss_sources_page.hpp"
 #include "subscriptions_page.hpp"
 #include <atomic>
@@ -617,6 +618,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   downloadHistoryAction_=view->addAction(tr("Download &History"));
   downloadHistoryAction_->setObjectName(QStringLiteral("classic-download-history"));
   connect(downloadHistoryAction_,&QAction::triggered,this,&LibraryWindow::showDownloadHistory);
+  downloadArchiveAction_ = view->addAction(tr("Archived Downloads"));
+  downloadArchiveAction_->setObjectName(QStringLiteral("classic-download-archive"));
+  connect(downloadArchiveAction_, &QAction::triggered, this, [this] {
+    if (columnSession_ && !busy_ && !closing_) { emit downloadArchiveRequested(columnSession_); }
+  });
   auto* toolbarVisibility = toolbar->toggleViewAction();
   toolbarVisibility->setText(tr("Toolbar"));
   toolbarVisibility->setObjectName(QStringLiteral("classic-show-toolbar"));
@@ -778,6 +784,17 @@ void LibraryWindow::showMyShares() {
   if (guard && fresh) { if(columnSession_){refreshPublicationViews();}else{refreshSavedServices();} }
 }
 #include "download_history_window.inc"
+
+void LibraryWindow::showDownloadArchive(DownloadArchivePresentation packet) {
+  if (!packet || closing_ || packet->session != columnSession_) { return; }
+  const QPointer<LibraryWindow> guard(this);
+  if (downloadArchiveDialog_) { downloadArchiveDialog_->close(); }
+  if (!guard || closing_ || packet->session != columnSession_) { return; }
+  auto* dialog = new DownloadArchiveDialog(std::move(packet), this);
+  downloadArchiveDialog_ = dialog;
+  dialog->setAttribute(Qt::WA_DeleteOnClose);
+  dialog->open();
+}
 #include "rss_sources_window.inc"
 #include "publication_window.inc"
 #include "recheck_window.inc"
@@ -1354,6 +1371,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if(rssPage_){const auto id=rssPage_->page()?rssPage_->page():reserveRssUiIdentity();rssPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   if(metasearchPage_){const auto id=metasearchPage_->page()?metasearchPage_->page():reserveRssUiIdentity();metasearchPage_->beginSession(session,id);if(!guard||columnSession_!=session){return;}}
   pendingDownloadHistoryCommand_.reset();if(downloadHistoryPage_){downloadHistoryPage_->beginSession(session);if(!guard){return;}}
+  if (downloadArchiveDialog_) { downloadArchiveDialog_->close(); if (!guard) { return; } }
   latestI2p_.reset();
   latestManualTagEditor_.reset();pendingManualTagCommand_.reset();
   latestCategoryEditor_.reset();pendingCategoryCommand_.reset();
@@ -1739,6 +1757,10 @@ void LibraryWindow::updateActions() {
   if(rssAction_){rssAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(metasearchAction_){metasearchAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
   if(downloadHistoryAction_){downloadHistoryAction_->setEnabled(!closing_&&!busy_&&columnSession_);if(!guard){return;}}
+  if (downloadArchiveAction_) {
+    downloadArchiveAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0);
+    if (!guard) { return; }
+  }
   if(downloadHistoryPage_){downloadHistoryPage_->setAvailable(!closing_&&!busy_);if(!guard){return;}}
   if(categoryAction_){categoryAction_->setEnabled(!closing_&&!offlinePreview_&&columnSession_);if(!guard){return;}}
   if(categoryDialog_){categoryDialog_->setAvailable(!busy_&&!closing_&&!offlinePreview_);if(!guard){return;}}

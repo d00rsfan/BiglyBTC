@@ -1,23 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
+#include "download_archive.hpp"
 #include "library_view.hpp"
 #include "plugin_settings.hpp"
 #include <stop_token>
 namespace biglybtc::storage {
 enum class RpcIdOrigin { Unavailable, Cache, Primary, Backup, Archive };
-struct ArchivedRpcMetadata {
-  std::optional<std::string> name, savePath;
-  std::int64_t size = 0;
-  std::size_t files = 0;
-  std::optional<std::vector<std::int64_t>> fileLengths{std::in_place};
-};
 struct PersistedRpcIdentity {
   bool archived;
   std::size_t sourceIndex;
   std::optional<core::TorrentHash> hash;
   std::optional<std::int64_t> id;
   RpcIdOrigin origin = RpcIdOrigin::Unavailable;
-  std::optional<ArchivedRpcMetadata> archive;
+  std::optional<core::ArchivedDownloadMetadata> archive;
   std::optional<std::int64_t> addedMillis{};
 };
 struct RpcProfileIssue {

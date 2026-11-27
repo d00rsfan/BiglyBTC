@@ -315,6 +315,8 @@ int main(int argc, char** argv) {
       if(!bridge.downloadHistoryCommand(request)){window.rejectDownloadHistoryCommand(request);}
     });
     QObject::connect(&bridge,&Bridge::downloadHistoryCommandFinished,&window,&Window::setDownloadHistoryCommandFinished);
+    QObject::connect(&window, &Window::downloadArchiveRequested, &bridge, &Bridge::loadDownloadArchive);
+    QObject::connect(&bridge, &Bridge::downloadArchiveLoaded, &window, &Window::showDownloadArchive);
     QObject::connect(&window,&Window::categoryCommandRequested,&bridge,
       [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::CategoryCommand command){
         if(owner&&view&&!owner->categoryCommand(command)&&view){view->rejectCategoryCommand(command);}

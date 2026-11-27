@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#pragma once
+
+#include "download_archive_presentation.hpp"
+#include <QDialog>
+
+namespace biglybtc::ui {
+class DownloadArchiveDialog final : public QDialog {
+  Q_OBJECT
+public:
+  explicit DownloadArchiveDialog(DownloadArchivePresentation, QWidget* parent = nullptr);
+};
+}
