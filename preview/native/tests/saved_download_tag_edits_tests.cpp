@@ -289,17 +289,17 @@ void configuredPerTagEffectsRemainDataOnlyUntilActualExecutor(){
     }
   }
 
-  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"future-effect","i0e"}}),dict({{"pub",bytes("yes")}}),dict({{"pub","i2e"}})}){
+  for(const auto& config:{dict({{"rl.up","i1024e"}}),dict({{"rl.down","i512e"}}),dict({{"rl.fps","i1e"}}),dict({{"rl.maxadl",bytes("two")}}),dict({{"pp.2","i1e"}}),dict({{"pp.tracker_templates",list({bytes("apply:template")})}}),dict({{"future-effect","i0e"}}),dict({{"pub",bytes("yes")}}),dict({{"pub","i2e"}})}){
     const auto before=dict({{"3",dict({{"1",dict({{"n",bytes("Configured")},{"c",config}})}})}});
     const auto data=edited(before,c::SavedTagAddMember{1,hash(20),1});check(data.changed,"Value-only membership projection unexpectedly became runtime permission");
     const auto* row=data.value.source->find("3")->find("1");check(!c::ordinarySavedTagMembershipEffects(data.value,*row),"Configured effect was treated as a supported executor");
     check(raw(data,*row->find("c"))==config,"Data projection changed configured effect bytes");
   }
-  // These two families now have qualified normal owners; source support is
+  // These families now have qualified normal owners; source support is
   // distinct from executing effects in this value-only editor.
-  for(const auto& config:{dict({{"pp.trackers",list({bytes("tracker")})}}),dict({{"pp.untagged","i1e"}})}){
+  for(const auto& config:{dict({{"pp.trackers",list({bytes("tracker")})}}),dict({{"pp.untagged","i1e"}}),dict({{"rl.maxadl","i2e"},{"rl.maxacd","i3e"},{"rl.als","i0e"}})}){
     auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Owned property")},{"c",config}})}})}}));
-    check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Qualified tracker/Untagged property was refused");
+    check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Qualified membership property was refused");
   }
   for(const auto& config:{std::string("de"),dict({{"vis","i1e"},{"oname",bytes("original")}}),dict({{"pub","i0e"}}),dict({{"pub","i1e"}}),dict({{"pp.trackers","le"},{"pp.tracker_templates","le"},{"pp.untagged","i0e"},{"pp.2","i0e"}}),dict({{"pp.constraint",list({bytes("true"),bytes("am=1;")})},{"pp.enabled.constraint","i0e"}})}){
     auto tags=c::readSavedDownloadTags(dict({{"3",dict({{"1",dict({{"n",bytes("Metadata")},{"c",config}})}})}}));check(bool(tags)&&c::ordinarySavedTagMembershipEffects(*tags,*tags->source->find("3")->find("1")),"Supported metadata-only/default property was blanket refused");

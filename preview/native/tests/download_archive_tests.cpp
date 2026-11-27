@@ -123,7 +123,7 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
   if (useRussian) { write(root / "biglybt.config", "d6:locale5:ru_RUe"); }
   const std::string markerRecord = existingMarker ? "1:3d1:cd3:pubi1ee1:n" + encode(markerName) + "1:olee" : "";
   write(root / "tag.config", "d1:3d1:1d1:cd11:pp.untaggedi1ee1:n4:Auto1:olee"
-      "1:2d1:cd6:b.downl4:2048e4:b.upl2:17ee1:n4:Kept1:olee" + markerRecord + "ee");
+      "1:2d1:cd6:b.downl4:2048e4:b.upl2:17e6:rl.alsi0e9:rl.maxadli2e9:rl.maxacdi1ee1:n4:Kept1:olee" + markerRecord + "ee");
   {
     auto lease = storage::ProfileLease::acquire(root);
     require(lease.has_value(), "Acquire isolated original restore profile");
@@ -171,6 +171,13 @@ void verifyRestore(std::optional<storage::DownloadArchiveRestoreStage> interrupt
       "New marker is private and the existing marker retains its public preference");
   const auto* totals = savedTags->source->find("3")->find("2")->find("c")->find("b.up");
   require(totals && totals->children.front().bytes == "17", "Preserve original tag transfer statistics");
+  const auto queueRules=core::savedTagQueueRules(*savedTags);
+  const auto queueTag=queueRules.find(hash.hex());
+  require(queueTag!=queueRules.end()&&queueTag->second.activityLimits.size()==1,
+      "Restoration returns the download to its configured queue cohort");
+  const auto& limit=queueTag->second.activityLimits.front();
+  require(limit.id==2&&limit.maximumDownloads==2&&limit.maximumSeeds==1&&!limit.strict,
+      "Preserve the active download, seed, and strictness settings when restoring a tagged item");
 
   const std::array<std::string, 2> manualTags{"Kept", "Saved"};
   const bool interruptArchive = interrupt && *interrupt != storage::DownloadArchiveRestoreStage::TagsPublished;
