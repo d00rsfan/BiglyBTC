@@ -28,6 +28,7 @@ public:
     core::TorrentHash hash;
     OwnedTorrent::Observation torrent;
     std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
+    std::shared_ptr<const core::SavedDownload> backupBaseline{};
     std::optional<std::int64_t> lastActiveTagMillis{};
     std::optional<std::array<core::tags::runtime::Membership, 15>> downloadTagMembers{};
     bool queued=false,selectedComplete=false;

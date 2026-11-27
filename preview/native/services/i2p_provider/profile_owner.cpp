@@ -69,6 +69,7 @@ struct QueueSink final:lt::BiglybtcQueueObserverV1 {
 }
 struct OwnedProfile::Prepared::Impl {
   core::TorrentHash hash;std::shared_ptr<ProfileSource> source;engine::detail::ManagedStorage storage;
+  std::shared_ptr<const core::SavedDownload> backupBaseline;
   std::uint64_t admission=0;std::size_t inventoryIndex=0;
   std::shared_ptr<engine::ProfilePreparedTagAttachment> tagTarget;
   Impl(core::TorrentHash h,std::shared_ptr<ProfileSource> s,engine::detail::ManagedStorage m):hash(h),source(std::move(s)),storage(std::move(m)){}
@@ -1302,6 +1303,13 @@ std::vector<OwnedProfile::Observation> OwnedProfile::observations(){
     const auto& original=m->data().storage.capturedDownload();
     row.cumulativeReceived=engine::cumulativePayload(original.downloaded,row.torrent.payloadDownloaded);
     row.cumulativeSent=engine::cumulativePayload(original.uploaded,row.torrent.payloadUploaded);
+    if (stateObserved && row.torrent.phase == Phase::Active && row.torrent.failure.empty()
+        && m->data().source->prepared() && s.source->prepared()
+        && ((row.cumulativeReceived && *row.cumulativeReceived > original.downloaded.value_or(0))
+            || (row.cumulativeSent && *row.cumulativeSent > original.uploaded.value_or(0)))) {
+      if (!m->data().backupBaseline) { m->data().backupBaseline=std::make_shared<const core::SavedDownload>(original); }
+      row.backupBaseline=m->data().backupBaseline;
+    }
     row.lastActiveTagMillis = m->tagState.lastActiveMillis();
     if (stateObserved && row.torrent.phase == Phase::Active && row.torrent.failure.empty()
         && s.source->tagManagerEnabled()) {

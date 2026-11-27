@@ -62,6 +62,7 @@ struct OwnedI2pService::Impl {
       v.downloadRate=a.downloadRate;v.uploadRate=a.uploadRate;v.peers=a.peers;v.seeds=a.seeds;v.checked=a.checked;v.seeding=a.seeding;
       v.trackerAnnounces=a.diagnostics.alerts.announces;v.trackerReplies=a.diagnostics.alerts.trackerReplies;v.trackerErrors=a.diagnostics.alerts.trackerErrors;
       v.downloadTagMembers = observed.downloadTagMembers;
+      v.backupBaseline = observed.backupBaseline;
       v.failure=a.failure;v.cumulativeReceived=observed.cumulativeReceived;v.cumulativeSent=observed.cumulativeSent;v.lastActiveTagMillis=observed.lastActiveTagMillis;v.queued=observed.queued;v.selectedComplete=observed.selectedComplete;v.completionPositionUnavailable=observed.completionPositionUnavailable;v.downloadLimit=observed.downloadLimit;v.uploadLimit=observed.uploadLimit;v.queueUnavailable=observed.queueUnavailable;v.globalDownloadLimit=observed.globalDownloadLimit;v.globalUploadLimit=observed.globalUploadLimit;v.loopbackPeerClasses=observed.loopbackPeerClasses;next.push_back({observed.hash,std::move(v)});
     }last=std::move(next);
   }
@@ -288,7 +289,7 @@ std::optional<std::size_t> OwnedI2pService::peerSetCount(const core::TorrentHash
 std::optional<storage::Error> OwnedI2pService::contactCacheDiagnostic()const{auto& s=*impl_;std::lock_guard lock(s.mutex);return s.contacts?s.contacts->diagnostic():std::nullopt;}
 OwnedI2pService::Observation OwnedI2pService::observation()const{
   const auto rows=observations();Observation out;out.joined=impl_->joined;if(rows.empty()){out.phase=impl_->closed?Phase::Withdrawn:impl_->lastPhase;return out;}out=rows.front().value;
-  if(rows.size()>1){bool capped=false;out.lastActiveTagMillis.reset();out.downloadTagMembers.reset();out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
+  if(rows.size()>1){bool capped=false;out.backupBaseline.reset();out.lastActiveTagMillis.reset();out.downloadTagMembers.reset();out.verifiedBytes=0;out.payloadDownloaded=0;out.payloadUploaded=0;out.downloadRate=0;out.uploadRate=0;out.peers=0;out.seeds=0;out.checked=true;out.seeding=true;out.cumulativeReceived=0;out.cumulativeSent=0;out.trackerAnnounces=out.trackerReplies=out.trackerErrors=0;
     for(const auto& entry:rows){const auto& v=entry.value;out.verifiedBytes=displaySum(out.verifiedBytes,v.verifiedBytes,capped);out.payloadDownloaded=payloadSum(out.payloadDownloaded,v.payloadDownloaded,capped);out.payloadUploaded=payloadSum(out.payloadUploaded,v.payloadUploaded,capped);out.downloadRate=displaySum(out.downloadRate,v.downloadRate,capped);out.uploadRate=displaySum(out.uploadRate,v.uploadRate,capped);out.peers=displaySum(out.peers,v.peers,capped);out.seeds=displaySum(out.seeds,v.seeds,capped);
       out.cumulativeReceived=out.cumulativeReceived&&v.cumulativeReceived?engine::cumulativePayload(out.cumulativeReceived,*v.cumulativeReceived):std::nullopt;
       out.cumulativeSent=out.cumulativeSent&&v.cumulativeSent?engine::cumulativePayload(out.cumulativeSent,*v.cumulativeSent):std::nullopt;

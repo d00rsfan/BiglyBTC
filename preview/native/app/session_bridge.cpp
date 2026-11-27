@@ -715,6 +715,18 @@ if(recheckWork&&recheckWork->request.receiver){recheckWork->request.receiver->re
         :OwnedI2pService::start(lease,hash,std::move(*options),external,&*tagManagerAtOpen);if(!started){return std::unexpected(started.error());}
     i2p=std::move(*started);coexistQueue.privateOwnerChanged();i2pJoined=false;pollI2p();return {};
   }
+  std::vector<storage::ProfileBackupTransferStatistics> backupTransferStatistics() const {
+    auto statistics = engine ? engine->backupTransferStatistics() : std::vector<storage::ProfileBackupTransferStatistics>{};
+    if (i2p) {
+      for (const auto& [hash, observed] : i2pFacts) {
+        static_cast<void>(hash);
+        if (observed.current && !observed.joined && observed.failure.empty() && observed.backupBaseline) {
+          statistics.push_back({*observed.backupBaseline, observed.cumulativeReceived, observed.cumulativeSent});
+        }
+      }
+    }
+    return statistics;
+  }
   void pollI2p(){
     if(!i2p){return;}const auto rows=i2p->observations();i2pPackets.clear();i2pFacts.clear();ui::I2pPacket total;bool capped=false;total.payloadDownloaded=0;total.payloadUploaded=0;
     bool withdrawn=rows.empty()&&i2p->observation().phase==OwnedI2pService::Phase::Withdrawn;
@@ -3860,8 +3872,7 @@ bool SessionBridge::backupSavedProfile(quint64 session, QString destination) {
     }
     const auto parent = platform::pathFromUtf8(destination.toUtf8().toStdString());
     const auto date = QDate::currentDate().toString(Qt::ISODate).toStdString();
-    const auto statistics = host_->engine ? host_->engine->backupTransferStatistics()
-        : std::vector<storage::ProfileBackupTransferStatistics>{};
+    const auto statistics = host_->backupTransferStatistics();
     const auto backup = storage::backupSavedProfile(host_->lease, parent, date, stop, statistics);
     if (!backup && backup.error().code == storage::ErrorCode::Cancelled) { throw Failure{backup.error()}; }
     const auto status = storage::recordProfileBackupStatus(host_->lease,
@@ -3927,7 +3938,7 @@ void SessionBridge::stepAutomaticProfileBackup(std::stop_token stop, bool force)
       .firstCheck = owner.firstAutomaticBackupCheck, .force = force};
   const auto date = local.date().toString(Qt::ISODate).toStdString();
   const auto turn = storage::pollAutomaticProfileBackup(owner.lease, clock, date, stop, [&owner] {
-    return owner.engine ? owner.engine->backupTransferStatistics() : std::vector<storage::ProfileBackupTransferStatistics>{};
+    return owner.backupTransferStatistics();
   });
   QString message;
   if (!turn) {

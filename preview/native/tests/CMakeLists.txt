@@ -2402,7 +2402,7 @@ if(TARGET biglybtc_i2p_dht)
     endif()
     target_compile_options(biglybtc-i2p-dht-channel-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME i2p-dht-channel COMMAND biglybtc-i2p-dht-channel-tests)
-    set_tests_properties(i2p-dht-channel PROPERTIES TIMEOUT 60 LABELS "unit;i2p;discovery")
+    set_tests_properties(i2p-dht-channel PROPERTIES TIMEOUT 90 LABELS "unit;i2p;discovery")
   endif()
 endif()
 

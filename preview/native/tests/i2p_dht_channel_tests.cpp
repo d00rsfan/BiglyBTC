@@ -4,6 +4,7 @@
 #include "owned_i2p_profile_fixture.hpp"
 #include "owner_runtime_guard.hpp"
 #include "profile_owner.hpp"
+#include "profile_backup.hpp"
 #include "saved_subscription_seed.hpp"
 #include "stream.hpp"
 #include <QDateTime>
@@ -43,9 +44,9 @@ namespace discovery=i2p::dht;
 class SubscriptionLeecher {
 public:
   SubscriptionLeecher(Router& router, const i2p::ClientIdentity& remote, i2p::Destination local,
-      const discovery::Contact& contact, std::string_view key, std::string_view payload)
+      const discovery::Contact& contact, std::string_view key, std::string_view payload, bool requireSeed=true)
       : router_(router), remote_(remote), local_(std::move(local)), contact_(contact),
-        key_(key), payload_(payload) { clock_.start(); }
+        key_(key), payload_(payload), requireSeed_(requireSeed) { clock_.start(); }
 
   bool pump() {
     if (!failure.isEmpty()) { return true; }
@@ -143,7 +144,7 @@ private:
     const auto mux=cp::decodeDhtMuxDatagram(payload);
     require(mux && mux->protocol==18,"Unexpected owned DHT dispatch while serving the seed");
     const auto message=discovery::decode(mux->datagram);
-    require(message && message->method==discovery::Method::AnnouncePeer && message->seed
+    require(message && message->method==discovery::Method::AnnouncePeer && (!requireSeed_ || message->seed)
         && std::string_view(reinterpret_cast<const char*>(message->target.data()),message->target.size())==key_,
         "Wrong signed seed key in actual I2P announce");
     discovery::Message ack;
@@ -203,6 +204,7 @@ private:
   i2p::Destination local_;
   discovery::Contact contact_;
   std::string key_,payload_;
+  bool requireSeed_;
   QElapsedTimer clock_;
   std::optional<stream::Connection> connection_;
   std::optional<std::uint64_t> resolvedAt_;
@@ -274,7 +276,7 @@ class DhtChannelTests final:public QObject {
     QVERIFY(packet);
     inbound(router,id,*packet,true);
   }
-  std::optional<d::Message> signedSeedQuery(const cp::Frame& frame,const d::Contact& contact) {
+  std::optional<d::Message> signedSeedQuery(const cp::Frame& frame,const d::Contact& contact,bool requireNoSeed=true) {
     const auto sent=cp::decodeDhtSendDatagram(frame);
     if (!sent || sent->recipient.wire!=contact.destination->wire) { return {}; }
     const auto mux=cp::decodeDhtMuxDatagram(sent->payload);
@@ -282,7 +284,7 @@ class DhtChannelTests final:public QObject {
     const auto signedQuery=i2p::decode1(mux->datagram);
     if (!signedQuery) { return {}; }
     const auto query=d::decode(signedQuery->payload);
-    if (!query || query->method!=d::Method::GetPeers || !query->noSeed) { return {}; }
+    if (!query || query->method!=d::Method::GetPeers || (requireNoSeed && !query->noSeed)) { return {}; }
     return *query;
   }
 #endif
@@ -412,6 +414,79 @@ private slots:
     (*owner)->join();
     QCOMPARE(original::read(profile.path/"downloads.config"),inventory);
     QCOMPARE(original::read(profile.path/"subs"/file),body);
+  }
+  void actualPrivateProfileTransferInBackup() {
+    namespace source = owned_i2p_test;
+    namespace storage = biglybtc::storage;
+    if (!i2p::provider::privateOwnerRuntimePin()) { QSKIP("Approved private I2P SDK required"); }
+    source::Fixture fixture;
+    const auto file = source::fs::path(fixture.payloadDirectory.path().toStdString()) / "owned.bin";
+    source::write(file, fixture.payload);
+    const auto state = source::dict({{"info", fixture.info}, {"attributes", source::dict({
+        {"networks", "l3:I2Pe"}, {"peersources", "l3:DHTe"}, {"resumecomplete", "i2e"}, {"storetypes", "l1:Le"}
+    })}, {"resume", source::dict({{"data", source::dict({
+        {"resume data", source::b(std::string(1, char(1)))}, {"valid", "i1e"}, {"blocks", "de"}
+    })}})}});
+    source::write(fixture.state(), state);
+    source::write(fixture.path / "fixture.torrent", source::dict({{"info", fixture.info}}));
+    const auto key = source::sha1(fixture.info);
+    const auto saveDirectory = source::fs::path(fixture.payloadDirectory.path().toStdString());
+    const auto saved = source::dict({{"downloads","l"+source::dict({
+        {"torrent_hash", source::b(key)}, {"torrent", source::b((fixture.path/"fixture.torrent").string())},
+        {"save_dir", source::b(saveDirectory.string())}, {"save_file", "9:owned.bin"}, {"state", "i0e"}, {"forceStart","i1e"},
+        {"downloaded","i"+std::to_string(fixture.payload.size())+"e"},{"uploaded","i17e"},
+        {"completedbytes","i"+std::to_string(fixture.payload.size())+"e"}
+    })+"e"}});
+    source::write(fixture.path / "downloads.config", saved);
+    auto owner = i2p::provider::OwnedProfile::prepare(*fixture.lease, fixture.hash);
+    QVERIFY2(owner,owner?"":owner.error().message.c_str());
+    Router router;
+    auto remote = signer("dsa");
+    const auto contact = seedContact(remote);
+    QVERIFY(contact);
+    registerSeedOwner(router, **owner, *contact);
+    QTRY_VERIFY_WITH_TIMEOUT(router.next(),12000);
+    const auto query = signedSeedQuery(router.take(), *contact, false);
+    QVERIFY(query);
+    QCOMPARE(std::string(reinterpret_cast<const char*>(query->target.data()),query->target.size()),key);
+    d::Message answer;
+    answer.kind=d::Kind::Reply;
+    answer.id=contact->id;
+    answer.transaction=query->transaction;
+    answer.token={0,0xff,0x51};
+    answer.hasPeers=true;
+    answer.peers={{remote.destination()->hash,false}};
+    replyToSeed(router,31,answer);
+    auto local=signer("ed25519");
+    SubscriptionLeecher leecher(router,remote,*local.destination(),*contact,key,fixture.payload,false);
+    QTRY_VERIFY2_WITH_TIMEOUT(leecher.pump(),qPrintable(leecher.state()),45000);
+    QVERIFY2(leecher.failure.isEmpty(),qPrintable(leecher.failure));
+    std::optional<i2p::provider::OwnedProfile::Observation> sample;
+    const auto findSample=[&] {
+      const auto rows = (*owner)->observations();
+      if (rows.size()!=1 || !rows.front().backupBaseline) { return false; }
+      sample=rows.front();
+      return true;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(findSample(),5000);
+    QCOMPARE(sample->torrent.phase,i2p::provider::OwnedProfile::Phase::Active);
+    QCOMPARE(sample->backupBaseline->hash,std::optional(fixture.hash));
+    QCOMPARE(sample->backupBaseline->uploaded,std::optional<std::int64_t>(17));
+    QCOMPARE(sample->cumulativeSent,std::optional<std::int64_t>(17+static_cast<std::int64_t>(fixture.payload.size())));
+    const auto target=source::fs::path(fixture.payloadDirectory.path().toStdString())/"copy";
+    source::fs::create_directory(target);
+    const std::array statistics{storage::ProfileBackupTransferStatistics{*sample->backupBaseline,
+        sample->cumulativeReceived,sample->cumulativeSent}};
+    const auto backed = storage::backupSavedProfile(*fixture.lease,target,"2026-11-27",{},statistics);
+    QVERIFY2(backed,backed?"":backed.error().message.c_str());
+    const auto inventory=source::core::Document::parse(source::read(backed->directory/"downloads.config"));
+    QVERIFY(inventory);
+    const auto result=source::core::readLibrary(*inventory);
+    QVERIFY(result && result->downloads.size()==1);
+    QCOMPARE(result->downloads.front().uploaded,sample->cumulativeSent);
+    QCOMPARE(source::read(fixture.path/"downloads.config"),saved);
+    (*owner)->close();
+    (*owner)->join();
   }
   void actualDormantSubscriptionCatalog_data() {
     QTest::addColumn<bool>("rotate");

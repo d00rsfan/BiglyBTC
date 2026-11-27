@@ -52,6 +52,7 @@ public:
     std::int64_t verifiedBytes=0,payloadDownloaded=-1,payloadUploaded=-1;
     int downloadRate=0,uploadRate=0,peers=0,seeds=0;
     std::optional<std::int64_t> cumulativeReceived{},cumulativeSent{};
+    std::shared_ptr<const core::SavedDownload> backupBaseline{};
     std::optional<std::int64_t> lastActiveTagMillis{};
     std::optional<std::array<core::tags::runtime::Membership, 15>> downloadTagMembers{};
     bool checked=false,seeding=false,current=false,joined=false,queued=false,selectedComplete=false;
